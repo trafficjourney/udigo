@@ -532,7 +532,7 @@
         @media (hover: hover) { .btn-settings-item:hover { box-shadow: var(--shadow-sm); } }
         .btn-settings-item:active { transform: scale(0.98); }
 
-        /* 뱃지(정보용, 클릭 불가) — BETA 태그 등 */
+        /* 뱃지(정보용, 클릭 불가) */
         .badge {
             display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;
             padding: 2px 8px; border-radius: var(--radius-pill); box-shadow: var(--shadow-xs);
@@ -609,7 +609,6 @@
             .search-bar .search-input-wrap { flex: 1; width: auto; min-width: 0; }
             .search-bar .app-brand { font-size: 17px; }
         }
-        @media (max-width: 360px) { .search-bar .app-brand .badge { display: none; } } /* 아주 좁은 화면은 BETA 표시를 빼서 검색창 폭 확보 */
 
         /* 🎨 테마 선택 */
         .theme-picker { margin-bottom: 16px; }
@@ -667,15 +666,13 @@
             box-shadow: var(--shadow-sm); padding: 32px 20px 20px; margin-bottom: 16px; text-align: center;
         }
         .welcome-title { font-size: 24px; line-height: 1.3; font-weight: 800; letter-spacing: -0.6px; color: var(--text); }
-        .welcome-sub { margin-top: 10px; font-size: 14px; color: var(--text2); line-height: 1.6; }
-        .welcome-steps { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
+        .welcome-steps { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 360px; margin: 24px auto; }
         .welcome-steps li {
             display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 4px;
             background: var(--bg); border-radius: var(--radius-md); font-size: 12px; color: var(--text2);
         }
         .welcome-steps i { font-size: 24px; color: var(--accent-text); margin-bottom: 4px; }
         .welcome-steps b { font-size: 14px; color: var(--text); }
-        .welcome-steps span { word-break: keep-all; }
         .brand-home { display: flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
         body:not(.welcome-revisit) .revisit-only { display: none !important; }
         .welcome-back { display: inline-flex; margin: -16px 0 16px; }
@@ -685,12 +682,9 @@
             background: none; border: 0; font: inherit; font-size: 13px; color: var(--text2); cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
         }
         .welcome-revisit-note { font-size: 12px; color: var(--text3); word-break: keep-all; }
-        .welcome-extras { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: -8px 0 24px; }
-        .welcome-extras li { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; color: var(--text2); word-break: keep-all; }
-        .welcome-extras i { font-size: 14px; color: var(--accent-text); }
         .welcome-actions { display: flex; flex-direction: column; gap: 8px; max-width: 360px; margin: 0 auto; }
         .welcome-links { margin-top: 14px; display: flex; justify-content: center; align-items: center; gap: 4px; font-size: 12px; color: var(--text3); }
-        .welcome-links button { background: none; border: none; color: var(--text2); font-size: 12px; padding: 8px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+        .welcome-links button { background: none; border: none; color: var(--text3); font-size: 12px; padding: 8px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
         /* 📍 검색 후 위치 확인 바 (하단 고정, 엄지로 누르기 쉬운 위치) */
         .found-bar {
@@ -977,7 +971,6 @@
 <div class="search-bar">
     <div class="app-brand" style="display: flex; align-items: center;">
         <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><i class="ti ti-box" style="margin-right: 6px;"></i>창고지기</button>
-        <span class="badge" style="background: var(--badge-bg); color: var(--badge-text); margin-left: 6px;">BETA</span>
         <button onclick="openVideoGuideModal()" style="background: none; border: none; padding: 0; margin-left: 8px; cursor: pointer; color: #e09b3a; display: flex; align-items: center;" title="사용방법 가이드">
             <i class="ti ti-bulb" style="font-size: 18px; transition: color 0.2s;"></i>
         </button>
@@ -1019,18 +1012,11 @@
     <section id="welcomeCard" class="welcome-card" style="display: none;">
         <button type="button" class="btn-xs welcome-back revisit-only" onclick="closeWelcomeRevisit()"><i class="ti ti-arrow-left"></i> 내 지도로 돌아가기</button>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
-        <p class="welcome-sub">창고 사진에 구역을 표시하고 물건을 적어두면,<br>누구든 검색 한 번으로 찾을 수 있어요.</p>
         <ol class="welcome-steps">
-            <li><i class="ti ti-camera"></i><b>찍기</b><span>선반 사진 등록</span></li>
-            <li><i class="ti ti-border-corners"></i><b>표시</b><span>물건 적어두기</span></li>
-            <li><i class="ti ti-search"></i><b>찾기</b><span>초성·음성 검색</span></li>
+            <li><i class="ti ti-camera"></i><b>찍기</b></li>
+            <li><i class="ti ti-border-corners"></i><b>표시</b></li>
+            <li><i class="ti ti-search"></i><b>찾기</b></li>
         </ol>
-        <ul class="welcome-extras" aria-label="함께 쓸 수 있는 기능">
-            <li><i class="ti ti-sparkles"></i>AI가 구역 자동 표시</li>
-            <li><i class="ti ti-microphone"></i>말로 물건 추가</li>
-            <li><i class="ti ti-file-type-pdf"></i>PDF로 뽑아 붙이기</li>
-            <li><i class="ti ti-device-mobile"></i>앱처럼 설치</li>
-        </ul>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
             <button class="btn-base btn-secondary btn-lg" onclick="document.getElementById('fileInput').click()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
