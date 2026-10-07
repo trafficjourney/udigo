@@ -2359,7 +2359,7 @@
 
             if (!wasDragged && !clickedInsideBubble) {
                 const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
-                if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; openModal(clickedZone); render(data); }
+                if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; if (!isEditMode) recordFind(); openModal(clickedZone); render(data); }
                 else if (!isEditMode && !pickMode) clearZoneFocus(); // 사진의 빈 곳을 누르면 선택(스포트라이트)을 푼다
             }
             if (isEditMode && (isMovingZone || isResizingZone)) { if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; } if (data.id !== "dummy_root") saveData(); render(data); }
@@ -2707,7 +2707,7 @@
         clearZoneFocus();
     }, true);
     function selectZone(dataId, index) {
-        deactivateHeroSearch();
+        deactivateHeroSearch(); recordFind();
         activeData = imageList.find(d => d.id == dataId); activeZone = activeData.zones[index];
         showSearchArrow = true; showPhoto(dataId);
         imageList.forEach(data => render(data));
@@ -2945,8 +2945,21 @@
     const IOS_INSTALL_GUIDE = "아래쪽(또는 주소창 옆) 공유 버튼 → '홈 화면에 추가'를 누르면 앱처럼 설치돼요.";
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; maybeShowInstallBanner(); });
     window.addEventListener('appinstalled', () => { deferredInstallPrompt = null; hideInstallBanner(); });
+    // 처음 쓰는 사람에게는 띄우지 않고, 손에 익었을 때 추천한다: 서로 다른 날 3번 이상 열었거나, 물건 위치를 5번 이상 찾았을 때.
+    // (그 전에도 설정 > "홈 화면에 앱으로 설치"로 언제든 설치할 수 있다)
+    const USAGE_KEY = 'usageStats', INSTALL_AFTER_DAYS = 3, INSTALL_AFTER_FINDS = 5;
+    function readUsage() { try { return JSON.parse(safeStorage.getItem(USAGE_KEY)) || { days: [], finds: 0 }; } catch (e) { return { days: [], finds: 0 }; } }
+    function writeUsage(u) { try { safeStorage.setItem(USAGE_KEY, JSON.stringify(u)); } catch (e) {} }
+    function isRealUse() { return !isSamplePreview && safeStorage.getItem('isSampleData') !== '1' && hasSavedData(); }
+    function recordUsageDay() {
+        if (!isRealUse()) return;
+        const u = readUsage(), t = new Date(), today = `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; // 기기 시간 기준 날짜
+        if (!u.days.includes(today)) { u.days = [...u.days, today].slice(-10); writeUsage(u); }
+    }
+    function recordFind() { if (!isRealUse()) return; const u = readUsage(); u.finds = (u.finds || 0) + 1; writeUsage(u); }
+    function isFamiliarUser() { const u = readUsage(); return u.days.length >= INSTALL_AFTER_DAYS || (u.finds || 0) >= INSTALL_AFTER_FINDS; }
     function maybeShowInstallBanner() {
-        if (isInstalledApp() || isSamplePreview || !hasSavedData()) return;
+        if (isInstalledApp() || !isRealUse() || !isFamiliarUser()) return;
         if (!deferredInstallPrompt && !isIOS()) return;
         const until = parseInt(safeStorage.getItem('installBannerHiddenUntil') || '0', 10);
         if (until && Date.now() < until) return;
@@ -3840,6 +3853,7 @@
                     document.getElementById('samplePreviewExit').textContent = '예시 닫기';
                 }
             }
+            recordUsageDay();
             maybeShowInstallBanner();
         }
         else {
