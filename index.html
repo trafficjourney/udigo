@@ -461,6 +461,37 @@
         .zl-summary { margin-left: 6px; font-weight: 400; color: var(--text2); }
         canvas { border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 100%; display: block; margin: 10px auto; transition: border-color 0.3s; }
         body.pick-mode canvas { cursor: pointer; }
+        .zoom-box { position: relative; margin: 10px auto; }
+        .zoom-wrap { overflow: auto; overscroll-behavior: contain; border-radius: var(--radius-sm); scrollbar-width: thin; }
+        .zoom-box:not(.zoomed) .zoom-wrap { overflow: hidden; }
+        .zoom-stage { position: relative; width: 100%; }
+        .zoom-stage canvas { width: 100%; height: auto; max-width: none; margin: 0; }
+        .note-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: 3px; }
+        .zone-note-slot.is-tiny { align-items: center; padding-top: 0; padding-bottom: 0; }
+        .zone-note { max-width: 100%; min-width: 0; padding: 3px 6px; background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
+        .zone-note > div { word-break: keep-all; overflow-wrap: anywhere; }
+        .zone-note.one-line > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .zone-note .it { padding-left: 0.7em; text-indent: -0.7em; } /* 줄이 바뀐 긴 이름은 들여 써서 다른 물건처럼 보이지 않게 */
+        .zone-note .it + .it { margin-top: 1px; }
+        .zone-note.one-line > div { display: flex; text-indent: 0; padding-left: 0; }
+        .zone-note.one-line .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .zone-note.one-line .more { flex: none; margin-left: 0.3em; }
+        .zone-note.narrow { padding: 2px 4px; font-size: calc(var(--note-fs, 12.5px) * 0.88); line-height: 1.25; }
+        .zone-note.narrow .it { padding-left: 0; text-indent: 0; }
+        .zone-note.narrow .it + .it, .zone-note.narrow .more { margin-top: 3px; padding-top: 3px; border-top: 1px dashed rgba(43,39,22,0.35); }
+        .zone-note .more { color: #7a6a1e; font-weight: 500; }
+        .zone-note.is-tiny { min-width: 2.8em; padding: 0 5px; font-size: 0.86em; line-height: 1.45; }
+        .zone-note.is-focus { outline: 2.5px solid #c44444; outline-offset: 1px; }
+        .note-layer.has-focus .zone-note:not(.is-focus) { opacity: 0.3; }
+        .zoom-ctl { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
+        .zoom-ctl button { display: none; align-items: center; justify-content: center; gap: 4px; min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 17px; background: rgba(255,255,255,0.94); color: #1a1a18; font: 600 12px sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer; }
+        .zoom-ctl button i { font-size: 16px; }
+        .zoom-box.zoomed .zoom-ctl .zoom-reset { display: inline-flex; }
+        @media (hover: hover) and (pointer: fine) {
+            .zoom-ctl .zoom-out, .zoom-ctl .zoom-in { display: inline-flex; opacity: 0; transition: opacity 0.15s; }
+            .zoom-box:hover .zoom-ctl .zoom-out, .zoom-box:hover .zoom-ctl .zoom-in, .zoom-ctl button:focus-visible { opacity: 1; }
+        }
 
         .zone-item { padding: 12px 14px; border-bottom: 1px solid var(--border); transition: background 0.2s; background: var(--card); }
         .zone-item:last-child { border-bottom: none; }
@@ -2013,7 +2044,7 @@
 
         imageList.forEach(data => {
             if (data.canvas) {
-                data.canvas.style.touchAction = isEditMode ? 'none' : 'auto';
+                data.canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y'; // 보기 모드도 브라우저 화면 확대는 막고 두 손가락은 사진 확대로
                 data.canvas.style.borderColor = isEditMode ? 'var(--warn)' : 'var(--border)';
             }
         });
@@ -2249,12 +2280,25 @@
         toggleHeader.onclick = () => setZoneListOpen(data.id, listDiv.style.display === "none");
 
         listWrapper.appendChild(toggleHeader); listWrapper.appendChild(listDiv);
-        section.appendChild(headerContainer); section.appendChild(canvas); section.appendChild(listWrapper);
+        // 사진 칸: 확대용 스크롤 틀(zoom-wrap) 안에 캔버스와 쪽지 층(note-layer)을 겹쳐 둔다
+        const zoomBox = document.createElement('div'); zoomBox.className = 'zoom-box'; zoomBox.style.maxWidth = canvas.width + 'px';
+        const zoomWrap = document.createElement('div'); zoomWrap.className = 'zoom-wrap';
+        const stage = document.createElement('div'); stage.className = 'zoom-stage';
+        const noteLayer = document.createElement('div'); noteLayer.className = 'note-layer'; noteLayer.setAttribute('aria-hidden', 'true');
+        const zoomCtl = document.createElement('div'); zoomCtl.className = 'zoom-ctl';
+        zoomCtl.innerHTML = `<button type="button" class="zoom-out" aria-label="사진 작게"><i class="ti ti-minus"></i></button><button type="button" class="zoom-in" aria-label="사진 크게"><i class="ti ti-plus"></i></button><button type="button" class="zoom-reset" aria-label="원래 크기로"><i class="ti ti-arrows-minimize"></i> 원래 크기</button>`;
+        zoomCtl.querySelector('.zoom-in').onclick = () => setPhotoZoom(data, (data.zoom || 1) * 1.5);
+        zoomCtl.querySelector('.zoom-out').onclick = () => setPhotoZoom(data, (data.zoom || 1) / 1.5);
+        zoomCtl.querySelector('.zoom-reset').onclick = () => setPhotoZoom(data, 1);
+        stage.append(canvas, noteLayer); zoomWrap.appendChild(stage); zoomBox.append(zoomWrap, zoomCtl);
+        data.zoomBox = zoomBox; data.zoomWrap = zoomWrap; data.noteStage = stage; data.noteLayer = noteLayer; data.zoom = 1;
+        canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y';
+        section.appendChild(headerContainer); section.appendChild(zoomBox); section.appendChild(listWrapper);
         document.getElementById('canvasList').appendChild(section);
 
         if (data.id === 'dummy_root' && welcomeVisible) section.style.display = 'none';
         if (data.id !== 'dummy_root') showWelcome(false);
-        initCanvasEvents(data, canvas); if (!imageList.includes(data)) { imageList.push(data); } render(data);
+        initCanvasEvents(data, canvas); initPhotoZoom(data); if (!imageList.includes(data)) { imageList.push(data); } render(data);
         syncPhotoView();
         if (document.body.classList.contains('hero-search-active')) renderHeroHome();
     }
@@ -2403,92 +2447,137 @@
         });
     }
 
-    // 보기 모드 구역 표시: 왼쪽 위 번호 + (직접 지은 이름이면) 이름 꼬리표 + 아래쪽 "대표 물건 외 N" / 좁으면 "N개"
-    const DEFAULT_ZONE_NAME = /^(\d+|[A-Z])구역$|^수동구역_\d+$/;
     // 캔버스는 가로 800px 기준이라 휴대폰에서는 2배 넘게 줄어 보인다. 표지 크기는 "화면에 보이는 px"로 정하고 이 배율을 곱한다.
     // 사진 줄에서 숨겨진 캔버스는 폭이 0이라 목록 폭으로 대신 잰다.
     function displayScale(canvas) {
         const shown = canvas.getBoundingClientRect().width || (document.getElementById('canvasList') || {}).clientWidth || canvas.width;
         return Math.max(1, canvas.width / Math.min(shown, canvas.width));
     }
-    function pillPad(fontPx) { return { x: Math.round(fontPx * 0.6), h: Math.round(fontPx * 1.7) }; }
-    function fitPill(ctx, text, maxW, fontPx) { return ctx.measureText(text).width + pillPad(fontPx).x * 2 <= maxW; }
-    function drawPill(ctx, cx, y, text, fontPx, align = 'center', x0 = 0) {
-        const pad = pillPad(fontPx), w = ctx.measureText(text).width + pad.x * 2, h = pad.h;
-        const x = align === 'center' ? cx - w / 2 : x0;
-        ctx.fillStyle = 'rgba(255,255,255,0.96)'; ctx.beginPath(); drawSafeRoundRect(ctx, x, y, w, h, h / 2); ctx.fill();
-        ctx.lineWidth = Math.max(1, fontPx * 0.08); ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.stroke();
-        ctx.fillStyle = '#1a1a18'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + w / 2, y + h / 2 + 1);
-        return w;
-    }
-    // 칸 배경이 밝은지 어두운지: 큰 숫자 색을 고르려고 칸 가운데를 듬성듬성 읽어 평균 밝기(0~1)를 낸다.
-    // 사진·구역 위치가 그대로면 다시 읽지 않도록 구역마다 기억해 둔다
-    const zoneLumCache = new WeakMap();
-    function zoneLuminance(ctx, z) {
-        const key = `${Math.round(z.x)},${Math.round(z.y)},${Math.round(z.w)},${Math.round(z.h)}`; // 구역을 옮기거나 크기를 바꾸면 다시 읽음
-        const hit = zoneLumCache.get(z); if (hit && hit.key === key) return hit.lum;
-        let lum = 0.5;
-        try {
-            const sx = Math.max(0, Math.round(z.x + z.w * 0.2)), sy = Math.max(0, Math.round(z.y + z.h * 0.15));
-            const sw = Math.max(1, Math.round(z.w * 0.6)), sh = Math.max(1, Math.round(z.h * 0.6));
-            const px = ctx.getImageData(sx, sy, sw, sh).data, step = 4 * 7;
-            let sum = 0, cnt = 0;
-            for (let i = 0; i < px.length; i += step) { sum += (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255; cnt++; }
-            if (cnt) lum = sum / cnt;
-        } catch (e) {}
-        zoneLumCache.set(z, { key, lum });
-        return lum;
-    }
-
-    // 보기 모드 구역 표시: 칸 가운데 큰 숫자를 은은하게 깔고, 아래쪽에 물건 뱃지 하나만 둔다.
-    // (작은 번호 원·이름표를 따로 두지 않아 사진이 덜 가려지고, 벽에 붙인 지도처럼 멀리서도 번호가 보인다)
-    function drawZoneMarker(ctx, z, n, isActive) {
-        const k = displayScale(ctx.canvas), ui = bubbleFontSize / (isMobileDevice() ? 22 : 16);
-        const gap = Math.round(4 * k), small = Math.round(11 * ui * k);
-        ctx.save();
-        ctx.font = `600 ${small}px sans-serif`;
-
-        // 물건 뱃지: "이름 외 N" → "이름" → "이름 앞부분…" → (2개 이상일 때만) 개수 중 칸 폭에 들어가는 것
-        let label = null;
-        if (z.items.length) {
-            const first = z.items[0].name, more = z.items.length - 1;
-            const candidates = [more ? `${first} 외 ${more}` : first, first];
-            for (let i = first.length - 1; i >= 2; i--) candidates.push(first.slice(0, i) + '…');
-            if (more) candidates.push(`${z.items.length}개`);
-            label = candidates.find(t => fitPill(ctx, t, z.w - gap * 2, small)) || null;
-        }
-        const pillH = pillPad(small).h, pillSpace = label ? pillH + gap * 2 : 0, cap = 72 * ui * k;
-
-        // 큰 숫자 자리 정하기 (화면 기준 72px를 넘지 않게)
-        //  - 기본: 숫자는 뱃지 위 남은 자리 가운데, 뱃지는 아래 가운데
-        //  - 납작한 칸(위 자리에 숫자가 26px도 안 들어감): 숫자를 왼쪽에 칸 높이만큼, 뱃지는 오른쪽에 나란히
-        //  - 그것도 안 들어가는 작은 칸: 숫자만 칸 가운데 크게 (뱃지는 생략)
-        let fs = Math.min(z.w * 0.6, (z.h - pillSpace) * 0.82, cap), tx = z.x + z.w / 2, ty = z.y + (z.h - pillSpace) / 2, pillAt = null;
-        if (label) pillAt = { x: z.x + z.w / 2, y: z.y + z.h - pillH - gap, align: 'center' };
-        if (label && (z.h - pillSpace) * 0.82 < 26 * k) { // 높이가 모자랄 때만 (가늘고 긴 칸은 숫자가 좀 작아도 위아래로 둘 다 들어간다)
-            const sideFs = Math.min(z.h * 0.78, cap);
-            ctx.font = `800 ${Math.round(sideFs)}px sans-serif`;
-            const numW = ctx.measureText(String(n)).width, pillW = ctx.measureText(label).width; ctx.font = `600 ${small}px sans-serif`;
-            const pillWidth = ctx.measureText(label).width + pillPad(small).x * 2;
-            if (gap * 3 + numW + pillWidth <= z.w) {
-                fs = sideFs; tx = z.x + gap * 1.5 + numW / 2; ty = z.y + z.h / 2;
-                pillAt = { x: Math.min(z.x + z.w - gap - pillWidth, tx + numW / 2 + gap * 1.5), y: z.y + (z.h - pillH) / 2, align: 'left' };
-            } else { fs = Math.min(z.w * 0.6, z.h * 0.78, cap); ty = z.y + z.h / 2; pillAt = null; } // 둘 다 들어갈 자리가 없는 작은 칸: 번호가 먼저라 숫자만 (뱃지가 숫자를 가렸다). 물건은 칸을 누르거나 구역 목록에서
-        }
-        fs = Math.max(small, fs); ty += fs * 0.04;
-        // 밝은 칸엔 어두운 숫자, 어두운 칸엔 흰 숫자
-        ctx.font = `800 ${Math.round(fs)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2, fs * 0.06);
-        if (isActive) { ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.fillStyle = themeColors.danger; }
-        else if (zoneLuminance(ctx, z) > 0.62) { ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.fillStyle = 'rgba(20, 28, 45, 0.32)'; }
-        else { ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.fillStyle = 'rgba(255,255,255,0.68)'; }
-        ctx.strokeText(String(n), tx, ty); ctx.fillText(String(n), tx, ty);
-
-        if (pillAt) { ctx.font = `600 ${small}px sans-serif`; drawPill(ctx, pillAt.x, pillAt.y, label, small, pillAt.align, pillAt.x); }
-        ctx.restore();
+    // 보기 모드 구역 표시: 칸마다 노란 쪽지에 물건 이름을 적어 사진 위에 붙인다 (선반에 포스트잇을 붙인 것처럼).
+    // 캔버스가 아니라 HTML로 얹어서 확대해도 글자가 선명하고, 확대할수록 칸이 커져 쪽지에 더 많은 줄이 들어간다.
+    // 쪽지는 손가락 입력을 받지 않아(pointer-events: none) 누르면 아래 캔버스가 받아 구역 창을 연다.
+    function renderZoneNotes(data, cleanView) {
+        const layer = data.noteLayer; if (!layer) return;
+        if (!cleanView) { if (layer.dataset.key) { layer.replaceChildren(); layer.dataset.key = ''; } return; }
+        const stageW = data.noteStage.clientWidth; if (!stageW) return; // 숨겨진 사진: 보일 때 다시 그린다
+        const s = stageW / data.canvas.width, ui = bubbleFontSize / (isMobileDevice() ? 22 : 16);
+        const fs = Math.round(12.5 * ui * 10) / 10, lineH = Math.round(fs * 1.35), gap = 3, padY = 3;
+        const focus = showSearchArrow && activeZone && data.zones.includes(activeZone) ? activeZone : null;
+        const key = [stageW, fs, focus ? data.zones.indexOf(focus) : -1, JSON.stringify(data.zones.map(z => [z.x, z.y, z.w, z.h, z.items.map(i => i.name)]))].join('|');
+        if (layer.dataset.key === key) return;
+        layer.dataset.key = key;
+        layer.classList.toggle('has-focus', !!focus);
+        layer.style.setProperty('--note-fs', fs + 'px'); layer.style.setProperty('--note-lh', lineH + 'px');
+        const W = data.canvas.width, H = data.canvas.height;
+        layer.replaceChildren();
+        data.zones.filter(z => z.items.length).forEach(z => {
+            const names = z.items.map(i => i.name), n = names.length;
+            const tiny = z.h * s - padY * 2 < lineH; // 칸이 쪽지 한 줄보다 낮으면 작은 쪽지를 칸 가운데에 걸쳐 붙인다
+            const slot = document.createElement('div');
+            slot.className = 'zone-note-slot' + (tiny ? ' is-tiny' : '');
+            slot.style.cssText = `left:${z.x / W * 100}%;top:${z.y / H * 100}%;width:${z.w / W * 100}%;height:${z.h / H * 100}%`;
+            const note = document.createElement('div');
+            note.className = 'zone-note' + (tiny ? ' is-tiny' : '') + (z === focus ? ' is-focus' : '');
+            const fill = (lines, more) => note.replaceChildren(...lines.map((t, i) => { const l = document.createElement('div'); l.textContent = t; l.className = more && i === lines.length - 1 ? 'more' : 'it'; return l; }));
+            slot.appendChild(note); layer.appendChild(slot);
+            // 한 줄짜리: 첫 물건 이름만 말줄임하고 "+N"은 끝까지 남긴다
+            const oneLine = () => {
+                const l = document.createElement('div'), nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = names[0]; l.appendChild(nm);
+                if (n > 1) { const m = document.createElement('span'); m.className = 'more'; m.textContent = `+${n - 1}`; l.appendChild(m); }
+                note.replaceChildren(l); note.classList.add('one-line');
+            };
+            if (tiny) { oneLine(); return; }
+            // 좁은 칸에선 이름이 줄을 바꿔 길어진다 → 실제로 그려 보고 칸 높이를 넘으면 뒤에서부터 줄여 "+N개 더"로 묶는다
+            // 좁은 칸(글자 6자 폭 미만): 글자를 조금 줄이고 점 대신 구분선, "+2개 더" 대신 "+2"
+            const room = slot.clientHeight - gap * 2, narrow = slot.clientWidth < fs * 6;
+            if (narrow) note.classList.add('narrow');
+            const moreLabel = (m) => narrow ? `+${m}` : `+${m}개 더`;
+            fill(names, false);
+            if (note.offsetHeight <= room) return;
+            for (let k = n - 1; k >= 1; k--) { fill([...names.slice(0, k), moreLabel(n - k)], true); if (note.offsetHeight <= room) return; }
+            // 첫 물건 하나도 다 안 들어가면: 넓은 칸은 "첫 물건 외 N" 한 줄 말줄임, 좁은 칸은 첫 물건을 칸 높이까지만 (확대하면 다 보인다)
+            if (narrow) { fill([names[0]], false); note.style.maxHeight = room + 'px'; note.style.overflow = 'hidden'; }
+            else oneLine();
+        });
     }
 
-
+    // 사진 확대: 두 손가락으로 벌리기/오므리기(휴대폰), Ctrl+휠·트랙패드 확대·+/− 버튼(PC).
+    // 사진 칸(.zoom-wrap) 안에서만 커지고 그 안에서 스크롤로 옮겨 본다. 두 손가락을 대는 순간 그리던 구역·누르기는 취소한다.
+    const ZOOM_MAX = 4;
+    function setPhotoZoom(data, z, clientX, clientY) {
+        const wrap = data.zoomWrap, stage = data.noteStage; if (!wrap) return;
+        z = Math.min(ZOOM_MAX, Math.max(1, z)); if (z < 1.03) z = 1;
+        const old = data.zoom || 1, rect = wrap.getBoundingClientRect();
+        const ax = (clientX ?? rect.left + rect.width / 2) - rect.left, ay = (clientY ?? rect.top + rect.height / 2) - rect.top;
+        const cx = (wrap.scrollLeft + ax) / old, cy = (wrap.scrollTop + ay) / old; // 손가락(마우스) 아래 지점이 그대로 남게
+        data.zoom = z;
+        fitZoomWrap(data);
+        stage.style.width = (z * 100) + '%';
+        wrap.scrollLeft = cx * z - ax; wrap.scrollTop = cy * z - ay;
+        data.zoomBox.classList.toggle('zoomed', z > 1);
+        render(data);
+    }
+    // 확대 중에는 사진 칸 높이를 원래 크기로 묶어 둬야 위아래도 사진 칸 안에서 움직인다
+    function fitZoomWrap(data) {
+        const wrap = data.zoomWrap; if (!wrap) return;
+        wrap.style.height = (data.zoom || 1) > 1 ? Math.round(wrap.clientWidth * data.canvas.height / data.canvas.width) + 'px' : '';
+    }
+    // 검색으로 고른 칸이 확대된 사진 밖에 있으면 그 칸이 가운데 오게 옮긴다
+    function scrollZoomToZone(data, zone) {
+        const wrap = data.zoomWrap; if (!wrap || (data.zoom || 1) <= 1) return;
+        const s = data.noteStage.clientWidth / data.canvas.width;
+        wrap.scrollLeft = (zone.x + zone.w / 2) * s - wrap.clientWidth / 2;
+        wrap.scrollTop = (zone.y + zone.h / 2) * s - wrap.clientHeight / 2;
+    }
+    function initPhotoZoom(data) {
+        const wrap = data.zoomWrap, touches = new Map(); let pinch = null, gesture = false;
+        const pair = () => { const [a, b] = [...touches.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+        // 캡처 단계에서 먼저 받아, 두 손가락 동작 중에는 캔버스(구역 그리기·누르기)로 넘기지 않는다
+        wrap.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'touch') return;
+            touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (touches.size === 2) {
+                gesture = true;
+                if (pendingHistoryState && (isMovingZone || isResizingZone)) saveHistory(pendingHistoryState);
+                isDrawingNewZone = false; isMovingZone = false; isResizingZone = false; pendingHistoryState = null; hasDragged = true;
+                if (holdingItem) { holdingItem.sourceZone.items.push(holdingItem.item); holdingItem = null; }
+                const p = pair(), rect = wrap.getBoundingClientRect(), z0 = data.zoom || 1;
+                pinch = { d0: p.d || 1, z0, cx: (wrap.scrollLeft + p.x - rect.left) / z0, cy: (wrap.scrollTop + p.y - rect.top) / z0 };
+                e.stopPropagation(); render(data);
+            } else if (gesture) e.stopPropagation();
+        }, true);
+        wrap.addEventListener('pointermove', (e) => {
+            if (!touches.has(e.pointerId)) return;
+            touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (!gesture) return;
+            e.stopPropagation();
+            if (!pinch || touches.size < 2) return;
+            const p = pair(), rect = wrap.getBoundingClientRect();
+            const z = Math.min(ZOOM_MAX, Math.max(1, pinch.z0 * p.d / pinch.d0));
+            data.zoom = z; fitZoomWrap(data);
+            data.noteStage.style.width = (z * 100) + '%';
+            // 처음 두 손가락 사이에 있던 지점이 지금 두 손가락 사이로 따라오게 (벌리면서 옮기기)
+            wrap.scrollLeft = pinch.cx * z - (p.x - rect.left); wrap.scrollTop = pinch.cy * z - (p.y - rect.top);
+            data.zoomBox.classList.toggle('zoomed', z > 1);
+            render(data);
+        }, true);
+        const end = (e) => {
+            if (!touches.has(e.pointerId)) return;
+            touches.delete(e.pointerId);
+            if (!gesture) return;
+            e.stopPropagation();
+            if (touches.size < 2) pinch = null;
+            if (!touches.size) { gesture = false; if ((data.zoom || 1) < 1.03) setPhotoZoom(data, 1); else render(data); }
+        };
+        wrap.addEventListener('pointerup', end, true);
+        wrap.addEventListener('pointercancel', end, true);
+        wrap.addEventListener('wheel', (e) => {
+            if (!e.ctrlKey) return; // 일반 휠은 페이지 스크롤 그대로
+            e.preventDefault();
+            setPhotoZoom(data, (data.zoom || 1) * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+        }, { passive: false });
+        new ResizeObserver(() => { fitZoomWrap(data); render(data); }).observe(data.noteStage);
+    }
 
     // 편집 모드 구역 표시: 이름은 칸 왼쪽 위(겹친 구역끼리 이름이 가운데서 부딪치지 않게), 물건 목록은 그 아래 칸 안에.
     // 예전 말풍선은 칸 바깥(위나 아래)에 그려져 이웃 칸 위에 놓이고 서로 엇갈렸다.
@@ -2667,7 +2756,7 @@
         const frameNow = performance.now();
         const flyAnim = searchFlyAnim && searchFlyAnim.dataId === data.id ? searchFlyAnim : null;
 
-        // 보기 모드: 사진을 가리지 않도록 테두리 + 번호 + 짧은 물건 이름만. 편집 모드: 채우기·가운데 이름·말풍선(끌어서 옮기기용)
+        // 보기 모드: 캔버스엔 테두리만, 물건 이름은 위에 얹은 노란 쪽지(renderZoneNotes). 편집 모드: 채우기·가운데 이름·말풍선(끌어서 옮기기용)
         const cleanView = !isEditMode && data.id !== 'dummy_root';
         zones.forEach((z, zi) => {
             // 검색 후 깜빡이는 동안에는 기존 빨간 박스도 테두리와 함께 사라졌다 보였다 한다 (끝나면 계속 보임).
@@ -2691,8 +2780,7 @@
                     ctx.lineWidth = Math.max(2, 1.3 * k); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(z.x, z.y, z.w, z.h);
                 } else { ctx.fillRect(z.x, z.y, z.w, z.h); ctx.strokeRect(z.x, z.y, z.w, z.h); }
             }
-            if (cleanView) { drawZoneMarker(ctx, z, zi + 1, z === activeZone); }
-            else { drawEditZoneInfo(ctx, z, z === activeZone); }
+            if (!cleanView) drawEditZoneInfo(ctx, z, z === activeZone);
             if (isEditMode && z === activeZone) { ctx.fillStyle = 'white'; ctx.strokeStyle = '#c44444'; ctx.lineWidth = 2; const corners = [{ x: z.x, y: z.y }, { x: z.x + z.w, y: z.y }, { x: z.x, y: z.y + z.h }, { x: z.x + z.w, y: z.y + z.h }]; const hh = handleDrawHalf(canvas); corners.forEach(c => { ctx.fillRect(c.x - hh, c.y - hh, hh * 2, hh * 2); ctx.strokeRect(c.x - hh, c.y - hh, hh * 2, hh * 2); }); }
             if (cleanView) { z.bubbleBox = null; z.bubbleMeta = null; }
             if (z === activeZone && showSearchArrow && !cleanView) { const k = displayScale(canvas); ctx.fillStyle = '#c44444'; ctx.font = `bold ${Math.round(Math.max(32, 22 * k))}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('▼', z.x + z.w / 2, z.y - Math.max(20, 8 * k) - bounce); }
@@ -2709,8 +2797,8 @@
             ctx.fillStyle = 'rgba(15, 18, 24, 0.55)'; ctx.fill('evenodd');
             if (!hideBox) { ctx.lineWidth = Math.max(3, 2.5 * k); ctx.strokeStyle = '#c44444'; ctx.strokeRect(z.x, z.y, z.w, z.h); }
             ctx.restore();
-            drawZoneMarker(ctx, z, zones.indexOf(z) + 1, true);
         }
+        renderZoneNotes(data, cleanView);
 
         if (flyAnim) { drawSearchFlyOverlay(ctx, flyAnim, canvas, frameNow); }
 
@@ -2785,6 +2873,7 @@
         // 애니메이션을 시작해야 "날아오는" 연출이 화면이 움직이는 도중에 겹쳐 보이지 않는다.
         if (activeData && activeData.canvas) {
             const canvas = activeData.canvas;
+            scrollZoomToZone(activeData, activeZone);
             canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
             let lastTop = canvas.getBoundingClientRect().top, stableFrames = 0;
             const settleStart = performance.now(), maxWait = 900;
