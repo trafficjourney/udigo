@@ -285,13 +285,13 @@
             --hero-chip-bg: rgba(255,255,255,0.6);
             --hero-chip-border: rgba(19,48,107,0.14);
         }
-        .edit-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1068; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px 14px; background: var(--warn, #f2b705); color: #1a1a18; box-shadow: 0 2px 10px rgba(0,0,0,0.18); }
+        .edit-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1068; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px 14px; background: #13306b; color: #fff; border-bottom: 3px solid #ffd200; box-shadow: 0 3px 12px rgba(0,0,0,0.3); } /* 노란 머리글과 겹치지 않게 남색 띠 + 노란 완료 */
         .edit-bar[hidden] { display: none; }
         .edit-bar-icon { font-size: 20px; flex: none; }
         .edit-bar-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
         .edit-bar-text b { font-size: 15px; }
-        .edit-bar-text span { font-size: 12px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .edit-bar-done { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: #1a1a18; color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .edit-bar-text span { font-size: 12px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .edit-bar-done { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: #ffd200; color: #13306b; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
         .edit-bar-done:active { transform: scale(0.96); }
         #editOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -517,7 +517,13 @@
         .fs-close { flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,0.14); color: #fff; font-size: 22px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
         .zoom-box.is-fs .zoom-wrap, .zoom-box.is-fs:not(.zoomed) .zoom-wrap { flex: 1; min-height: 0; overflow: auto; border-radius: 0; }
         .zoom-box.is-fs canvas { border: 0; border-radius: 0; }
-        .zoom-box.is-fs .zoom-ctl { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: 12px; }
+        .zoom-box.is-fs .zoom-ctl { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: auto; left: 12px; } /* 오른쪽 아래는 편집 버튼 모음 자리 */
+        /* 크게 보기에서도 편집·되돌리기 버튼 모음과 편집 중 띠를 위에 띄운다 (확대해서 작은 칸을 정확히 그리게). 글자 크기 +/−는 숨김 */
+        body.photo-fs .floating-remote { z-index: 1099; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+        body.photo-fs .floating-remote .fab-font { display: none; }
+        body.photo-fs .edit-bar { z-index: 1099; }
+        body.photo-fs.editing .zoom-box.is-fs { top: var(--edit-bar-h, 60px); }
+        body.photo-fs.editing .zoom-box.is-fs .fs-bar { padding-top: 8px; }
         .zoom-box.is-fs .zoom-ctl .zoom-full, .zoom-box.is-fs .zoom-ctl .zoom-reset { display: none; }
         @media (hover: hover) and (pointer: fine) {
             .zoom-ctl .zoom-out, .zoom-ctl .zoom-in { display: inline-flex; opacity: 0; transition: opacity 0.15s; }
@@ -1242,8 +1248,8 @@
 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="addImage(this)">
 
 <div class="floating-remote" id="floatingRemote">
-    <button class="fab-btn" onclick="changeFontSize(2)">+</button>
-    <button class="fab-btn" onclick="changeFontSize(-2)">-</button>
+    <button class="fab-btn fab-font" onclick="changeFontSize(2)">+</button>
+    <button class="fab-btn fab-font" onclick="changeFontSize(-2)">-</button>
     <button id="detailToggleBtn" onclick="toggleDetails()" class="fab-btn" title="말풍선 토글"><i class="ti ti-message-circle"></i></button>
     <button id="undoBtn" onclick="undo()" class="fab-btn" title="되돌리기" disabled><i class="ti ti-arrow-back-up"></i></button>
     <button id="mainModeBtn" onclick="toggleEditMode()" title="구역·물건 편집하기" aria-label="구역·물건 편집하기">
@@ -2062,14 +2068,24 @@
         requestAnimationFrame(() => { photoSpyQueued = false; updateCurrentPhotoFromScroll(); });
     }, { passive: true });
 
+    // 휴대폰 뒤로 가기: 편집·크게 보기를 열 때마다 기록을 하나 넣고, 뒤로 가기는 가장 나중에 연 것부터 닫는다.
+    // 버튼으로 닫을 때 그게 맨 위면 기록도 빼고, 아니면(크게 보기 안에서 편집 중 크게 보기를 닫는 등) 빈 기록으로 남긴다
+    const navStack = []; let skipPop = false;
+    function navPush(kind) { try { history.pushState({ nav: kind }, ''); navStack.push(kind); } catch (e) {} }
+    function navClose(kind) {
+        const i = navStack.lastIndexOf(kind); if (i < 0) return;
+        if (i === navStack.length - 1) { navStack.pop(); skipPop = true; try { history.back(); } catch (e) { skipPop = false; } }
+        else navStack[i] = 'stale';
+    }
     // fromHistory: 휴대폰 뒤로 가기로 끝낸 경우 (이미 기록이 빠졌으니 다시 빼지 않음)
     function toggleEditMode(fromHistory) {
         isEditMode = !isEditMode;
         // 편집 중엔 화면을 어둡게 덮지 않고(완료 버튼까지 꺼진 것처럼 보였다) 위쪽 띠로 알린다. 뒤로 가기로도 끝낼 수 있게 기록을 하나 넣는다
         document.getElementById('editBar').hidden = !isEditMode;
+        if (isEditMode) document.documentElement.style.setProperty('--edit-bar-h', document.getElementById('editBar').offsetHeight + 'px'); // 크게 보기 중이면 띠 아래로 사진을 내린다
         document.body.classList.toggle('editing', isEditMode);
-        if (isEditMode) { try { history.pushState({ editMode: 1 }, ''); } catch (e) {} }
-        else if (fromHistory !== true) { try { if (history.state && history.state.editMode) history.back(); } catch (e) {} }
+        if (isEditMode) navPush('edit');
+        else if (fromHistory !== true) navClose('edit');
         // 편집 모드에선 목록 칩이 커져서 위쪽 사진의 목록이 길어진다 → 보던 사진이 밀리지 않게 전환 후 제자리로
         const line = innerHeight * 0.35;
         const anchorSec = [...document.querySelectorAll('.image-section')].find(s => s.offsetParent && s.getBoundingClientRect().bottom > line);
@@ -2100,7 +2116,7 @@
 
         imageList.forEach(data => {
             if (data.canvas) {
-                data.canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y'; // 보기 모드도 브라우저 화면 확대는 막고 두 손가락은 사진 확대로
+                data.canvas.style.touchAction = isEditMode || (fsPhoto && fsPhoto.data === data) ? 'none' : 'pan-x pan-y'; // 크게 보기는 앱이 직접 처리. 보기 모드도 브라우저 화면 확대는 막고 두 손가락은 사진 확대로
                 data.canvas.style.borderColor = isEditMode ? 'var(--warn)' : 'var(--border)';
             }
         });
@@ -2620,7 +2636,7 @@
 
         data.canvas.style.touchAction = 'none'; // 전체 화면에선 끌기·확대를 앱이 직접 처리 (브라우저 스크롤·화면 확대가 끼어들지 않게)
         box.classList.add('is-fs'); document.body.appendChild(box); document.body.classList.add('photo-fs');
-        try { history.pushState({ photoFs: 1 }, ''); } catch (e) {} // 휴대폰 뒤로 가기로 닫히게
+        navPush('fs'); // 휴대폰 뒤로 가기로 닫히게
         const wrap = data.zoomWrap;
         applyZoom(data, at ? 2 : 1);
         const mt = parseFloat(data.noteStage.style.marginTop) || 0, sw = data.noteStage.clientWidth, sh = data.noteStage.clientHeight;
@@ -2637,9 +2653,14 @@
         ph.replaceWith(data.zoomBox);
         applyZoom(data, 1); data.zoomWrap.scrollLeft = 0; data.zoomWrap.scrollTop = 0;
         render(data);
-        if (!fromHistory) { try { if (history.state && history.state.photoFs) history.back(); } catch (e) {} }
+        if (!fromHistory) navClose('fs');
     }
-    window.addEventListener('popstate', () => { if (fsPhoto) closePhotoFullscreen(true); else if (isEditMode) toggleEditMode(true); });
+    window.addEventListener('popstate', () => {
+        if (skipPop) { skipPop = false; return; } // 버튼으로 닫으며 우리가 직접 뺀 기록
+        const top = navStack.pop(); // 가장 나중에 연 것(크게 보기·편집)부터 닫는다
+        if (top === 'fs' && fsPhoto) closePhotoFullscreen(true);
+        else if (top === 'edit' && isEditMode) toggleEditMode(true);
+    });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && fsPhoto && document.getElementById('modal').style.display !== 'flex') closePhotoFullscreen(); });
 
     function initPhotoZoom(data) {
