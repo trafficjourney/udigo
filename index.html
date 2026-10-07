@@ -685,18 +685,9 @@
             background: none; border: 0; font: inherit; font-size: 13px; color: var(--text2); cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
         }
         .welcome-revisit-note { font-size: 12px; color: var(--text3); word-break: keep-all; }
-        .industry-pick { max-width: 360px; margin: 0 auto 20px; }
-        .industry-pick-label { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-        .industry-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .industry-chip {
-            min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px;
-            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md);
-            font: inherit; font-size: 12px; font-weight: 600; color: var(--text2); cursor: pointer; word-break: keep-all;
-        }
-        .industry-chip i { font-size: 16px; }
-        .industry-chip.is-wide { grid-column: 1 / -1; }
-        .industry-chip[aria-pressed="true"] { border-color: var(--accent-text); background: var(--accent-soft); color: var(--accent-text); }
-        .industry-pick-hint { margin-top: 8px; font-size: 12px; color: var(--text3); word-break: keep-all; }
+        .welcome-extras { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: -8px 0 24px; }
+        .welcome-extras li { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; color: var(--text2); word-break: keep-all; }
+        .welcome-extras i { font-size: 14px; color: var(--accent-text); }
         .welcome-actions { display: flex; flex-direction: column; gap: 8px; max-width: 360px; margin: 0 auto; }
         .welcome-links { margin-top: 14px; display: flex; justify-content: center; align-items: center; gap: 4px; font-size: 12px; color: var(--text3); }
         .welcome-links button { background: none; border: none; color: var(--text2); font-size: 12px; padding: 8px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
@@ -1030,23 +1021,16 @@
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <p class="welcome-sub">창고 사진에 구역을 표시하고 물건을 적어두면,<br>누구든 검색 한 번으로 찾을 수 있어요.</p>
         <ol class="welcome-steps">
-            <li><i class="ti ti-camera"></i><b>찍기</b><span>창고 사진 등록</span></li>
-            <li><i class="ti ti-border-corners"></i><b>표시</b><span>구역에 물건 기록</span></li>
-            <li><i class="ti ti-search"></i><b>찾기</b><span>이름·초성·음성</span></li>
+            <li><i class="ti ti-camera"></i><b>찍기</b><span>선반 사진 등록</span></li>
+            <li><i class="ti ti-border-corners"></i><b>표시</b><span>물건 적어두기</span></li>
+            <li><i class="ti ti-search"></i><b>찾기</b><span>초성·음성 검색</span></li>
         </ol>
-        <div class="industry-pick">
-            <div class="industry-pick-label">어떤 곳을 정리하세요?</div>
-            <div class="industry-chips">
-                <button type="button" class="industry-chip" data-industry="cafe" aria-pressed="false" onclick="pickIndustry('cafe')"><i class="ti ti-coffee"></i>카페</button>
-                <button type="button" class="industry-chip" data-industry="restaurant" aria-pressed="false" onclick="pickIndustry('restaurant')"><i class="ti ti-tools-kitchen-2"></i>식당</button>
-                <button type="button" class="industry-chip" data-industry="hardware" aria-pressed="false" onclick="pickIndustry('hardware')"><i class="ti ti-hammer"></i>철물·공구</button>
-                <button type="button" class="industry-chip" data-industry="beauty" aria-pressed="false" onclick="pickIndustry('beauty')"><i class="ti ti-droplet"></i>화장품·드럭</button>
-                <button type="button" class="industry-chip" data-industry="clothing" aria-pressed="false" onclick="pickIndustry('clothing')"><i class="ti ti-shirt"></i>의류·잡화</button>
-                <button type="button" class="industry-chip" data-industry="general" aria-pressed="false" onclick="pickIndustry('general')"><i class="ti ti-package"></i>창고·기타</button>
-                <button type="button" class="industry-chip is-wide" data-industry="organizer" aria-pressed="false" onclick="pickIndustry('organizer')"><i class="ti ti-home"></i>집 정리 · 정리수납 전문가</button>
-            </div>
-            <p id="industryHint" class="industry-pick-hint">고르면 자주 쓰는 품목을 미리 넣어둘게요</p>
-        </div>
+        <ul class="welcome-extras" aria-label="함께 쓸 수 있는 기능">
+            <li><i class="ti ti-sparkles"></i>AI가 구역 자동 표시</li>
+            <li><i class="ti ti-microphone"></i>말로 물건 추가</li>
+            <li><i class="ti ti-file-type-pdf"></i>PDF로 뽑아 붙이기</li>
+            <li><i class="ti ti-device-mobile"></i>앱처럼 설치</li>
+        </ul>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
             <button class="btn-base btn-secondary btn-lg" onclick="document.getElementById('fileInput').click()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
@@ -2712,24 +2696,8 @@
         try { safeStorage.setItem('industry', key); safeStorage.setItem('baseItems', JSON.stringify(baseItems)); } catch (e) {}
         syncIndustryUI();
     }
-    // 첫 화면에서 고르기: 아직 저장된 사진이 없으니 확인 없이 바로 바꾼다
-    // 이미 쓰던 사람이 다시 고를 때는 직접 추가해둔 품목을 지우지 않고 업종 품목만 더한다
-    function pickIndustry(key) {
-        const hint = document.getElementById('industryHint');
-        if (hasSavedData()) {
-            const added = INDUSTRY_TEMPLATES[key].items.filter(n => !baseItems.includes(n));
-            baseItems.push(...added);
-            try { safeStorage.setItem('industry', key); safeStorage.setItem('baseItems', JSON.stringify(baseItems)); } catch (e) {}
-            syncIndustryUI();
-            if (hint) hint.textContent = added.length ? `기본 품목에 ${added.slice(0, 3).join(', ')} 등 ${added.length}개를 더했어요` : '이미 모두 들어 있어요';
-            return;
-        }
-        setIndustry(key);
-        if (hint) hint.textContent = `구역에 ${baseItems.slice(0, 3).join(', ')} 같은 품목을 미리 넣어둘게요`;
-    }
     function syncIndustryUI() {
         const cur = currentIndustry();
-        document.querySelectorAll('.industry-chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.industry === cur)));
         const sel = document.getElementById('industrySelect'); if (sel && cur) sel.value = cur;
     }
     function exportSystemData() { const packageData = { note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") }; const downloadLink = document.createElement('a'); downloadLink.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(packageData))); downloadLink.setAttribute("download", `매장위치지도_백업_${new Date().toISOString().slice(0,10)}.json`); downloadLink.click(); }
