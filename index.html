@@ -2385,56 +2385,73 @@
         ctx.fillStyle = '#1a1a18'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + w / 2, y + h / 2 + 1);
         return w;
     }
+    // 칸 배경이 밝은지 어두운지: 큰 숫자 색을 고르려고 칸 가운데를 듬성듬성 읽어 평균 밝기(0~1)를 낸다.
+    // 사진·구역 위치가 그대로면 다시 읽지 않도록 구역마다 기억해 둔다
+    const zoneLumCache = new WeakMap();
+    function zoneLuminance(ctx, z) {
+        const key = `${Math.round(z.x)},${Math.round(z.y)},${Math.round(z.w)},${Math.round(z.h)}`; // 구역을 옮기거나 크기를 바꾸면 다시 읽음
+        const hit = zoneLumCache.get(z); if (hit && hit.key === key) return hit.lum;
+        let lum = 0.5;
+        try {
+            const sx = Math.max(0, Math.round(z.x + z.w * 0.2)), sy = Math.max(0, Math.round(z.y + z.h * 0.15));
+            const sw = Math.max(1, Math.round(z.w * 0.6)), sh = Math.max(1, Math.round(z.h * 0.6));
+            const px = ctx.getImageData(sx, sy, sw, sh).data, step = 4 * 7;
+            let sum = 0, cnt = 0;
+            for (let i = 0; i < px.length; i += step) { sum += (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255; cnt++; }
+            if (cnt) lum = sum / cnt;
+        } catch (e) {}
+        zoneLumCache.set(z, { key, lum });
+        return lum;
+    }
+
+    // 보기 모드 구역 표시: 칸 가운데 큰 숫자를 은은하게 깔고, 아래쪽에 물건 뱃지 하나만 둔다.
+    // (작은 번호 원·이름표를 따로 두지 않아 사진이 덜 가려지고, 벽에 붙인 지도처럼 멀리서도 번호가 보인다)
     function drawZoneMarker(ctx, z, n, isActive) {
-        // 화면 기준 크기: 번호 원 지름 약 20px, 글자 11px (+/- 버튼으로 함께 커지고 작아짐)
         const k = displayScale(ctx.canvas), ui = bubbleFontSize / (isMobileDevice() ? 22 : 16);
-        const r = Math.round(10 * ui * k), gap = Math.round(4 * k), small = Math.round(11 * ui * k);
-        const cx = z.x + r + gap, cy = z.y + r + gap;
-        const markFill = isActive ? themeColors.danger : themeColors.accent, markText = isActive ? '#fff' : themeColors.onAccent;
+        const gap = Math.round(4 * k), small = Math.round(11 * ui * k);
         ctx.save();
         ctx.font = `600 ${small}px sans-serif`;
 
-        // 위치 표지(번호 + 이름)는 테마 강조색 한 덩어리, 물건 뱃지는 흰색 — "어디"와 "무엇"을 구분한다.
-        // 사용자가 의미 있게 지은 이름("냉장고 위")만, 그리고 통째로 들어갈 때만 붙인다 (잘린 "1단 …"은 오히려 헷갈림)
-        let name = '';
-        if (z.name && !DEFAULT_ZONE_NAME.test(z.name) && ctx.measureText(z.name).width <= z.w - gap * 2 - r * 2 - small * 1.4) name = z.name;
-        const tagW = (nm) => r * 2 + (nm ? ctx.measureText(nm).width + small * 0.9 : 0);
-
-        // 물건 뱃지 자리 정하기: 기본은 칸 아래 가운데, 번호 표지와 겹치면 표지 오른쪽 같은 줄.
-        // 그래도 안 들어가면 구역 이름을 빼서라도 물건 이름을 살린다 ("어디"는 번호로도 알 수 있지만 "무엇"은 뱃지뿐)
-        let pill = null;
+        // 물건 뱃지: "이름 외 N" → "이름" → "이름 앞부분…" → (2개 이상일 때만) 개수 중 칸 폭에 들어가는 것
+        let label = null;
         if (z.items.length) {
-            const pillH = pillPad(small).h, first = z.items[0].name, more = z.items.length - 1;
-            // 개수보다 물건 이름이 낫다: "이름 외 N" → "이름" → "이름 앞부분…" → (2개 이상일 때만) 개수
+            const first = z.items[0].name, more = z.items.length - 1;
             const candidates = [more ? `${first} 외 ${more}` : first, first];
             for (let i = first.length - 1; i >= 2; i--) candidates.push(first.slice(0, i) + '…');
             if (more) candidates.push(`${z.items.length}개`);
-            const pick = (maxW) => candidates.find(t => fitPill(ctx, t, maxW, small));
-            const widthOf = (t) => ctx.measureText(t).width + pillPad(small).x * 2;
-            const stackY = z.y + z.h - pillH - gap;
-            const place = (nm) => {
-                const tagRight = z.x + gap + tagW(nm);
-                const label = pick(z.w - gap * 2);
-                // 맞닿는 정도는 괜찮고, 아래 뱃지가 번호 표지와 실제로 겹칠 때만 옆으로 옮긴다
-                if (label && !(stackY < cy + r && z.x + z.w / 2 - widthOf(label) / 2 < tagRight + gap / 2)) return { label, x: z.x + z.w / 2, y: stackY, align: 'center' };
-                const side = pick(z.x + z.w - tagRight - gap * 2);
-                return side ? { label: side, x: tagRight + gap, y: cy - pillH / 2, align: 'left' } : null;
-            };
-            pill = place(name);
-            if (!pill && name) { pill = place(''); if (pill) name = ''; }
+            label = candidates.find(t => fitPill(ctx, t, z.w - gap * 2, small)) || null;
         }
+        const pillH = pillPad(small).h, pillSpace = label ? pillH + gap * 2 : 0, cap = 72 * ui * k;
 
-        ctx.beginPath(); drawSafeRoundRect(ctx, cx - r, cy - r, tagW(name), r * 2, r);
-        ctx.fillStyle = markFill; ctx.fill();
-        ctx.lineWidth = Math.max(2, 1.5 * k); ctx.strokeStyle = '#fff'; ctx.stroke();
-        ctx.fillStyle = markText; ctx.textBaseline = 'middle';
-        ctx.font = `bold ${Math.round(r * 1.1)}px sans-serif`; ctx.textAlign = 'center';
-        ctx.fillText(String(n), cx, cy + 1);
-        ctx.font = `600 ${small}px sans-serif`;
-        if (name) { ctx.textAlign = 'left'; ctx.fillText(name, cx + r + small * 0.35, cy + 1); }
-        if (pill) drawPill(ctx, pill.x, pill.y, pill.label, small, pill.align, pill.x);
+        // 큰 숫자 자리 정하기 (화면 기준 72px를 넘지 않게)
+        //  - 기본: 숫자는 뱃지 위 남은 자리 가운데, 뱃지는 아래 가운데
+        //  - 납작한 칸(위 자리에 숫자가 26px도 안 들어감): 숫자를 왼쪽에 칸 높이만큼, 뱃지는 오른쪽에 나란히
+        //  - 그것도 안 들어가는 작은 칸: 숫자를 칸 전체에 깔고 뱃지를 그 위에 얹는다
+        let fs = Math.min(z.w * 0.6, (z.h - pillSpace) * 0.82, cap), tx = z.x + z.w / 2, ty = z.y + (z.h - pillSpace) / 2, pillAt = null;
+        if (label) pillAt = { x: z.x + z.w / 2, y: z.y + z.h - pillH - gap, align: 'center' };
+        if (label && fs < 26 * k) {
+            const sideFs = Math.min(z.h * 0.78, cap);
+            ctx.font = `800 ${Math.round(sideFs)}px sans-serif`;
+            const numW = ctx.measureText(String(n)).width, pillW = ctx.measureText(label).width; ctx.font = `600 ${small}px sans-serif`;
+            const pillWidth = ctx.measureText(label).width + pillPad(small).x * 2;
+            if (gap * 3 + numW + pillWidth <= z.w) {
+                fs = sideFs; tx = z.x + gap * 1.5 + numW / 2; ty = z.y + z.h / 2;
+                pillAt = { x: Math.min(z.x + z.w - gap - pillWidth, tx + numW / 2 + gap * 1.5), y: z.y + (z.h - pillH) / 2, align: 'left' };
+            } else { fs = Math.min(z.w * 0.6, z.h * 0.82, cap); ty = z.y + z.h / 2; }
+        }
+        fs = Math.max(small, fs); ty += fs * 0.04;
+        // 밝은 칸엔 어두운 숫자, 어두운 칸엔 흰 숫자
+        ctx.font = `800 ${Math.round(fs)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2, fs * 0.06);
+        if (isActive) { ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.fillStyle = themeColors.danger; }
+        else if (zoneLuminance(ctx, z) > 0.62) { ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.fillStyle = 'rgba(20, 28, 45, 0.32)'; }
+        else { ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.fillStyle = 'rgba(255,255,255,0.68)'; }
+        ctx.strokeText(String(n), tx, ty); ctx.fillText(String(n), tx, ty);
+
+        if (pillAt) { ctx.font = `600 ${small}px sans-serif`; drawPill(ctx, pillAt.x, pillAt.y, label, small, pillAt.align, pillAt.x); }
         ctx.restore();
     }
+
 
 
     function drawSpeechBubble(ctx, x, y, items, isBelow, z) {
