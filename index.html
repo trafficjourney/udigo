@@ -4081,17 +4081,23 @@
 
         let saved = null;
         try { saved = JSON.parse(safeStorage.getItem('savedSystemData')); } catch (e) { saved = null; }
+        // 예전에 불러 둔 샘플은 그때 사진 순서로 저장돼 있다 → 지금 샘플 순서에 맞춘다 (고친 내용은 그대로, 직접 넣은 사진은 뒤로)
+        if (Array.isArray(saved) && !isSamplePreview && safeStorage.getItem('isSampleData') === '1') {
+            const order = currentSample().savedSystemData.map(p => String(p.id));
+            const rank = (p) => { const i = order.indexOf(String(p.id)); return i < 0 ? order.length : i; };
+            const sorted = saved.map((p, i) => [p, i]).sort((x, y) => (rank(x[0]) - rank(y[0])) || (x[1] - y[1])).map(([p]) => p);
+            if (sorted.some((p, i) => p !== saved[i])) { saved = sorted; safeStorage.setItem('savedSystemData', JSON.stringify(saved)); }
+        }
 
         const deleteSampleBtn = document.getElementById('deleteSampleBtn');
         const sampleDataBtn = document.getElementById('sampleDataBtn');
 
         if (saved && saved.length > 0) {
-            saved.forEach(s => {
-                const img = new Image();
-                img.onload = () => { createNewCanvasElement({ img, zones: s.zones, id: s.id, title: s.title, imgData: s.imgData }); };
-                img.onerror = () => { createNewCanvasElement({ img: null, zones: s.zones, id: s.id, title: s.title, imgData: s.imgData }); };
-                img.src = s.imgData;
-            });
+            // 사진은 한꺼번에 읽되, 화면에는 저장된 순서대로 붙인다 (먼저 읽힌 사진부터 붙이면 작은 사진이 앞으로 튀어나와 순서가 뒤섞였다)
+            const loads = saved.map(s => new Promise(resolve => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = s.imgData; }));
+            loads.reduce((prev, load, i) => prev.then(() => load).then(img => {
+                const s = saved[i]; createNewCanvasElement({ img, zones: s.zones, id: s.id, title: s.title, imgData: s.imgData });
+            }), Promise.resolve());
             activateHeroSearch();
             if (deleteSampleBtn && safeStorage.getItem('isSampleData') === '1') deleteSampleBtn.style.display = 'flex';
             if (isSamplePreview) {
