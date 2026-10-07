@@ -2360,6 +2360,7 @@
             if (!wasDragged && !clickedInsideBubble) {
                 const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
                 if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; openModal(clickedZone); render(data); }
+                else if (!isEditMode && !pickMode) clearZoneFocus(); // 사진의 빈 곳을 누르면 선택(스포트라이트)을 푼다
             }
             if (isEditMode && (isMovingZone || isResizingZone)) { if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; } if (data.id !== "dummy_root") saveData(); render(data); }
             isMovingZone = false; isResizingZone = false; pendingHistoryState = null;
@@ -2668,6 +2669,20 @@
     function toggleCommentField(cb) { cb.closest('.zm-item').classList.toggle('is-checked', cb.checked); updateZoneItemCount(); }
     function saveZone() { saveHistory(); markZoneChecked(activeZone); activeZone.name = document.getElementById('zoneNameInput').value; activeZone.items = []; document.querySelectorAll('.cb:checked').forEach(cb => { activeZone.items.push({ name: cb.value, comment: cb.parentElement.nextElementSibling.value || "" }); }); if (activeData.id !== "dummy_root") saveData(); closeModal(); showSearchArrow = true; render(activeData); }
     function closeModal() { hideZoneModal(); showSearchArrow = true; if (activeData) render(activeData); }
+    // 보기 모드에서 고른 칸(스포트라이트)을 푼다. 편집 모드에서는 고른 구역을 옮기거나 고쳐야 하므로 그대로 둔다
+    function clearZoneFocus() {
+        if (!activeZone || isEditMode) return;
+        const d = activeData; activeZone = null; showSearchArrow = false;
+        if (d) render(d);
+    }
+    // 사진 밖 다른 곳을 눌러도 푼다. 단, 구역 창·검색·찾은 위치 바·인쇄 창처럼 고른 칸을 쓰는 곳은 제외
+    // (capture 단계에서 먼저 풀어야, 구역 목록을 눌러 다른 칸을 고를 때 새 선택이 뒤에서 덮이지 않는다)
+    document.addEventListener('pointerdown', (e) => {
+        if (!activeZone || isEditMode) return;
+        if (document.getElementById('modal').style.display === 'flex' || document.body.classList.contains('zone-picker-open') || document.body.classList.contains('print-open')) return; // 창이 고른 칸을 쓰는 중
+        if (e.target.closest('canvas, #modal, #printModal, #printBackdrop, #zonePicker, .sheet-backdrop, .search-bar, #searchResultDisplay, #foundBar, #foundPill, #floatingRemote, #settingsModal')) return;
+        clearZoneFocus();
+    }, true);
     function selectZone(dataId, index) {
         deactivateHeroSearch();
         activeData = imageList.find(d => d.id == dataId); activeZone = activeData.zones[index];
