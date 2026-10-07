@@ -501,7 +501,8 @@
         .zoom-ctl { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
         .zoom-ctl button { display: none; align-items: center; justify-content: center; gap: 4px; min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 17px; background: rgba(255,255,255,0.94); color: #1a1a18; font: 600 12px sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer; }
         .zoom-ctl button i { font-size: 16px; }
-        .zoom-ctl .zoom-full { padding: 0; width: 34px; background: rgba(255,255,255,0.86); }
+        .zoom-ctl .zoom-full { padding: 0; width: 46px; height: 46px; border-radius: 23px; background: rgba(26,26,24,0.72); border: 1.5px solid rgba(255,255,255,0.75); color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.3); } /* 크게 보기: 자주 쓸 기능이라 크게 */
+        .zoom-ctl .zoom-full i { font-size: 24px; }
         .zoom-box.zoomed .zoom-ctl .zoom-reset, .zoom-ctl .zoom-full { display: inline-flex; }
         /* 크게 보기(전체 화면): 사진 칸을 화면 가득 띄운다. 구역 창(#modal)은 이보다 위에 뜬다 */
         .fs-bar { display: none; }
@@ -2903,6 +2904,8 @@
 
         // 한 프레임 안에서 구역 박스와 깜빡임 테두리가 같은 박자로 움직이도록 시각을 한 번만 잡는다.
         const frameNow = performance.now();
+        // 깜빡임이 끝나 고정된 빨간 테두리는, 다른 곳을 누르거나 다른 칸을 고르면(찾은 칸 선택이 풀리면) 지운다
+        if (searchFlyAnim && searchFlyAnim.done && (searchFlyAnim.zone !== activeZone || !showSearchArrow)) searchFlyAnim = null;
         const flyAnim = searchFlyAnim && searchFlyAnim.dataId === data.id ? searchFlyAnim : null;
 
         // 보기 모드: 캔버스엔 테두리만, 물건 이름은 위에 얹은 노란 쪽지(renderZoneNotes). 편집 모드: 채우기·가운데 이름·말풍선(끌어서 옮기기용)
