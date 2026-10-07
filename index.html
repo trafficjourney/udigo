@@ -1002,7 +1002,7 @@
 
               <li style="margin-bottom: 12px;">
                 <i class="ti ti-pencil-minus" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>구역 수정:</b> 화면 오른쪽 아래 <b>[읽기전용]</b>을 눌러 <b>[편집모드]</b>로 변경. 드래그해서 구역을 그릴 수 있습니다.
+                <b>구역 수정:</b> 화면 오른쪽 아래 <b>[편집]</b>을 눌러 편집을 시작하고, 끝나면 <b>[완료]</b>를 누르세요. 드래그해서 구역을 그릴 수 있습니다.
               </li>
 
               <li style="margin-bottom: 12px;">
@@ -1162,9 +1162,9 @@
     <button class="fab-btn" onclick="changeFontSize(-2)">-</button>
     <button id="detailToggleBtn" onclick="toggleDetails()" class="fab-btn" title="말풍선 토글"><i class="ti ti-message-circle"></i></button>
     <button id="undoBtn" onclick="undo()" class="fab-btn" title="되돌리기" disabled><i class="ti ti-arrow-back-up"></i></button>
-    <button id="mainModeBtn" onclick="toggleEditMode()" title="모드 전환">
-        <i id="modeIcon" class="ti ti-eye" style="font-size: 14px;"></i>
-        <span id="modeText" style="margin-left: 4px;">읽기전용</span>
+    <button id="mainModeBtn" onclick="toggleEditMode()" title="구역·물건 편집하기" aria-label="구역·물건 편집하기">
+        <i id="modeIcon" class="ti ti-pencil" style="font-size: 14px;"></i>
+        <span id="modeText" style="margin-left: 4px;">편집</span>
     </button>
 </div>
 
@@ -1987,15 +1987,17 @@
 
         if (isEditMode) {
             if(overlay) overlay.style.display = 'block';
-            if (icon) icon.className = 'ti ti-pencil';
-            if (modeText) modeText.innerText = '편집활성';
+            if (icon) icon.className = 'ti ti-check';
+            if (modeText) modeText.innerText = '완료';
+            if (btn) btn.title = btn.ariaLabel = '편집 끝내기';
             if (btn) btn.classList.remove('view-mode');
             if (undoBtn) undoBtn.style.display = "flex";
             const dBtn = document.getElementById('detailToggleBtn'); if (dBtn) dBtn.style.display = "flex";
         } else {
             if(overlay) overlay.style.display = 'none';
-            if (icon) icon.className = 'ti ti-eye';
-            if (modeText) modeText.innerText = '읽기전용';
+            if (icon) icon.className = 'ti ti-pencil';
+            if (modeText) modeText.innerText = '편집';
+            if (btn) btn.title = btn.ariaLabel = '구역·물건 편집하기';
             if (btn) btn.classList.add('view-mode');
             if (undoBtn) undoBtn.style.display = "none";
             const dBtn = document.getElementById('detailToggleBtn'); if (dBtn) dBtn.style.display = "none";
@@ -2197,7 +2199,21 @@
         document.getElementById('zoneItemCount').textContent = n ? `${n}개 선택` : '';
     }
 
-    function toggleDetails() { showDetails = !showDetails; const btn = document.getElementById('detailToggleBtn'); if (btn) { btn.style.background = showDetails ? 'var(--charcoal)' : 'var(--card)'; btn.style.color = showDetails ? 'var(--ivory-text)' : 'var(--charcoal-mute)'; btn.style.borderColor = showDetails ? 'var(--charcoal)' : 'var(--ivory-border)'; } imageList.forEach(data => render(data)); }
+    // 편집 모드 물건 목록: 끔 → 요약(칸 안에 3줄까지) → 전체(칸 안에 다, 고른 칸은 넘치면 아래로 펼침). 고른 단계는 기억한다
+    const BUBBLE_LEVELS = ['끔', '요약', '전체'];
+    let bubbleLevel = (() => { const v = parseInt(safeStorage.getItem('bubbleLevel'), 10); return v >= 0 && v <= 2 ? v : 1; })();
+    showDetails = bubbleLevel > 0;
+    function syncDetailBtn() {
+        const btn = document.getElementById('detailToggleBtn'); if (!btn) return;
+        btn.style.background = showDetails ? 'var(--charcoal)' : 'var(--card)'; btn.style.color = showDetails ? 'var(--ivory-text)' : 'var(--charcoal-mute)'; btn.style.borderColor = showDetails ? 'var(--charcoal)' : 'var(--ivory-border)';
+        btn.title = btn.ariaLabel = `물건 목록: ${BUBBLE_LEVELS[bubbleLevel]} (누르면 ${BUBBLE_LEVELS[(bubbleLevel + 1) % 3]})`;
+    }
+    function toggleDetails() {
+        bubbleLevel = (bubbleLevel + 1) % 3; showDetails = bubbleLevel > 0;
+        try { safeStorage.setItem('bubbleLevel', String(bubbleLevel)); } catch (e) {}
+        syncDetailBtn(); showToast(`물건 목록: ${BUBBLE_LEVELS[bubbleLevel]}`);
+        imageList.forEach(data => render(data));
+    }
     function editZone(dataId, index) { activeData = imageList.find(d => d.id == dataId); activeZone = activeData.zones[index]; expandZoneList(dataId); showSearchArrow = false; openModal(activeZone); render(activeData); }
 
     function createNewCanvasElement(data) {
@@ -2277,9 +2293,9 @@
             if (clickedBubble) {
                 if (isEditMode) {
                     pendingHistoryState = cloneZonesState();
-                    const padding = 10, lineSpacing = 4, lineHeight = bubbleFontSize + lineSpacing;
-                    let clickedIdx = Math.floor((y - (clickedBubble.bubbleBox.y + padding)) / lineHeight);
-                    if (clickedIdx >= 0 && clickedIdx < clickedBubble.items.length) { holdingItem = { item: clickedBubble.items[clickedIdx], sourceZone: clickedBubble }; clickedBubble.items.splice(clickedIdx, 1); mousePos = { x, y }; activeData = data; render(data); }
+                    const meta = clickedBubble.bubbleMeta || { pad: 10, lineH: bubbleFontSize + 4, shown: clickedBubble.items.length };
+                    let clickedIdx = Math.floor((y - (clickedBubble.bubbleBox.y + meta.pad)) / meta.lineH);
+                    if (clickedIdx >= 0 && clickedIdx < meta.shown) { holdingItem = { item: clickedBubble.items[clickedIdx], sourceZone: clickedBubble }; clickedBubble.items.splice(clickedIdx, 1); mousePos = { x, y }; activeData = data; render(data); }
                 }
                 return;
             }
@@ -2461,6 +2477,40 @@
 
 
 
+    // 편집 모드 구역 표시: 이름은 칸 왼쪽 위(겹친 구역끼리 이름이 가운데서 부딪치지 않게), 물건 목록은 그 아래 칸 안에.
+    // 예전 말풍선은 칸 바깥(위나 아래)에 그려져 이웃 칸 위에 놓이고 서로 엇갈렸다.
+    function drawEditZoneInfo(ctx, z, isActive) {
+        const k = displayScale(ctx.canvas), ui = bubbleFontSize / (isMobileDevice() ? 22 : 16);
+        const fs = Math.round(11.5 * ui * k), nameFs = Math.round(12.5 * ui * k), pad = Math.round(5 * k), gap = Math.round(4 * k), lineH = Math.round(fs * 1.4);
+        const fit = (t, w) => { if (ctx.measureText(t).width <= w) return t; while (t.length > 1 && ctx.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; };
+        ctx.save(); ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.lineJoin = 'round';
+        ctx.font = `700 ${nameFs}px sans-serif`;
+        const name = fit(z.name || '', z.w - gap * 2);
+        ctx.lineWidth = Math.max(3, nameFs * 0.3); ctx.strokeStyle = 'rgba(26,26,24,0.85)'; ctx.strokeText(name, z.x + gap, z.y + gap);
+        ctx.fillStyle = '#ffffff'; ctx.fillText(name, z.x + gap, z.y + gap);
+        z.bubbleBox = null; z.bubbleMeta = null;
+        if (bubbleLevel === 0 || !z.items.length) { ctx.restore(); return; }
+
+        ctx.font = `500 ${fs}px sans-serif`;
+        const top = z.y + gap * 2 + Math.round(nameFs * 1.25), maxW = z.w - gap * 2;
+        let maxLines = Math.max(0, Math.floor((z.y + z.h - gap - top - pad * 2 + (lineH - fs)) / lineH));
+        if (bubbleLevel === 1) maxLines = Math.min(maxLines, 3);
+        const n = z.items.length; let shown = n, more = 0;
+        if (n > maxLines && !(bubbleLevel === 2 && isActive)) { shown = Math.max(0, maxLines - 1); more = n - shown; } // 고른 칸만 "전체"에서 칸 밖으로 펼친다
+        let lines;
+        if (more && shown === 0 && maxLines >= 1) { shown = 1; lines = [fit(`• ${z.items[0].name} 외 ${n - 1}`, maxW - pad * 2)]; } // 한 줄뿐이면 개수보다 첫 물건 이름을 살린다
+        else {
+            lines = z.items.slice(0, shown).map(it => fit('• ' + it.name, maxW - pad * 2));
+            if (more) lines.push(shown ? `+${more}개 더` : `물건 ${n}개`);
+        }
+        const boxW = Math.min(maxW, Math.max(...lines.map(l => ctx.measureText(l).width)) + pad * 2);
+        const boxH = lines.length * lineH - (lineH - fs) + pad * 2, boxX = z.x + gap, boxY = top;
+        ctx.fillStyle = 'rgba(248, 246, 241, 0.95)'; ctx.strokeStyle = '#d8d2c4'; ctx.lineWidth = Math.max(1, 0.8 * k);
+        ctx.beginPath(); drawSafeRoundRect(ctx, boxX, boxY, boxW, boxH, Math.round(4 * k)); ctx.fill(); ctx.stroke();
+        lines.forEach((l, i) => { ctx.fillStyle = i >= shown ? '#6b6960' : '#1a1a18'; ctx.fillText(l, boxX + pad, boxY + pad + i * lineH); });
+        z.bubbleBox = { x: boxX, y: boxY, w: boxW, h: boxH }; z.bubbleMeta = { pad, lineH, shown }; // 물건을 집어 옮길 때 몇 번째 줄인지 계산용
+        ctx.restore();
+    }
     function drawSpeechBubble(ctx, x, y, items, isBelow, z) {
         if (!items || items.length === 0) return;
         const padding = 10, lineSpacing = 4; ctx.font = `500 ${bubbleFontSize}px sans-serif`;
@@ -2587,7 +2637,7 @@
             ctx.textBaseline = 'middle';
 
             ctx.fillStyle = '#9b9890'; ctx.font = '20px sans-serif';
-            ctx.fillText('* 오른쪽 아래 \'읽기전용\'을 눌러 편집 모드로 진입', boxX + boxW/2, boxY + boxH/2 + 0);
+            ctx.fillText('* 오른쪽 아래 \'편집\'을 눌러 구역을 그려보세요', boxX + boxW/2, boxY + boxH/2 + 0);
             ctx.fillText('* 사진 등록 하기를 눌러 사진 추가', boxX + boxW/2, boxY + boxH/2 + 30);
             ctx.fillText('* 슥 드래그하여 구역을 만들어보세요!', boxX + boxW/2, boxY + boxH/2 + 60);
         }
@@ -2629,14 +2679,13 @@
                 } else { ctx.fillRect(z.x, z.y, z.w, z.h); ctx.strokeRect(z.x, z.y, z.w, z.h); }
             }
             if (cleanView) { drawZoneMarker(ctx, z, zi + 1, z === activeZone); }
-            else {
-                ctx.font = 'bold ' + Math.round(bubbleFontSize * 1.1) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.strokeStyle = '#1a1a18'; ctx.lineWidth = 3; ctx.strokeText(z.name, z.x + z.w / 2, z.y + z.h / 2); ctx.fillStyle = '#ffffff'; ctx.fillText(z.name, z.x + z.w / 2, z.y + z.h / 2);
-            }
+            else { drawEditZoneInfo(ctx, z, z === activeZone); }
             if (isEditMode && z === activeZone) { ctx.fillStyle = 'white'; ctx.strokeStyle = '#c44444'; ctx.lineWidth = 2; const corners = [{ x: z.x, y: z.y }, { x: z.x + z.w, y: z.y }, { x: z.x, y: z.y + z.h }, { x: z.x + z.w, y: z.y + z.h }]; const hh = handleDrawHalf(canvas); corners.forEach(c => { ctx.fillRect(c.x - hh, c.y - hh, hh * 2, hh * 2); ctx.strokeRect(c.x - hh, c.y - hh, hh * 2, hh * 2); }); }
-            if (isEditMode && showDetails && z.items.length > 0) { drawSpeechBubble(ctx, z.x, (z.y < 60 ? z.y + z.h + 5 : z.y), z.items, z.y < 60, z); } else { z.bubbleBox = null; }
+            if (cleanView) { z.bubbleBox = null; z.bubbleMeta = null; }
             if (z === activeZone && showSearchArrow && !cleanView) { const k = displayScale(canvas); ctx.fillStyle = '#c44444'; ctx.font = `bold ${Math.round(Math.max(32, 22 * k))}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('▼', z.x + z.w / 2, z.y - Math.max(20, 8 * k) - bounce); }
         });
+
+        if (!cleanView && activeZone && zones.includes(activeZone)) drawEditZoneInfo(ctx, activeZone, true);
 
         // 찾은(누른) 칸 스포트라이트: 나머지를 어둡게 덮고 그 칸만 밝게 둔 뒤, 테두리와 번호를 위에 다시 그린다
         if (cleanView && !pickMode && showSearchArrow && activeZone && zones.includes(activeZone)) {
@@ -3828,10 +3877,11 @@
               detailBtn = document.getElementById('detailToggleBtn');
 
         if (btn) btn.classList.add('view-mode');
-        if (icon) icon.className = 'ti ti-eye';
-        if (modeText) modeText.innerText = '읽기전용';
+        if (icon) icon.className = 'ti ti-pencil';
+        if (modeText) modeText.innerText = '편집';
         if (undoBtn) undoBtn.style.display = "none";
         if (detailBtn) detailBtn.style.display = "none"; // 말풍선은 편집 모드 전용
+        syncDetailBtn();
         if (overlay) overlay.style.display = 'none';
 
         if (detailBtn) {
