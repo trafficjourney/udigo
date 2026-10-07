@@ -574,6 +574,10 @@
         #printBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 1085; }
         body.print-open #printBackdrop { display: block; }
         .print-sub { font-size: 13px; color: var(--text2); margin: 4px 0 14px; word-break: keep-all; }
+        .print-tabs { display: flex; gap: 6px; margin: 0 0 12px; }
+        .print-tabs[hidden] { display: none; }
+        .print-tabs button { flex: 1; min-width: 0; min-height: 40px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: var(--radius-pill); background: var(--card); color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .print-tabs button[aria-selected="true"] { border-color: var(--accent-text); background: var(--accent-soft); color: var(--accent-text); }
         .print-pages { display: grid; gap: 12px; background: var(--bg); border-radius: var(--radius-md); padding: 12px; }
         .print-pages img { display: block; width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
         .print-actions { display: flex; gap: 8px; margin-top: 14px; }
@@ -1381,7 +1385,12 @@
         <h3 id="printTitle"><i class="ti ti-printer"></i> 벽에 붙일 지도</h3>
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <p class="print-sub">A4로 뽑아 선반 옆에 붙여두면, 앱을 열지 않아도 번호만 보고 찾을 수 있어요.</p>
+    <p class="print-sub">A4로 뽑아 붙여두면, 앱을 열지 않아도 물건 이름으로 자리를 찾을 수 있어요.</p>
+    <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진을 합친 전체 찾아보기 -->
+    <div id="printTabs" class="print-tabs" role="tablist" hidden>
+        <button type="button" role="tab" data-tab="photo" onclick="renderPrintPreview('photo')"></button>
+        <button type="button" role="tab" data-tab="all" onclick="renderPrintPreview('all')"><i class="ti ti-list-search"></i> 전체 찾아보기</button>
+    </div>
     <div id="printPages" class="print-pages"></div>
     <div class="print-actions">
         <button type="button" class="btn-base btn-secondary" onclick="closePrintPreview()">닫기</button>
@@ -4108,7 +4117,9 @@
 
     // 한 사진의 인쇄 페이지들: 첫 쪽에 제목·쪽지 사진, 그 아래(넘치면 다음 쪽)에 2단 "물건 찾아보기"
     // 실제로 그리기 전에 각 줄의 높이를 먼저 재야 하므로, 측정 전용 캔버스를 하나 만들어 폰트를 맞춰 잰다.
-    function buildPrintPages(data, index, dateStr) {
+    // 사진 기호: 사진이 여러 장이면 A·B·C…로 불러 전체 찾아보기에서 "A-2"(A 사진의 2번 칸)로 가리킨다
+    function photoLetter(i) { return i < 26 ? String.fromCharCode(65 + i) : `P${i + 1}`; }
+    function buildPrintPages(data, index, dateStr, letter) {
         const pageW = printPx(PRINT.pageWmm), pageH = printPx(PRINT.pageHmm), margin = printPx(PRINT.marginMm);
         const contentW = pageW - margin * 2, colGap = printPx(8), colW = (contentW - colGap) / 2;
         const meas = document.createElement('canvas').getContext('2d');
@@ -4158,7 +4169,7 @@
 
             ctx.textBaseline = 'alphabetic';
             ctx.font = titleFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left';
-            ctx.fillText((data.title || `#${index + 1}`) + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(7));
+            ctx.fillText((letter ? `${letter} · ` : '') + (data.title || `#${index + 1}`) + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(7));
             ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'right';
             ctx.fillText(dateStr, pageW - margin, cy + printPx(7));
             cy += printPx(12);
@@ -4223,16 +4234,158 @@
         });
     }
 
+    // 전체 찾아보기: 사진 여러 장(선반·창고 여러 곳)의 물건을 한데 모아 가나다순으로. 창고 입구에 이 한 장만 붙여도 된다.
+    // 오른쪽 "A-2" = A 사진의 2번 칸. 위쪽에 사진 기호 목록(A = 창고 박스 선반 …)
+    function drawPrintTag(ctx, xRight, cy, text) { // 오른쪽 끝을 xRight에 맞춘 어두운 꼬리표, 왼쪽 끝 x를 돌려준다
+        ctx.font = `bold ${printPx(3.2)}px sans-serif`;
+        const w = ctx.measureText(text).width + printPx(3.2), h = printPx(5.2), x = xRight - w;
+        ctx.fillStyle = PRINT.ink; ctx.beginPath(); drawSafeRoundRect(ctx, x, cy - h / 2, w, h, h / 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + w / 2, cy + 1);
+        return x;
+    }
+    function buildMasterIndexPages(photos, dateStr) {
+        const pageW = printPx(PRINT.pageWmm), pageH = printPx(PRINT.pageHmm), margin = printPx(PRINT.marginMm);
+        const contentW = pageW - margin * 2, colGap = printPx(8), colW = (contentW - colGap) / 2;
+        const meas = document.createElement('canvas').getContext('2d');
+        const titleFont = `bold ${printPx(7)}px sans-serif`, dateFont = `${printPx(3.6)}px sans-serif`, footFont = `${printPx(3.2)}px sans-serif`;
+        const legendFont = `${printPx(3.6)}px sans-serif`, initFont = `bold ${printPx(3.4)}px sans-serif`;
+        const nameFont = `600 ${printPx(4.2)}px sans-serif`, memoFont = `${printPx(3.2)}px sans-serif`;
+        const nameLineH = printPx(5.6), memoLineH = printPx(4.2), rowGap = printPx(1.2), gutter = printPx(6), groupGap = printPx(2.2);
+        const headH = printPx(12) + printPx(6), footH = printPx(10);
+
+        // 사진 기호 목록 줄 나누기
+        meas.font = legendFont;
+        const legendItems = photos.map((d, i) => `${photoLetter(i)}  ${d.title || `#${i + 1}`}`);
+        const legendLines = []; let line = [], lw = 0;
+        legendItems.forEach(t => { const w = meas.measureText(t).width + printPx(9); if (line.length && lw + w > contentW) { legendLines.push(line); line = []; lw = 0; } line.push(t); lw += w; });
+        if (line.length) legendLines.push(line);
+        const legendH = legendLines.length * printPx(6.4) + printPx(5);
+
+        // 물건 → 자리들
+        const map = new Map();
+        photos.forEach((d, pi) => d.zones.forEach((z, zi) => z.items.forEach(it => {
+            const key = it.name.trim(); if (!key) return;
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push({ tag: `${photoLetter(pi)}-${zi + 1}`, comment: (it.comment || '').trim() });
+        })));
+        const entries = [...map.entries()].map(([name, at]) => ({ name, at })).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        meas.font = `bold ${printPx(3.2)}px sans-serif`;
+        const tagW = (t) => meas.measureText(t).width + printPx(3.2);
+        const rows = []; let lastInit = null;
+        entries.forEach(e => {
+            const init = indexInitial(e.name), first = init !== lastInit; lastInit = init;
+            const tags = [...new Set(e.at.map(a => a.tag))];
+            const tagsW = tags.reduce((w, t) => w + tagW(t) + printPx(1.2), 0);
+            meas.font = nameFont; const nameLines = wrapCanvasText(meas, e.name, Math.max(printPx(20), colW - gutter - tagsW - printPx(6)));
+            meas.font = memoFont;
+            const memos = e.at.filter(a => a.comment).flatMap(a => wrapCanvasText(meas, (tags.length > 1 ? `${a.tag}: ` : '') + a.comment, colW - gutter - printPx(4)));
+            meas.font = `bold ${printPx(3.2)}px sans-serif`;
+            rows.push({ e, init: first ? init : null, tags, nameLines, memos, h: (first && rows.length ? groupGap : 0) + nameLines.length * nameLineH + memos.length * memoLineH + rowGap });
+        });
+        if (!rows.length) rows.push({ empty: true, h: nameLineH });
+
+        const pages = []; let page = { first: true, cols: [[], []] }, col = 0;
+        const top0 = () => margin + headH + (page.first ? legendH : 0);
+        let y = top0(); const limitY = pageH - margin - footH;
+        rows.forEach(row => {
+            if (y + row.h > limitY) {
+                if (col === 0) { col = 1; y = top0(); }
+                else { pages.push(page); page = { first: false, cols: [[], []] }; col = 0; y = top0(); }
+            }
+            page.cols[col].push(row); y += row.h;
+        });
+        pages.push(page);
+
+        return pages.map((pg, pgi) => {
+            const canvas = document.createElement('canvas'); canvas.width = pageW; canvas.height = pageH;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, pageW, pageH);
+            let cy = margin;
+            ctx.textBaseline = 'alphabetic'; ctx.font = titleFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left';
+            ctx.fillText('전체 물건 찾아보기' + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(7));
+            ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'right'; ctx.fillText(dateStr, pageW - margin, cy + printPx(7));
+            cy += printPx(12);
+            ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.6); ctx.beginPath(); ctx.moveTo(margin, cy); ctx.lineTo(pageW - margin, cy); ctx.stroke();
+            cy += printPx(6);
+            if (pg.first) { // 사진 기호 목록: [A] 창고 박스 선반   [B] 의류 백룸 선반 …
+                ctx.textBaseline = 'middle';
+                legendLines.forEach((ln, li) => {
+                    let x = margin; const ly = cy + printPx(3.2) + li * printPx(6.4);
+                    ln.forEach(t => {
+                        const [letter, ...rest] = t.split('  '), name = rest.join('  ');
+                        ctx.font = `bold ${printPx(3.4)}px sans-serif`;
+                        const bw = Math.max(printPx(5.4), ctx.measureText(letter).width + printPx(2.4));
+                        ctx.fillStyle = PRINT.ink; ctx.beginPath(); drawSafeRoundRect(ctx, x, ly - printPx(2.7), bw, printPx(5.4), printPx(1)); ctx.fill();
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(letter, x + bw / 2, ly + 1);
+                        ctx.font = legendFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.fillText(name, x + bw + printPx(1.6), ly + 1);
+                        x += bw + printPx(1.6) + ctx.measureText(name).width + printPx(6);
+                    });
+                });
+                cy += legendH;
+                ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                ctx.fillText('가나다순 · 오른쪽 A-2 = A 사진의 2번 칸', margin, cy - printPx(1.6));
+            }
+            pg.cols.forEach((list, ci) => {
+                const x0 = margin + ci * (colW + colGap); let ry = cy;
+                list.forEach(row => {
+                    if (row.empty) { ctx.font = nameFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText('아직 적은 물건이 없어요', x0, ry + nameLineH - printPx(1.4)); ry += row.h; return; }
+                    const rowTop = ry, ini = row.init || (ry === cy ? indexInitial(row.e.name) : null);
+                    if (ini) {
+                        if (row.init && ry > cy) { ry += groupGap; ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.25); ctx.beginPath(); ctx.moveTo(x0, ry - groupGap / 2); ctx.lineTo(x0 + colW, ry - groupGap / 2); ctx.stroke(); }
+                        ctx.font = initFont; ctx.fillStyle = '#a08a2a'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText(ini, x0, ry + nameLineH - printPx(1.6));
+                    }
+                    const nx0 = x0 + gutter;
+                    ctx.font = nameFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                    row.nameLines.forEach((l, li) => ctx.fillText(l, nx0, ry + nameLineH * (li + 1) - printPx(1.4)));
+                    const lastW = ctx.measureText(row.nameLines[row.nameLines.length - 1]).width, by = ry + nameLineH * (row.nameLines.length - 0.5);
+                    let xr = x0 + colW;
+                    [...row.tags].reverse().forEach(t => { xr = drawPrintTag(ctx, xr, by, t) - printPx(1.2); });
+                    const dotFrom = nx0 + lastW + printPx(2), dotTo = xr - printPx(0.8);
+                    if (dotTo - dotFrom > printPx(3)) {
+                        ctx.save(); ctx.strokeStyle = '#b9b4aa'; ctx.lineWidth = printPx(0.35); ctx.setLineDash([printPx(0.4), printPx(1.2)]); ctx.lineCap = 'round';
+                        ctx.beginPath(); ctx.moveTo(dotFrom, by + printPx(0.8)); ctx.lineTo(dotTo, by + printPx(0.8)); ctx.stroke(); ctx.restore();
+                    }
+                    const my = ry + row.nameLines.length * nameLineH;
+                    ctx.font = memoFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                    row.memos.forEach((m, mi) => ctx.fillText(m, nx0 + printPx(3), my + memoLineH * (mi + 1) - printPx(1.1)));
+                    ry = rowTop + row.h - (row.init && rowTop === cy && rows.indexOf(row) > 0 ? groupGap : 0);
+                });
+            });
+            ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.3); ctx.beginPath();
+            ctx.moveTo(margin, pageH - margin - printPx(7)); ctx.lineTo(pageW - margin, pageH - margin - printPx(7)); ctx.stroke();
+            ctx.font = footFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            ctx.fillText(`${dateStr} · 창고 입구에 붙여 두세요 · 위치가 바뀌면 앱에서 고치고 다시 뽑기`, margin, pageH - margin - printPx(1));
+            ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - margin, pageH - margin - printPx(1));
+            return canvas.toDataURL('image/jpeg', 0.92);
+        });
+    }
+
     // 인쇄물 미리보기: 보고 있는 사진 한 장의 A4 페이지를 그대로 보여주고, 받기는 전체 사진을 한 PDF로
+    // 인쇄물 미리보기: 사진 카드의 [인쇄]는 그 사진 한 장, 위쪽 [인쇄물 보기]는 사진이 여러 장이면 전체 찾아보기부터. 받기는 전체를 한 PDF로
+    let printPreviewId = null;
     function openPrintPreview(dataId) {
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         if (!photos.length) { alert("먼저 사진을 등록해주세요."); return; }
         const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
-        const pages = buildPrintPages(data, photos.indexOf(data), printDateStr());
-        document.getElementById('printPages').innerHTML = pages.map((src, i) => `<img src="${src}" alt="${escapeHtml(data.title || '')} 인쇄물 ${i + 1}쪽">`).join('');
-        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${photos.length > 1 ? ` (${photos.length}장)` : ''}`;
+        printPreviewId = data.id;
+        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${photos.length > 1 ? ` (전체 찾아보기 + 사진 ${photos.length}장)` : ''}`;
+        renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
         document.getElementById('printModal').style.display = 'block';
         document.body.classList.add('print-open'); lockPageScroll();
+    }
+    function renderPrintPreview(tab) {
+        const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
+        const data = photos.find(d => d.id == printPreviewId) || photos[0], multi = photos.length > 1, i = photos.indexOf(data);
+        const tabs = document.getElementById('printTabs');
+        tabs.hidden = !multi;
+        if (multi) {
+            tabs.querySelector('[data-tab="photo"]').textContent = `${photoLetter(i)} · ${data.title || ''}`;
+            tabs.querySelectorAll('button').forEach(btn => btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false'));
+        }
+        const pages = tab === 'all' && multi ? buildMasterIndexPages(photos, printDateStr()) : buildPrintPages(data, i, printDateStr(), multi ? photoLetter(i) : null);
+        const label = tab === 'all' && multi ? '전체 찾아보기' : (data.title || '');
+        document.getElementById('printPages').innerHTML = pages.map((src, k) => `<img src="${src}" alt="${escapeHtml(label)} 인쇄물 ${k + 1}쪽">`).join('');
+        document.getElementById('printPages').scrollTop = 0;
     }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePrintPreview(); });
     function closePrintPreview() {
@@ -4259,10 +4412,12 @@
         }
 
         try {
-            const dateStr = printDateStr();
+            const dateStr = printDateStr(), multi = photos.length > 1;
             let firstPage = true;
+            const addPage = (imgData) => { if (!firstPage) doc.addPage(); else firstPage = false; doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm); };
+            if (multi) buildMasterIndexPages(photos, dateStr).forEach(addPage); // 맨 앞: 창고 입구에 붙일 전체 찾아보기
             photos.forEach((data, pi) => {
-                buildPrintPages(data, pi, dateStr).forEach(imgData => {
+                buildPrintPages(data, pi, dateStr, multi ? photoLetter(pi) : null).forEach(imgData => {
                     if (!firstPage) doc.addPage(); else firstPage = false;
                     doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm);
                 });
