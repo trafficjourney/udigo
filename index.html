@@ -524,13 +524,6 @@
         }
         @media (hover: hover) { .btn-xs:hover { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); border-color: var(--accent2); } }
         .btn-xs:active { transform: scale(0.95); }
-        .btn-settings-item {
-            width: 100%; padding: 10px; margin-bottom: 8px; border-radius: var(--radius-sm); font-size: 13px;
-            font-weight: 600; cursor: pointer; text-align: center; box-sizing: border-box;
-            box-shadow: var(--shadow-xs); transition: all 0.15s var(--ease);
-        }
-        @media (hover: hover) { .btn-settings-item:hover { box-shadow: var(--shadow-sm); } }
-        .btn-settings-item:active { transform: scale(0.98); }
 
         /* 뱃지(정보용, 클릭 불가) */
         .badge {
@@ -610,19 +603,34 @@
             .search-bar .app-brand { font-size: 17px; }
         }
 
-        /* 🎨 테마 선택 */
-        .theme-picker { margin-bottom: 16px; }
-        .theme-picker-label { font-weight: 600; font-size: 12px; color: var(--accent-text); margin-bottom: 8px; }
-        .theme-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .theme-option {
-            display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 8px; min-height: 76px;
-            background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-md);
-            font: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;
-            word-break: keep-all; line-height: 1.35; text-align: center;
+        /* ⚙️ 설정 창: 한 화면 안에 들어오게 짧게 */
+        .settings-head { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 16px; }
+        .settings-head h3 { margin: 0; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .settings-group { display: grid; gap: 8px; margin-bottom: 18px; }
+        .settings-label { font-weight: 600; font-size: 12px; color: var(--text2); }
+        .settings-inline { display: flex; gap: 8px; }
+        .settings-inline select { flex: 1; min-width: 0; margin: 0; }
+        .settings-inline .btn-base { flex-shrink: 0; padding: 0 16px; min-height: 44px; }
+        .settings-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+        .settings-row {
+            display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; width: 100%;
+            background: var(--card); border: 0; border-top: 1px solid var(--border); font: inherit; font-size: 14px; color: var(--text); text-align: left; cursor: pointer;
         }
-        .theme-option[aria-checked="true"] { border-color: var(--accent-text); box-shadow: var(--shadow-focus); }
+        .settings-row:first-child, .settings-row[hidden] + .settings-row { border-top: 0; }
+        .settings-row[hidden] { display: none; }
+        .settings-row i { font-size: 18px; color: var(--text2); }
+        @media (hover: hover) { .settings-row:hover { background: var(--bg); } }
+        .settings-row:active { background: var(--bg); }
+        /* 🎨 테마 선택: 색 두 개짜리 동그라미 5개를 한 줄로 */
+        .theme-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .theme-option {
+            display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; min-height: 56px;
+            background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-md);
+            font: inherit; font-size: 11px; font-weight: 600; color: var(--text2); cursor: pointer; line-height: 1.2;
+        }
+        .theme-option[aria-checked="true"] { border-color: var(--accent-text); color: var(--text); box-shadow: var(--shadow-focus); }
         .theme-swatch { display: flex; }
-        .theme-swatch i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+        .theme-swatch i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; margin-left: -5px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
         .theme-swatch i:first-child { margin-left: 0; }
 
         /* 📋 사진 아래 구역 목록: 사진의 번호와 같은 번호로 연결 */
@@ -1208,47 +1216,44 @@
 </div>
 
 <div id="settingsModal">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
-        <h3 style="margin:0; font-size:15px; color:var(--text); display:flex; align-items:center; gap:6px;"><i class="ti ti-settings"></i> 시스템 설정 및 관리</h3>
-        <button class="btn-ghost" onclick="closeSettingsModal()"><i class="ti ti-x"></i></button>
+    <div class="settings-head">
+        <h3><i class="ti ti-settings"></i> 설정</h3>
+        <button class="btn-ghost" onclick="closeSettingsModal()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <div class="theme-picker">
-        <div class="theme-picker-label">화면 테마</div>
+    <div class="settings-group">
+        <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
-            <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')">
-                <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i><i style="background:#f4f6fa"></i></span>
-                <span>옐로우 &amp; 네이비</span>
+            <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
+                <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
             </button>
-            <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')">
-                <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i><i style="background:#52b788"></i></span>
-                <span>그린 &amp; 아이보리</span>
+            <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
+                <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
             </button>
-            <button type="button" class="theme-option" data-theme-value="dark" role="radio" onclick="setTheme('dark')">
-                <span class="theme-swatch"><i style="background:#0f0f10"></i><i style="background:#ffd200"></i><i style="background:#2c2c30"></i></span>
-                <span>블랙 &amp; 옐로우</span>
+            <button type="button" class="theme-option" data-theme-value="dark" role="radio" onclick="setTheme('dark')" title="블랙 &amp; 옐로우">
+                <span class="theme-swatch"><i style="background:#0f0f10"></i><i style="background:#ffd200"></i></span><span>블랙</span>
             </button>
-            <button type="button" class="theme-option" data-theme-value="redblack" role="radio" onclick="setTheme('redblack')">
-                <span class="theme-swatch"><i style="background:#130f0f"></i><i style="background:#c62828"></i><i style="background:#d4af37"></i></span>
-                <span>블랙 &amp; 레드</span>
+            <button type="button" class="theme-option" data-theme-value="redblack" role="radio" onclick="setTheme('redblack')" title="블랙 &amp; 레드">
+                <span class="theme-swatch"><i style="background:#130f0f"></i><i style="background:#c62828"></i></span><span>레드</span>
             </button>
-            <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')">
-                <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i><i style="background:#f3b78c"></i></span>
-                <span>파스텔</span>
+            <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔">
+                <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
             </button>
         </div>
     </div>
-    <div style="margin-bottom: 20px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
-        <label style="font-weight: 600; font-size: 12px; color: var(--accent-text); display: block; margin-bottom: 8px;">업종별 기본 품목 원클릭 세팅</label>
-        <select id="industrySelect" style="margin-bottom: 8px;"></select>
-        <button class="btn-settings-item btn-base btn-primary" onclick="applyIndustryTemplate()" style="width: 100%;">선택한 업종의 필수 항목 적용하기</button>
+    <div class="settings-group">
+        <label class="settings-label" for="industrySelect">업종 기본 품목</label>
+        <div class="settings-inline">
+            <select id="industrySelect"></select>
+            <button class="btn-base btn-secondary" onclick="applyIndustryTemplate()">적용</button>
+        </div>
     </div>
-    <div style="display: flex; flex-direction: column; gap: 6px;">
-        <button class="btn-settings-item btn-base" onclick="installApp()" style="background: var(--card); border: 1px solid var(--border); color: var(--text);"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치하기</button>
-        <button class="btn-settings-item btn-base" onclick="openFeedbackForm()" style="background: var(--card); border: 1px solid var(--border); color: var(--text);"><i class="ti ti-message-2"></i> 의견 보내기</button>
-        <button class="btn-settings-item btn-base" onclick="exportSystemData()" style="background: var(--card); border: 1px solid var(--accent-text); color: var(--accent-text);"><i class="ti ti-download"></i> 현재 데이터 백업 파일 받기</button>
-        <button class="btn-settings-item btn-base" onclick="document.getElementById('backupFileInput').click()" style="background: var(--card); border: 1px solid var(--accent2); color: var(--accent-text);"><i class="ti ti-upload"></i> 백업 파일로 복구하기</button>
-        <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="importSystemData(this)">
+    <div class="settings-list">
+        <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
+        <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기</button>
+        <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
+        <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
     </div>
+    <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="importSystemData(this)">
 </div>
 
 <div id="aiSheetBackdrop" style="display:none; position:fixed; inset:0; z-index:9990; background:transparent; pointer-events:none;"></div>
@@ -2035,6 +2040,7 @@
         const sel = document.getElementById('industrySelect');
         if (!sel.options.length) sel.innerHTML = Object.entries(INDUSTRY_TEMPLATES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join('');
         syncIndustryUI();
+        document.getElementById('installAppRow').hidden = isInstalledApp();
         document.getElementById('settingsModal').style.display = 'block';
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
