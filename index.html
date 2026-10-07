@@ -1849,7 +1849,7 @@
     // 모바일 초기값(22)은 유지하고 PC 초기값만 더 작게 잡는다.
     let bubbleFontSize = isMobileDevice() ? 22 : 16, isDrawingNewZone = false, drawStart = { x: 0, y: 0 }, currentDrawPos = { x: 0, y: 0 };
     let holdingItem = null, mousePos = { x: 0, y: 0 }, isMovingZone = false, isResizingZone = false, resizeHandle = '';
-    let zoneDragOffset = { x: 0, y: 0 }, hasDragged = false, startPointerPos = { x: 0, y: 0 }, showSearchArrow = false;
+    let zoneDragOffset = { x: 0, y: 0 }, hasDragged = false, startPointerPos = { x: 0, y: 0 }, startClientPos = { x: 0, y: 0 }, showSearchArrow = false;
     const HANDLE_SIZE = 15;
     // 모서리 손잡이 크기는 화면 픽셀 기준: 마우스는 작게, 손가락은 넓게 (캔버스는 800px 기준이라 화면 배율로 환산)
     let lastPointerFine = window.matchMedia('(pointer: fine)').matches;
@@ -2270,7 +2270,7 @@
         canvas.addEventListener('pointerdown', (e) => {
             try { canvas.setPointerCapture(e.pointerId); } catch(err) {}
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-            hasDragged = false; startPointerPos = { x, y }; showSearchArrow = false;
+            hasDragged = false; startPointerPos = { x, y }; startClientPos = { x: e.clientX, y: e.clientY }; showSearchArrow = false;
 
             let clickedBubble = null;
             if (showDetails) { clickedBubble = data.zones.find(z => z.bubbleBox && x >= z.bubbleBox.x && x <= z.bubbleBox.x + z.bubbleBox.w && y >= z.bubbleBox.y && y <= z.bubbleBox.y + z.bubbleBox.h); }
@@ -2303,7 +2303,7 @@
 
         canvas.addEventListener('pointermove', (e) => {
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-            if (Math.abs(x - startPointerPos.x) > 5 || Math.abs(y - startPointerPos.y) > 5) hasDragged = true;
+            if (Math.abs(e.clientX - startClientPos.x) > 6 || Math.abs(e.clientY - startClientPos.y) > 6) hasDragged = true; // 화면 기준 6px 넘게 움직이면 끌기
             if (e.pointerType === 'mouse' && !isDrawingNewZone && !holdingItem && !isMovingZone && !isResizingZone) canvas.style.cursor = hoverCursor(data, canvas, x, y);
 
             if (isDrawingNewZone) { currentDrawPos = { x, y }; render(data); }
@@ -2317,6 +2317,10 @@
             }
         });
 
+        canvas.addEventListener('pointercancel', () => {
+            if (isEditMode && (isMovingZone || isResizingZone) && pendingHistoryState) { saveHistory(pendingHistoryState); if (data.id !== "dummy_root") saveData(); }
+            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; render(data);
+        });
         canvas.addEventListener('pointerup', (e) => {
             try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -2342,7 +2346,10 @@
                 return;
             }
 
-            const moveDistance = Math.sqrt(Math.pow(x - startPointerPos.x, 2) + Math.pow(y - startPointerPos.y, 2)), wasDragged = moveDistance > 5;
+            // 끌기였는지: 손을 뗀 위치만 보면 끌었다가 제자리로 돌아오거나 페이지가 같이 스크롤된 경우를 "누르기"로 착각한다.
+            // 누르는 동안 한 번이라도 6px 넘게 움직였으면 끌기, 구역을 옮기거나 크기를 바꾸는 중이었다면 움직임과 상관없이 상세 창을 열지 않는다
+            const wasDragged = hasDragged || Math.hypot(e.clientX - startClientPos.x, e.clientY - startClientPos.y) > 6;
+            const wasEditingShape = isEditMode && (isResizingZone || (isMovingZone && hasDragged));
 
             if (holdingItem) {
                 const targetZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
@@ -2357,9 +2364,9 @@
             let clickedInsideBubble = false;
             if (showDetails) { clickedInsideBubble = data.zones.some(z => z.bubbleBox && x >= z.bubbleBox.x && x <= z.bubbleBox.x + z.bubbleBox.w && y >= z.bubbleBox.y && y <= z.bubbleBox.y + z.bubbleBox.h); }
 
-            if (!wasDragged && !clickedInsideBubble) {
+            if (!wasDragged && !wasEditingShape && !clickedInsideBubble) {
                 const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
-                if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; openModal(clickedZone); render(data); }
+                if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; if (!isEditMode) recordFind(); openModal(clickedZone); render(data); }
                 else if (!isEditMode && !pickMode) clearZoneFocus(); // 사진의 빈 곳을 누르면 선택(스포트라이트)을 푼다
             }
             if (isEditMode && (isMovingZone || isResizingZone)) { if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; } if (data.id !== "dummy_root") saveData(); render(data); }
@@ -2707,7 +2714,7 @@
         clearZoneFocus();
     }, true);
     function selectZone(dataId, index) {
-        deactivateHeroSearch();
+        deactivateHeroSearch(); recordFind();
         activeData = imageList.find(d => d.id == dataId); activeZone = activeData.zones[index];
         showSearchArrow = true; showPhoto(dataId);
         imageList.forEach(data => render(data));
@@ -2945,8 +2952,21 @@
     const IOS_INSTALL_GUIDE = "아래쪽(또는 주소창 옆) 공유 버튼 → '홈 화면에 추가'를 누르면 앱처럼 설치돼요.";
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; maybeShowInstallBanner(); });
     window.addEventListener('appinstalled', () => { deferredInstallPrompt = null; hideInstallBanner(); });
+    // 처음 쓰는 사람에게는 띄우지 않고, 손에 익었을 때 추천한다: 서로 다른 날 3번 이상 열었거나, 물건 위치를 5번 이상 찾았을 때.
+    // (그 전에도 설정 > "홈 화면에 앱으로 설치"로 언제든 설치할 수 있다)
+    const USAGE_KEY = 'usageStats', INSTALL_AFTER_DAYS = 3, INSTALL_AFTER_FINDS = 5;
+    function readUsage() { try { return JSON.parse(safeStorage.getItem(USAGE_KEY)) || { days: [], finds: 0 }; } catch (e) { return { days: [], finds: 0 }; } }
+    function writeUsage(u) { try { safeStorage.setItem(USAGE_KEY, JSON.stringify(u)); } catch (e) {} }
+    function isRealUse() { return !isSamplePreview && safeStorage.getItem('isSampleData') !== '1' && hasSavedData(); }
+    function recordUsageDay() {
+        if (!isRealUse()) return;
+        const u = readUsage(), t = new Date(), today = `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; // 기기 시간 기준 날짜
+        if (!u.days.includes(today)) { u.days = [...u.days, today].slice(-10); writeUsage(u); }
+    }
+    function recordFind() { if (!isRealUse()) return; const u = readUsage(); u.finds = (u.finds || 0) + 1; writeUsage(u); }
+    function isFamiliarUser() { const u = readUsage(); return u.days.length >= INSTALL_AFTER_DAYS || (u.finds || 0) >= INSTALL_AFTER_FINDS; }
     function maybeShowInstallBanner() {
-        if (isInstalledApp() || isSamplePreview || !hasSavedData()) return;
+        if (isInstalledApp() || !isRealUse() || !isFamiliarUser()) return;
         if (!deferredInstallPrompt && !isIOS()) return;
         const until = parseInt(safeStorage.getItem('installBannerHiddenUntil') || '0', 10);
         if (until && Date.now() < until) return;
@@ -3644,7 +3664,9 @@
             ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(zx, zy, zw, zh);
             ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(zx, zy, zw, zh);
 
-            const r = Math.max(printPx(5), Math.round(Math.min(zw, zh) * 0.16)), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
+            // 번호 원은 한 장 안에서 모두 같은 크기(반지름 5.5mm)로. 칸 크기에 비례시키면 큰 칸 번호만 혼자 커 보였다.
+            // 원이 칸을 덮을 만큼 작은 칸에서만 줄인다 (최소 3.5mm)
+            const r = Math.round(Math.max(printPx(3.5), Math.min(printPx(5.5), Math.min(zw, zh) * 0.35))), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.fillStyle = PRINT.ink; ctx.fill();
             ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
@@ -3840,6 +3862,7 @@
                     document.getElementById('samplePreviewExit').textContent = '예시 닫기';
                 }
             }
+            recordUsageDay();
             maybeShowInstallBanner();
         }
         else {
