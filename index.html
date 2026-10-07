@@ -497,7 +497,8 @@
         .print-pages img { display: block; width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
         .print-actions { display: flex; gap: 8px; margin-top: 14px; }
         .print-actions .btn-base { flex: 1; }
-        .print-tip span { display: inline-flex; align-items: center; gap: 6px; word-break: keep-all; }
+        .sample-banner > span { word-break: keep-all; }
+        .sample-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
         h2, h3 { color: var(--text); font-weight: 600; letter-spacing: -0.3px; }
         input[type="text"], select {
@@ -1051,9 +1052,13 @@
 
 <div class="content-wrapper" id="report-container">
     <!-- 샘플 데이터로 둘러보는 중일 때만 표시 (헤더가 좁은 모바일에서 넘치지 않도록 본문 상단에 둔다) -->
+    <!-- 샘플 띠 하나에: 샘플이라는 안내 + 이 지도를 종이로 뽑아 벽에 붙일 수 있다는 걸 실제 인쇄물로 보여주는 버튼 -->
     <div id="deleteSampleBtn" class="sample-banner" style="display: none;">
-        <span><i class="ti ti-package"></i> 샘플 데이터로 둘러보는 중이에요</span>
-        <button type="button" class="btn-xs is-danger" onclick="clearSampleData()"><i class="ti ti-trash"></i> 샘플 삭제</button>
+        <span>A4로 뽑아 벽에 붙일 수 있어요</span>
+        <div class="sample-banner-actions">
+            <button type="button" class="btn-xs is-accent" onclick="openPrintPreview()"><i class="ti ti-printer"></i> 인쇄물 보기</button>
+            <button type="button" class="btn-xs is-danger" onclick="clearSampleData()">샘플 삭제</button>
+        </div>
     </div>
     <div id="installBanner" class="sample-banner install-banner" style="display: none;">
         <span id="installBannerText"><i class="ti ti-device-mobile"></i> 홈 화면에 추가하면 앱처럼 바로 열리고, 사진도 더 안전하게 보관돼요</span>
@@ -1062,14 +1067,12 @@
             <button type="button" class="btn-xs is-icon" onclick="dismissInstallBanner()" title="닫기" aria-label="닫기"><i class="ti ti-x"></i></button>
         </span>
     </div>
-    <!-- 샘플을 보는 동안: 이 지도를 종이로 뽑아 벽에 붙일 수 있다는 걸 실제 인쇄물로 보여준다 -->
-    <div id="printTipBanner" class="sample-banner print-tip" style="display: none;">
-        <span><i class="ti ti-printer"></i> 이 지도는 A4로 뽑아 벽에 붙일 수 있어요</span>
-        <button type="button" class="btn-xs is-accent" onclick="openPrintPreview()">인쇄물 보기</button>
-    </div>
     <div id="samplePreviewBanner" class="sample-banner" style="display: none;">
-        <span id="samplePreviewText"><i class="ti ti-eye"></i> 샘플 미리보기 중이에요. 여기서 바꾼 건 저장되지 않아요</span>
-        <button type="button" id="samplePreviewExit" class="btn-xs is-accent" onclick="exitSamplePreview()">내 지도로 돌아가기</button>
+        <span id="samplePreviewText">A4로 뽑아 벽에 붙일 수 있어요</span>
+        <div class="sample-banner-actions">
+            <button type="button" class="btn-xs is-accent" onclick="openPrintPreview()"><i class="ti ti-printer"></i> 인쇄물 보기</button>
+            <button type="button" id="samplePreviewExit" class="btn-xs" onclick="exitSamplePreview()">내 지도로</button>
+        </div>
     </div>
 
     <!-- 🏁 첫 방문(데이터 없음) 화면: 5초 안에 무엇을 해주는 서비스인지 보여준다 -->
@@ -3767,11 +3770,10 @@
             });
             activateHeroSearch();
             if (deleteSampleBtn && safeStorage.getItem('isSampleData') === '1') deleteSampleBtn.style.display = 'flex';
-            if (isSamplePreview || safeStorage.getItem('isSampleData') === '1') document.getElementById('printTipBanner').style.display = 'flex';
             if (isSamplePreview) {
                 document.getElementById('samplePreviewBanner').style.display = 'flex';
                 if (currentSampleKey() === 'organizer') {
-                    document.getElementById('samplePreviewText').innerHTML = '<i class="ti ti-home"></i> 정리수납 예시예요. 정리를 마치고 고객님께 이렇게 넘겨드려요';
+                    document.getElementById('samplePreviewText').innerHTML = 'A4로 뽑아 고객님께 넘겨드려요';
                     document.getElementById('samplePreviewExit').textContent = '예시 닫기';
                 }
             }
