@@ -467,9 +467,9 @@
         .zoom-stage { position: relative; width: 100%; }
         .zoom-stage canvas { width: 100%; height: auto; max-width: none; margin: 0; }
         .note-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: 3px; }
+        .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: 5px 3px 2px 5px; transition: opacity 0.2s; }
         .zone-note-slot.is-tiny { align-items: center; padding-top: 0; padding-bottom: 0; }
-        .zone-note { max-width: 100%; min-width: 0; padding: 3px 6px; background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
+        .zone-note { position: relative; max-width: 100%; min-width: 0; padding: 3px 6px; background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
         .zone-note > div { word-break: keep-all; overflow-wrap: anywhere; }
         .zone-note.one-line > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zone-note .it { padding-left: 0.7em; text-indent: -0.7em; } /* 줄이 바뀐 긴 이름은 들여 써서 다른 물건처럼 보이지 않게 */
@@ -483,11 +483,33 @@
         .zone-note .more { color: #7a6a1e; font-weight: 500; }
         .zone-note.is-tiny { min-width: 2.8em; padding: 0 5px; font-size: 0.86em; line-height: 1.45; }
         .zone-note.is-focus { outline: 2.5px solid #c44444; outline-offset: 1px; }
-        .note-layer.has-focus .zone-note:not(.is-focus) { opacity: 0.3; }
+        .note-layer.has-focus .zone-note:not(.is-focus), .note-layer.has-focus .is-empty:not(.is-focus) { opacity: 0.3; }
+        /* 칸 번호: 쪽지 왼쪽 위 구석의 작은 동그라미 (빈 칸은 번호만) */
+        .zone-num { position: absolute; top: -0.95em; left: -0.95em; min-width: 1.5em; height: 1.5em; padding: 0 0.3em; border-radius: 0.75em; display: inline-flex; align-items: center; justify-content: center; background: #2b2716; color: #fff3a3; font-size: calc(var(--note-fs, 12.5px) * 0.68); font-weight: 800; line-height: 1; text-indent: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .num-top .zone-num { top: -0.3em; } .num-left .zone-num { left: -0.3em; }
+        .num-top.num-left { padding-left: 1.3em; }
+        .is-empty .zone-num { position: static; background: rgba(43,39,22,0.62); color: #fff; }
+        .zone-note.is-focus .zone-num, .is-empty.is-focus .zone-num { background: #c44444; color: #fff; }
         .zoom-ctl { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
         .zoom-ctl button { display: none; align-items: center; justify-content: center; gap: 4px; min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 17px; background: rgba(255,255,255,0.94); color: #1a1a18; font: 600 12px sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer; }
         .zoom-ctl button i { font-size: 16px; }
-        .zoom-box.zoomed .zoom-ctl .zoom-reset { display: inline-flex; }
+        .zoom-ctl .zoom-full { padding: 0; width: 34px; background: rgba(255,255,255,0.86); }
+        .zoom-box.zoomed .zoom-ctl .zoom-reset, .zoom-ctl .zoom-full { display: inline-flex; }
+        /* 크게 보기(전체 화면): 사진 칸을 화면 가득 띄운다. 구역 창(#modal)은 이보다 위에 뜬다 */
+        .fs-bar { display: none; }
+        body.photo-fs { overflow: hidden; }
+        .zoom-box.is-fs { position: fixed; inset: 0; z-index: 1095; margin: 0; max-width: none !important; display: flex; flex-direction: column; background: #121417; }
+        .zoom-box.is-fs .fs-bar { display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px 8px 16px; color: #fff; }
+        .fs-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .fs-text b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fs-text span { font-size: 12px; opacity: 0.72; }
+        .fs-text .fs-rotate { display: none; opacity: 1; color: #ffd84d; }
+        @media (orientation: portrait) { .zoom-box.is-fs.wide-photo:not(.zoomed) .fs-rotate { display: block; } }
+        .fs-close { flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,0.14); color: #fff; font-size: 22px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .zoom-box.is-fs .zoom-wrap, .zoom-box.is-fs:not(.zoomed) .zoom-wrap { flex: 1; min-height: 0; overflow: auto; border-radius: 0; }
+        .zoom-box.is-fs canvas { border: 0; border-radius: 0; }
+        .zoom-box.is-fs .zoom-ctl { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: 12px; }
+        .zoom-box.is-fs .zoom-ctl .zoom-full, .zoom-box.is-fs .zoom-ctl .zoom-reset { display: none; }
         @media (hover: hover) and (pointer: fine) {
             .zoom-ctl .zoom-out, .zoom-ctl .zoom-in { display: inline-flex; opacity: 0; transition: opacity 0.15s; }
             .zoom-box:hover .zoom-ctl .zoom-out, .zoom-box:hover .zoom-ctl .zoom-in, .zoom-ctl button:focus-visible { opacity: 1; }
@@ -2286,11 +2308,16 @@
         const stage = document.createElement('div'); stage.className = 'zoom-stage';
         const noteLayer = document.createElement('div'); noteLayer.className = 'note-layer'; noteLayer.setAttribute('aria-hidden', 'true');
         const zoomCtl = document.createElement('div'); zoomCtl.className = 'zoom-ctl';
-        zoomCtl.innerHTML = `<button type="button" class="zoom-out" aria-label="사진 작게"><i class="ti ti-minus"></i></button><button type="button" class="zoom-in" aria-label="사진 크게"><i class="ti ti-plus"></i></button><button type="button" class="zoom-reset" aria-label="원래 크기로"><i class="ti ti-arrows-minimize"></i> 원래 크기</button>`;
+        zoomCtl.innerHTML = `<button type="button" class="zoom-out" aria-label="사진 작게"><i class="ti ti-minus"></i></button><button type="button" class="zoom-in" aria-label="사진 크게"><i class="ti ti-plus"></i></button><button type="button" class="zoom-reset" aria-label="원래 크기로"><i class="ti ti-arrows-minimize"></i> 원래 크기</button><button type="button" class="zoom-full" aria-label="사진 크게 보기" title="크게 보기"><i class="ti ti-maximize"></i></button>`;
         zoomCtl.querySelector('.zoom-in').onclick = () => setPhotoZoom(data, (data.zoom || 1) * 1.5);
         zoomCtl.querySelector('.zoom-out').onclick = () => setPhotoZoom(data, (data.zoom || 1) / 1.5);
         zoomCtl.querySelector('.zoom-reset').onclick = () => setPhotoZoom(data, 1);
-        stage.append(canvas, noteLayer); zoomWrap.appendChild(stage); zoomBox.append(zoomWrap, zoomCtl);
+        zoomCtl.querySelector('.zoom-full').onclick = () => openPhotoFullscreen(data);
+        // 전체 화면 위쪽 줄: 사진 이름 · 사용법 · 닫기 (전체 화면일 때만 보임)
+        const fsBar = document.createElement('div'); fsBar.className = 'fs-bar';
+        fsBar.innerHTML = `<div class="fs-text"><b class="fs-title"></b><span>두 손가락으로 벌리면 더 크게 · 칸을 누르면 물건 목록</span><span class="fs-rotate"><i class="ti ti-device-mobile-rotated"></i> 폰을 가로로 돌리면 사진이 더 크게 보여요</span></div><button type="button" class="fs-close" aria-label="크게 보기 닫기"><i class="ti ti-x"></i></button>`;
+        fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
+        stage.append(canvas, noteLayer); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl);
         data.zoomBox = zoomBox; data.zoomWrap = zoomWrap; data.noteStage = stage; data.noteLayer = noteLayer; data.zoom = 1;
         canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y';
         section.appendChild(headerContainer); section.appendChild(zoomBox); section.appendChild(listWrapper);
@@ -2461,7 +2488,7 @@
         if (!cleanView) { if (layer.dataset.key) { layer.replaceChildren(); layer.dataset.key = ''; } return; }
         const stageW = data.noteStage.clientWidth; if (!stageW) return; // 숨겨진 사진: 보일 때 다시 그린다
         const s = stageW / data.canvas.width, ui = bubbleFontSize / (isMobileDevice() ? 22 : 16);
-        const fs = Math.round(12.5 * ui * 10) / 10, lineH = Math.round(fs * 1.35), gap = 3, padY = 3;
+        const fs = Math.round(12.5 * ui * 10) / 10, lineH = Math.round(fs * 1.3), padY = 3;
         const focus = showSearchArrow && activeZone && data.zones.includes(activeZone) ? activeZone : null;
         const key = [stageW, fs, focus ? data.zones.indexOf(focus) : -1, JSON.stringify(data.zones.map(z => [z.x, z.y, z.w, z.h, z.items.map(i => i.name)]))].join('|');
         if (layer.dataset.key === key) return;
@@ -2470,57 +2497,74 @@
         layer.style.setProperty('--note-fs', fs + 'px'); layer.style.setProperty('--note-lh', lineH + 'px');
         const W = data.canvas.width, H = data.canvas.height;
         layer.replaceChildren();
-        data.zones.filter(z => z.items.length).forEach(z => {
+        data.zones.forEach((z, zi) => {
+            // 칸 번호는 쪽지 왼쪽 위 구석에 작게: 평소엔 물건 이름만 읽히고, 말로 전할 때("3번 칸")·인쇄물·구역 목록과 맞춰 볼 때만 쓴다
+            const num = document.createElement('span'); num.className = 'zone-num'; num.textContent = zi + 1;
+            const slot = document.createElement('div');
+            slot.style.cssText = `left:${z.x / W * 100}%;top:${z.y / H * 100}%;width:${z.w / W * 100}%;height:${z.h / H * 100}%`;
+            layer.appendChild(slot);
+            if (!z.items.length) { slot.className = 'zone-note-slot is-empty' + (z === focus ? ' is-focus' : ''); slot.appendChild(num); return; } // 빈 칸: 번호만 (칸이 있다는 표시)
             const names = z.items.map(i => i.name), n = names.length;
             const tiny = z.h * s - padY * 2 < lineH; // 칸이 쪽지 한 줄보다 낮으면 작은 쪽지를 칸 가운데에 걸쳐 붙인다
-            const slot = document.createElement('div');
             slot.className = 'zone-note-slot' + (tiny ? ' is-tiny' : '');
-            slot.style.cssText = `left:${z.x / W * 100}%;top:${z.y / H * 100}%;width:${z.w / W * 100}%;height:${z.h / H * 100}%`;
             const note = document.createElement('div');
             note.className = 'zone-note' + (tiny ? ' is-tiny' : '') + (z === focus ? ' is-focus' : '');
-            const fill = (lines, more) => note.replaceChildren(...lines.map((t, i) => { const l = document.createElement('div'); l.textContent = t; l.className = more && i === lines.length - 1 ? 'more' : 'it'; return l; }));
-            slot.appendChild(note); layer.appendChild(slot);
+            const fill = (lines, more) => note.replaceChildren(num, ...lines.map((t, i) => { const l = document.createElement('div'); l.textContent = t; l.className = more && i === lines.length - 1 ? 'more' : 'it'; return l; }));
+            slot.appendChild(note);
+            // 사진 맨 위·맨 왼쪽에 붙은 칸은 번호가 사진 밖으로 잘리지 않게 쪽지 안쪽으로
+            if (z.y * s < fs) note.classList.add('num-top'); if (z.x * s < fs) note.classList.add('num-left');
             // 한 줄짜리: 첫 물건 이름만 말줄임하고 "+N"은 끝까지 남긴다
             const oneLine = () => {
                 const l = document.createElement('div'), nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = names[0]; l.appendChild(nm);
                 if (n > 1) { const m = document.createElement('span'); m.className = 'more'; m.textContent = `+${n - 1}`; l.appendChild(m); }
-                note.replaceChildren(l); note.classList.add('one-line');
+                note.replaceChildren(num, l); note.classList.add('one-line');
             };
             if (tiny) { oneLine(); return; }
             // 좁은 칸에선 이름이 줄을 바꿔 길어진다 → 실제로 그려 보고 칸 높이를 넘으면 뒤에서부터 줄여 "+N개 더"로 묶는다
-            // 좁은 칸(글자 6자 폭 미만): 글자를 조금 줄이고 점 대신 구분선, "+2개 더" 대신 "+2"
-            const room = slot.clientHeight - gap * 2, narrow = slot.clientWidth < fs * 6;
+            // 좁은 칸(글자 6자 폭 미만): 글자를 조금 줄이고 구분선, "+2개 더" 대신 "+2"
+            const room = slot.clientHeight - 7, narrow = slot.clientWidth < fs * 6; // 7 = 칸 위아래 여백 (5px 위: 번호 자리 + 2px 아래)
             if (narrow) note.classList.add('narrow');
             const moreLabel = (m) => narrow ? `+${m}` : `+${m}개 더`;
             fill(names, false);
             if (note.offsetHeight <= room) return;
             for (let k = n - 1; k >= 1; k--) { fill([...names.slice(0, k), moreLabel(n - k)], true); if (note.offsetHeight <= room) return; }
-            // 첫 물건 하나도 다 안 들어가면: 넓은 칸은 "첫 물건 외 N" 한 줄 말줄임, 좁은 칸은 첫 물건을 칸 높이까지만 (확대하면 다 보인다)
-            if (narrow) { fill([names[0]], false); note.style.maxHeight = room + 'px'; note.style.overflow = 'hidden'; }
+            // 첫 물건 하나도 다 안 들어가면: 넓은 칸은 "첫 물건 +N" 한 줄 말줄임, 좁은 칸은 첫 물건을 칸 높이까지만 (확대하면 다 보인다)
+            if (narrow) { fill([names[0]], false); const l = note.lastChild; l.style.maxHeight = Math.max(lineH, room - 6) + 'px'; l.style.overflow = 'hidden'; } // 쪽지가 아니라 글줄을 자른다 (쪽지를 자르면 번호도 잘림)
             else oneLine();
         });
     }
 
-    // 사진 확대: 두 손가락으로 벌리기/오므리기(휴대폰), Ctrl+휠·트랙패드 확대·+/− 버튼(PC).
-    // 사진 칸(.zoom-wrap) 안에서만 커지고 그 안에서 스크롤로 옮겨 본다. 두 손가락을 대는 순간 그리던 구역·누르기는 취소한다.
-    const ZOOM_MAX = 4;
+    // 사진 확대: 휴대폰은 두 손가락으로 벌리면 사진을 화면 가득(전체 화면) 띄운 뒤 그 안에서 확대한다
+    // (목록 속 작은 사진 칸 안에서 벌려 봐야 보이는 범위가 좁아 의미가 없었다). PC는 Ctrl+휠·트랙패드·+/− 버튼, [크게 보기]로 전체 화면.
+    let fsPhoto = null; // 전체 화면으로 띄운 사진 { data, ph: 원래 자리 표시 }
+    const zoomMax = (data) => fsPhoto && fsPhoto.data === data ? 6 : 4;
+    function applyZoom(data, z) {
+        data.zoom = z; data.noteStage.style.width = (z * 100) + '%'; fitZoomWrap(data);
+        data.zoomBox.classList.toggle('zoomed', z > 1);
+    }
     function setPhotoZoom(data, z, clientX, clientY) {
-        const wrap = data.zoomWrap, stage = data.noteStage; if (!wrap) return;
-        z = Math.min(ZOOM_MAX, Math.max(1, z)); if (z < 1.03) z = 1;
+        const wrap = data.zoomWrap; if (!wrap) return;
+        z = Math.min(zoomMax(data), Math.max(1, z)); if (z < 1.03) z = 1;
         const old = data.zoom || 1, rect = wrap.getBoundingClientRect();
         const ax = (clientX ?? rect.left + rect.width / 2) - rect.left, ay = (clientY ?? rect.top + rect.height / 2) - rect.top;
-        const cx = (wrap.scrollLeft + ax) / old, cy = (wrap.scrollTop + ay) / old; // 손가락(마우스) 아래 지점이 그대로 남게
-        data.zoom = z;
-        fitZoomWrap(data);
-        stage.style.width = (z * 100) + '%';
-        wrap.scrollLeft = cx * z - ax; wrap.scrollTop = cy * z - ay;
-        data.zoomBox.classList.toggle('zoomed', z > 1);
+        const sx = parseFloat(data.noteStage.style.marginTop) || 0;
+        const cx = (wrap.scrollLeft + ax) / old, cy = (wrap.scrollTop + ay - sx) / old; // 손가락(마우스) 아래 지점이 그대로 남게
+        applyZoom(data, z);
+        wrap.scrollLeft = cx * z - ax; wrap.scrollTop = cy * z - ay + (parseFloat(data.noteStage.style.marginTop) || 0);
         render(data);
     }
-    // 확대 중에는 사진 칸 높이를 원래 크기로 묶어 둬야 위아래도 사진 칸 안에서 움직인다
+    // 목록 속 사진: 확대 중에는 사진 칸 높이를 원래 크기로 묶어 위아래도 그 안에서 움직이게.
+    // 전체 화면: 칸 높이는 화면이 정하고, 사진이 화면보다 낮으면 위아래 가운데에 둔다
     function fitZoomWrap(data) {
         const wrap = data.zoomWrap; if (!wrap) return;
-        wrap.style.height = (data.zoom || 1) > 1 ? Math.round(wrap.clientWidth * data.canvas.height / data.canvas.width) + 'px' : '';
+        const z = data.zoom || 1, ratio = data.canvas.height / data.canvas.width;
+        if (fsPhoto && fsPhoto.data === data) {
+            wrap.style.height = '';
+            data.noteStage.style.marginTop = Math.max(0, Math.round((wrap.clientHeight - wrap.clientWidth * z * ratio) / 2)) + 'px';
+        } else {
+            data.noteStage.style.marginTop = '';
+            wrap.style.height = z > 1 ? Math.round(wrap.clientWidth * ratio) + 'px' : '';
+        }
     }
     // 검색으로 고른 칸이 확대된 사진 밖에 있으면 그 칸이 가운데 오게 옮긴다
     function scrollZoomToZone(data, zone) {
@@ -2529,9 +2573,43 @@
         wrap.scrollLeft = (zone.x + zone.w / 2) * s - wrap.clientWidth / 2;
         wrap.scrollTop = (zone.y + zone.h / 2) * s - wrap.clientHeight / 2;
     }
+    // at: 벌리기로 들어올 때 손가락 사이 지점 (사진 안 비율 0~1). 그 지점을 가운데 두고 2배로 연다. 버튼으로 열면 사진 전체가 보이게.
+    function openPhotoFullscreen(data, at) {
+        if (fsPhoto || !data.zoomBox) return;
+        const box = data.zoomBox, ph = document.createElement('div');
+        ph.style.height = box.offsetHeight + 'px'; ph.style.margin = '10px auto';
+        box.replaceWith(ph); fsPhoto = { data, ph };
+        if (data.resetTouches) data.resetTouches();
+        box.querySelector('.fs-title').textContent = data.title || '';
+        box.classList.toggle('wide-photo', data.canvas.width > data.canvas.height * 1.15); // 가로로 긴 사진: 세로 화면이면 "가로로 돌리면 더 크게"
+
+        box.classList.add('is-fs'); document.body.appendChild(box); document.body.classList.add('photo-fs');
+        try { history.pushState({ photoFs: 1 }, ''); } catch (e) {} // 휴대폰 뒤로 가기로 닫히게
+        const wrap = data.zoomWrap;
+        applyZoom(data, at ? 2 : 1);
+        const mt = parseFloat(data.noteStage.style.marginTop) || 0, sw = data.noteStage.clientWidth, sh = data.noteStage.clientHeight;
+        wrap.scrollLeft = at ? at.x * sw - wrap.clientWidth / 2 : 0;
+        wrap.scrollTop = at ? at.y * sh + mt - wrap.clientHeight / 2 : 0;
+        render(data);
+    }
+    function closePhotoFullscreen(fromHistory) {
+        if (!fsPhoto) return;
+        const { data, ph } = fsPhoto; fsPhoto = null;
+        if (data.resetTouches) data.resetTouches();
+        data.zoomBox.classList.remove('is-fs'); document.body.classList.remove('photo-fs');
+        ph.replaceWith(data.zoomBox);
+        applyZoom(data, 1); data.zoomWrap.scrollLeft = 0; data.zoomWrap.scrollTop = 0;
+        render(data);
+        if (!fromHistory) { try { if (history.state && history.state.photoFs) history.back(); } catch (e) {} }
+    }
+    window.addEventListener('popstate', () => { if (fsPhoto) closePhotoFullscreen(true); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && fsPhoto && document.getElementById('modal').style.display !== 'flex') closePhotoFullscreen(); });
+
     function initPhotoZoom(data) {
         const wrap = data.zoomWrap, touches = new Map(); let pinch = null, gesture = false;
+        data.resetTouches = () => { touches.clear(); pinch = null; gesture = false; };
         const pair = () => { const [a, b] = [...touches.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+        const isFs = () => fsPhoto && fsPhoto.data === data;
         // 캡처 단계에서 먼저 받아, 두 손가락 동작 중에는 캔버스(구역 그리기·누르기)로 넘기지 않는다
         wrap.addEventListener('pointerdown', (e) => {
             if (e.pointerType !== 'touch') return;
@@ -2541,8 +2619,8 @@
                 if (pendingHistoryState && (isMovingZone || isResizingZone)) saveHistory(pendingHistoryState);
                 isDrawingNewZone = false; isMovingZone = false; isResizingZone = false; pendingHistoryState = null; hasDragged = true;
                 if (holdingItem) { holdingItem.sourceZone.items.push(holdingItem.item); holdingItem = null; }
-                const p = pair(), rect = wrap.getBoundingClientRect(), z0 = data.zoom || 1;
-                pinch = { d0: p.d || 1, z0, cx: (wrap.scrollLeft + p.x - rect.left) / z0, cy: (wrap.scrollTop + p.y - rect.top) / z0 };
+                const p = pair(), rect = wrap.getBoundingClientRect(), z0 = data.zoom || 1, mt = parseFloat(data.noteStage.style.marginTop) || 0;
+                pinch = { d0: p.d || 1, z0, cx: (wrap.scrollLeft + p.x - rect.left) / z0, cy: (wrap.scrollTop + p.y - rect.top - mt) / z0 };
                 e.stopPropagation(); render(data);
             } else if (gesture) e.stopPropagation();
         }, true);
@@ -2553,12 +2631,17 @@
             e.stopPropagation();
             if (!pinch || touches.size < 2) return;
             const p = pair(), rect = wrap.getBoundingClientRect();
-            const z = Math.min(ZOOM_MAX, Math.max(1, pinch.z0 * p.d / pinch.d0));
-            data.zoom = z; fitZoomWrap(data);
-            data.noteStage.style.width = (z * 100) + '%';
+            // 목록 속 작은 사진에서 벌리기 시작하면 바로 전체 화면으로 띄운다 (이번 손동작은 여기서 끝, 전체 화면에서 다시 벌리면 더 커진다)
+            if (!isFs() && p.d / pinch.d0 > 1.12) {
+                const sr = data.noteStage.getBoundingClientRect();
+                openPhotoFullscreen(data, { x: Math.min(1, Math.max(0, (p.x - sr.left) / sr.width)), y: Math.min(1, Math.max(0, (p.y - sr.top) / sr.height)) });
+                return;
+            }
+            const z = Math.min(zoomMax(data), Math.max(1, pinch.z0 * p.d / pinch.d0));
+            applyZoom(data, z);
             // 처음 두 손가락 사이에 있던 지점이 지금 두 손가락 사이로 따라오게 (벌리면서 옮기기)
-            wrap.scrollLeft = pinch.cx * z - (p.x - rect.left); wrap.scrollTop = pinch.cy * z - (p.y - rect.top);
-            data.zoomBox.classList.toggle('zoomed', z > 1);
+            const mt = parseFloat(data.noteStage.style.marginTop) || 0;
+            wrap.scrollLeft = pinch.cx * z - (p.x - rect.left); wrap.scrollTop = pinch.cy * z - (p.y - rect.top) + mt;
             render(data);
         }, true);
         const end = (e) => {
@@ -2576,7 +2659,8 @@
             e.preventDefault();
             setPhotoZoom(data, (data.zoom || 1) * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
         }, { passive: false });
-        new ResizeObserver(() => { fitZoomWrap(data); render(data); }).observe(data.noteStage);
+        const ro = new ResizeObserver(() => { fitZoomWrap(data); render(data); });
+        ro.observe(data.noteStage); ro.observe(wrap);
     }
 
     // 편집 모드 구역 표시: 이름은 칸 왼쪽 위(겹친 구역끼리 이름이 가운데서 부딪치지 않게), 물건 목록은 그 아래 칸 안에.
