@@ -798,6 +798,8 @@
         }
         .welcome-steps i { font-size: 24px; color: var(--accent-text); margin-bottom: 4px; }
         .welcome-steps b { font-size: 14px; color: var(--text); }
+        .welcome-steps span { font-size: 11.5px; line-height: 1.35; color: var(--text2); word-break: keep-all; text-align: center; }
+        .welcome-sub { margin-top: 10px; font-size: 14px; line-height: 1.55; color: var(--text2); word-break: keep-all; }
         .brand-home { display: flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
         body:not(.welcome-revisit) .revisit-only { display: none !important; }
         .welcome-back { display: inline-flex; margin: -16px 0 16px; }
@@ -814,7 +816,7 @@
         @media (max-width: 600px) {
             .welcome-card { --welcome-offset: 108px; padding: 40px 20px 24px; margin-bottom: 0; }
             .welcome-title { font-size: 30px; }
-            .welcome-steps { gap: 10px; margin: 40px auto; }
+            .welcome-steps { gap: 10px; margin: 28px auto; }
             .welcome-steps li { padding: 20px 4px; }
             .welcome-steps i { font-size: 30px; }
             .welcome-steps b { font-size: 15px; }
@@ -824,7 +826,11 @@
         @media (min-width: 601px) {
             .welcome-hero { width: min(300px, 60%); margin-bottom: 28px; }
             .welcome-title { font-size: 36px; letter-spacing: -1px; }
-            .welcome-steps { max-width: 460px; gap: 12px; margin: 36px auto; }
+            .welcome-steps { max-width: 460px; gap: 12px; margin: 28px auto; }
+            .welcome-sub { font-size: 16px; }
+            .welcome-sub .sub-br { display: none; } /* 넓은 화면은 한 줄로 */
+            .welcome-sub .sub-more::before { content: '·'; margin: 0 4px 0 2px; }
+            .welcome-steps span { font-size: 13px; }
             .welcome-steps li { padding: 22px 6px; }
             .welcome-steps i { font-size: 32px; }
             .welcome-steps b { font-size: 17px; }
@@ -835,20 +841,26 @@
         }
         @media (min-width: 601px) and (max-height: 860px) { /* 세로가 낮은 노트북: 크게 키우되 스크롤 없이 한 화면에 */
             .welcome-card { padding-top: 20px; padding-bottom: 16px; }
-            .welcome-hero { width: min(200px, 40%); margin-bottom: 16px; }
+            .welcome-hero { width: min(170px, 34%); margin-bottom: 12px; }
             .welcome-title { font-size: 30px; }
-            .welcome-steps { margin: 22px auto; }
-            .welcome-steps li { padding: 14px 6px; }
+            .welcome-sub { margin-top: 6px; font-size: 15px; }
+            .welcome-steps { margin: 16px auto; }
+            .welcome-steps li { padding: 10px 6px; }
             .welcome-steps i { font-size: 26px; }
             .welcome-actions .btn-lg { min-height: 50px; }
             .welcome-links { margin-top: 12px; }
         }
+        @media (min-width: 601px) and (min-height: 861px) and (max-height: 980px) { /* 900px 안팎 모니터: 그림만 조금 줄여 한 화면에 */
+            .welcome-hero { width: min(250px, 50%); margin-bottom: 20px; }
+        }
         @media (max-width: 600px) and (max-height: 700px) { /* 키가 작은 휴대폰: 스크롤 없이 한 화면에 들어가게 간격만 줄인다 */
             .welcome-card { padding-top: 20px; padding-bottom: 14px; }
             .welcome-title { font-size: 26px; }
-            .welcome-steps { margin: 20px auto; }
-            .welcome-steps i { font-size: 26px; }
-            .welcome-steps li { padding: 14px 4px; }
+            .welcome-steps { margin: 14px auto; }
+            .welcome-steps i { font-size: 24px; }
+            .welcome-steps li { padding: 10px 4px; }
+            .welcome-steps span, .welcome-sub .sub-more, .welcome-sub .sub-br { display: none; } /* 핵심 한 줄만 남긴다 */
+            .welcome-sub { margin-top: 6px; }
             .welcome-links { margin-top: 16px; }
         }
 
@@ -1214,10 +1226,12 @@
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
+        <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
+        <p class="welcome-sub">물건 이름만 대면 어느 칸인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
         <ol class="welcome-steps">
-            <li><i class="ti ti-camera"></i><b>찍기</b></li>
-            <li><i class="ti ti-border-corners"></i><b>표시</b></li>
-            <li><i class="ti ti-search"></i><b>찾기</b></li>
+            <li><i class="ti ti-camera"></i><b>찍기</b><span>선반·냉동고 사진</span></li>
+            <li><i class="ti ti-border-corners"></i><b>표시</b><span>칸마다 물건</span></li>
+            <li><i class="ti ti-search"></i><b>찾기</b><span>폰이나 인쇄물로</span></li>
         </ol>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
