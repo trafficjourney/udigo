@@ -919,6 +919,14 @@
 
         /* 찾기·새로 추가 입력줄 (상단 검색창과 같은 알약 모양) */
         .search-input-wrap.zm-find { width: 100%; margin-bottom: 10px; background: var(--card); }
+        .zm-industry { margin: 0 0 14px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); }
+        .zm-industry[hidden] { display: none; }
+        .zm-industry-q { font-size: 13px; line-height: 1.5; color: var(--text2); margin-bottom: 10px; }
+        .zm-industry-q b { display: block; font-size: 15px; color: var(--text); }
+        .zm-industry-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .zm-industry-chips button { min-height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 18px; background: var(--card); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .zm-industry-chips button:active { transform: scale(0.96); }
+        .zm-industry-skip { display: block; margin: 10px auto 0; padding: 6px 10px; border: 0; background: none; color: var(--text2); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
         .zm-status { font-size: 12px; color: var(--text2); text-align: center; line-height: 1.5; margin: -2px 0 10px; }
         .zm-status:empty { display: none; }
         .zm-add-new {
@@ -1282,6 +1290,12 @@
     </div>
 
     <div class="zm-body">
+        <!-- 업종 한 번 묻기: 첫 구역의 물건 창에서 (고르거나 건너뛰면 다시 안 물음, 설정에서 바꿀 수 있음) -->
+        <div id="industryAsk" class="zm-industry" hidden>
+            <div class="zm-industry-q"><b>어떤 가게예요?</b> 고르면 자주 쓰는 물건을 바로 눌러 넣을 수 있어요</div>
+            <div id="industryAskChips" class="zm-industry-chips"></div>
+            <button type="button" class="zm-industry-skip" onclick="skipIndustryAsk()">건너뛰기 · 직접 입력할게요</button>
+        </div>
         <div class="zm-section-head">
             <span>이 구역에 있는 물건</span>
             <span id="zoneItemCount" class="zm-count"></span>
@@ -2216,6 +2230,7 @@
         document.getElementById('newItemInput').value = '';
         document.getElementById('voiceItemStatus').textContent = '';
         closeImportReview();
+        syncIndustryAsk();
         renderZoneItems(false);
         showZoneModal();
         document.getElementById('itemList').scrollTop = 0;
@@ -3116,6 +3131,35 @@
         baseItems = [...INDUSTRY_TEMPLATES[key].items];
         try { safeStorage.setItem('industry', key); safeStorage.setItem('baseItems', JSON.stringify(baseItems)); } catch (e) {}
         syncIndustryUI();
+    }
+    // 업종 한 번 묻기: 처음 칸을 그리고 물건을 적으려는 순간에 묻는다 (첫 화면에서 묻으면 설문 같고, 이때는 왜 필요한지 바로 보인다)
+    const INDUSTRY_ASK_CHIPS = [['cafe', '카페'], ['restaurant', '식당'], ['mart', '편의점·마트'], ['hardware', '철물·공구'], ['pharmacy', '약국'], ['clothing', '의류'], ['beauty', '화장품'], ['hospital', '병원'], ['organizer', '정리수납'], ['general', '창고·기타']];
+    function needIndustryAsk() {
+        return !isSamplePreview && safeStorage.getItem('isSampleData') !== '1' && !currentIndustry() && safeStorage.getItem('industryAsked') !== '1';
+    }
+    function syncIndustryAsk() {
+        const box = document.getElementById('industryAsk');
+        box.hidden = !needIndustryAsk();
+        if (!box.hidden && !box.dataset.ready) {
+            document.getElementById('industryAskChips').innerHTML = INDUSTRY_ASK_CHIPS.map(([k, label]) => `<button type="button" onclick="pickIndustryAsk('${k}')">${label}</button>`).join('');
+            box.dataset.ready = '1';
+        }
+    }
+    function pickIndustryAsk(key) {
+        // 직접 추가해 둔 물건은 남기고, 고른 업종의 자주 쓰는 물건을 앞에 둔다
+        const oldDefaults = INDUSTRY_TEMPLATES[currentIndustry() || 'general'].items;
+        const custom = baseItems.filter(n => !oldDefaults.includes(n));
+        setIndustry(key);
+        baseItems = [...new Set([...INDUSTRY_TEMPLATES[key].items, ...custom])];
+        try { safeStorage.setItem('baseItems', JSON.stringify(baseItems)); safeStorage.setItem('industryAsked', '1'); } catch (e) {}
+        document.getElementById('industryAsk').hidden = true;
+        renderZoneItems(true);
+        document.getElementById('voiceItemStatus').textContent = `${INDUSTRY_TEMPLATES[key].label} 물건으로 채웠어요. 눌러서 넣으세요 · 업종은 설정에서 바꿀 수 있어요`; // 알림(토스트)은 구역 창 뒤에 가려진다
+    }
+    function skipIndustryAsk() {
+        try { safeStorage.setItem('industryAsked', '1'); } catch (e) {}
+        document.getElementById('industryAsk').hidden = true;
+        document.getElementById('newItemInput').focus();
     }
     function syncIndustryUI() {
         const cur = currentIndustry();
