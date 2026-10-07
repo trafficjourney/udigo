@@ -1030,36 +1030,31 @@
               </li>
 
               <li style="margin-bottom: 12px;">
-                <i class="ti ti-file-export" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>PDF 출력:</b> 편집한 내용을 PDF로 출력 할 수 있어요.
+                <i class="ti ti-printer" style="margin-right: 5px; color: var(--text2);"></i>
+                <b>인쇄:</b> 사진 위 <b>[인쇄]</b>로 A4 지도를 뽑아 선반 옆에 붙여두세요.
               </li>
             </ul>
         </ul>
     </div>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); margin-bottom: 12px; cursor: pointer; user-select: none;">
-        <input type="checkbox" id="hideGuideCheckbox" style="width: auto; accent-color: var(--accent);">
-        24시간 동안 다시 보지 않기
-    </label>
+    <p style="font-size: 12px; color: var(--text3); margin: 0 0 12px; text-align: center;">이 안내는 처음 한 번만 떠요. 다시 보려면 첫 화면의 "사용방법 보기"</p>
     <div style="display: flex; gap: 8px; width: 100%;">
         <button onclick="closeGuideModal(); openVideoGuideModal();" class="btn-base" style="background: var(--card); border: 1px solid var(--accent-text); color: var(--accent-text); flex: 1;"><i class="ti ti-video" style="margin-right: 4px; font-size: 16px;"></i> 영상보기</button>
         <button onclick="closeGuideModal();" class="btn-base btn-primary" style="flex: 1.5;">확인했습니다, 시작하기!</button>
     </div>
 </div>
 <script>
-    // 체크박스를 눌러 닫으면 24시간 동안 안내창을 다시 띄우지 않는다.
+    // 안내창은 사진이 생긴 뒤 처음 한 번만 자동으로 띄운다. 매일 여는 사람에게 매번 뜨면 검색하려다 창부터 닫아야 했다.
+    // (다시 보고 싶으면 첫 화면·설정의 "사용방법 보기")
     function closeGuideModal() {
         document.getElementById('guideModal').style.display = 'none';
-        const cb = document.getElementById('hideGuideCheckbox');
-        if (cb && cb.checked) {
-            try { localStorage.setItem('guideHiddenUntil', String(Date.now() + 24 * 60 * 60 * 1000)); } catch (e) {}
-        }
+        try { localStorage.setItem('guideSeen', '1'); } catch (e) {}
     }
-    // 페인트 전에 즉시 판단해서, 아직 유효한 "다시 보지 않기" 기간이면 깜빡임 없이 바로 숨긴다.
+    // 페인트 전에 즉시 판단해서, 이미 봤거나 아직 사진이 없으면 깜빡임 없이 바로 숨긴다.
     (function () {
         try {
-            const until = parseInt(localStorage.getItem('guideHiddenUntil') || '0', 10);
+            const seen = localStorage.getItem('guideSeen') === '1' || parseInt(localStorage.getItem('guideHiddenUntil') || '0', 10) > 0;
             const hasData = localStorage.getItem('hasSavedPhotos') === '1' || JSON.parse(localStorage.getItem('savedSystemData') || '[]').length > 0;
-            if ((until && Date.now() < until) || !hasData) {
+            if (seen || !hasData) {
                 document.write('<style>#guideModal{display:none !important;}</style>');
             }
         } catch (e) {}
@@ -2280,11 +2275,16 @@
                 const newId = Date.now(); const newTitle = "#" + (imageList.length + 1);
                 const data = { imgData: compressedUrl, zones: [], id: newId, title: newTitle };
                 const finalImg = new Image(); finalImg.src = compressedUrl;
-                finalImg.onload = () => { data.img = finalImg; createNewCanvasElement(data); showPhoto(data.id, true); render(data); saveData(); };
+                const isFirstPhoto = !imageList.some(d => d.id !== 'dummy_root');
+                finalImg.onload = () => {
+                    data.img = finalImg; createNewCanvasElement(data); showPhoto(data.id, true); render(data); saveData();
+                    if (isFirstPhoto) showToast('다음: 오른쪽 아래 [편집]을 누르고, 사진 위를 끌어서 칸을 나눠보세요', 6000);
+                };
             };
             img.src = e.target.result;
         };
         reader.readAsDataURL(input.files[0]);
+        input.value = ''; // 같은 사진을 다시 골라도 onchange가 오도록
     }
 
     function initCanvasEvents(data, canvas) {
@@ -2948,7 +2948,7 @@
         const cur = currentIndustry();
         const sel = document.getElementById('industrySelect'); if (sel && cur) sel.value = cur;
     }
-    function exportSystemData() { const packageData = { note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") }; const downloadLink = document.createElement('a'); downloadLink.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(packageData))); downloadLink.setAttribute("download", `매장위치지도_백업_${new Date().toISOString().slice(0,10)}.json`); downloadLink.click(); }
+    function exportSystemData() { const packageData = { note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") }; const downloadLink = document.createElement('a'); downloadLink.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(packageData))); downloadLink.setAttribute("download", `changgojigi_backup_${fileDate()}.json`); downloadLink.click(); }
     function importSystemData(input) { if (!input.files[0]) return; const reader = new FileReader(); reader.onload = function(e) { try { const imported = JSON.parse(e.target.result); if (imported.savedSystemData && imported.baseItems && confirm("백업 파일로 전체 복구하시겠습니까?")) { if (isSamplePreview) { try { sessionStorage.removeItem(SAMPLE_PREVIEW_KEY); } catch (e) {} isSamplePreview = false; } safeStorage.setItem('savedSystemData', JSON.stringify(imported.savedSystemData)); safeStorage.setItem('baseItems', JSON.stringify(imported.baseItems)); reloadAfterSave(); } } catch (err) { alert("올바른 형식이 아닙니다."); } }; reader.readAsText(input.files[0]); }
 
     // ────────────────────────────────────────────────────────────
@@ -3442,10 +3442,10 @@
     }
 
     let toastTimer = null;
-    function showToast(msg) {
+    function showToast(msg, ms = 2200) {
         const el = document.getElementById('toast');
         el.textContent = msg; el.classList.add('show');
-        clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms);
     }
 
     // 검색 후 확인 흐름: 위치를 먼저 보여주고(줌인·깜박임) → 끝나면 작은 "찾으셨나요?" 알약 →
@@ -3846,12 +3846,15 @@
         document.getElementById('printModal').style.display = 'none';
         document.body.classList.remove('print-open'); unlockPageScroll();
     }
+    // 내려받는 파일 이름용 날짜 (기기 시간 기준). 파일 이름은 영문: 한글은 일부 브라우저에서 이름·확장자가 빠져 "download"로 저장됐다
+    function fileDate() { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; }
     function printDateStr() {
         const t = new Date();
         return `${t.getFullYear()}.${String(t.getMonth() + 1).padStart(2, '0')}.${String(t.getDate()).padStart(2, '0')} 기준`;
     }
 
     async function downloadReportAsPDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) { alert("PDF 만드는 도구를 아직 불러오지 못했어요. 인터넷 연결을 확인하고 잠시 뒤 다시 눌러주세요."); return; }
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
@@ -3870,7 +3873,7 @@
                     doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm);
                 });
             });
-            doc.save("매장_공간_관리_지도.pdf");
+            doc.save(`changgojigi_map_${fileDate()}.pdf`);
         } catch (error) {
             console.error("PDF 생성 중 오류 발생:", error);
             alert("PDF 생성 중 문제가 발생했습니다.");
