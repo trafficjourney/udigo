@@ -285,6 +285,14 @@
             --hero-chip-bg: rgba(255,255,255,0.6);
             --hero-chip-border: rgba(19,48,107,0.14);
         }
+        .edit-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1068; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px 14px; background: var(--warn, #f2b705); color: #1a1a18; box-shadow: 0 2px 10px rgba(0,0,0,0.18); }
+        .edit-bar[hidden] { display: none; }
+        .edit-bar-icon { font-size: 20px; flex: none; }
+        .edit-bar-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+        .edit-bar-text b { font-size: 15px; }
+        .edit-bar-text span { font-size: 12px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .edit-bar-done { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: #1a1a18; color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .edit-bar-done:active { transform: scale(0.96); }
         #editOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.2); pointer-events: none;
@@ -1063,6 +1071,12 @@
 </head>
 <body>
 <div id="editOverlay"></div>
+<!-- 편집 중 띠: 지금 편집 모드라는 것과 끝내는 방법(완료)을 화면 위에 계속 보여준다 -->
+<div id="editBar" class="edit-bar" hidden>
+    <i class="ti ti-pencil edit-bar-icon" aria-hidden="true"></i>
+    <div class="edit-bar-text"><b>편집 중</b><span>끌어서 칸 만들기 · 칸 눌러 물건 적기</span></div>
+    <button type="button" class="edit-bar-done" onclick="toggleEditMode()"><i class="ti ti-check"></i> 완료</button>
+</div>
 
 <div id="guideModal" style="display:block; line-height: 1.6;">
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">1분 만에 끝내는 매장 지도 만들기</h2>
@@ -2047,8 +2061,14 @@
         requestAnimationFrame(() => { photoSpyQueued = false; updateCurrentPhotoFromScroll(); });
     }, { passive: true });
 
-    function toggleEditMode() {
+    // fromHistory: 휴대폰 뒤로 가기로 끝낸 경우 (이미 기록이 빠졌으니 다시 빼지 않음)
+    function toggleEditMode(fromHistory) {
         isEditMode = !isEditMode;
+        // 편집 중엔 화면을 어둡게 덮지 않고(완료 버튼까지 꺼진 것처럼 보였다) 위쪽 띠로 알린다. 뒤로 가기로도 끝낼 수 있게 기록을 하나 넣는다
+        document.getElementById('editBar').hidden = !isEditMode;
+        document.body.classList.toggle('editing', isEditMode);
+        if (isEditMode) { try { history.pushState({ editMode: 1 }, ''); } catch (e) {} }
+        else if (fromHistory !== true) { try { if (history.state && history.state.editMode) history.back(); } catch (e) {} }
         // 편집 모드에선 목록 칩이 커져서 위쪽 사진의 목록이 길어진다 → 보던 사진이 밀리지 않게 전환 후 제자리로
         const line = innerHeight * 0.35;
         const anchorSec = [...document.querySelectorAll('.image-section')].find(s => s.offsetParent && s.getBoundingClientRect().bottom > line);
@@ -2061,7 +2081,6 @@
               overlay = document.getElementById('editOverlay');
 
         if (isEditMode) {
-            if(overlay) overlay.style.display = 'block';
             if (icon) icon.className = 'ti ti-check';
             if (modeText) modeText.innerText = '완료';
             if (btn) btn.title = btn.ariaLabel = '편집 끝내기';
@@ -2598,6 +2617,7 @@
         box.querySelector('.fs-title').textContent = data.title || '';
         box.classList.toggle('wide-photo', data.canvas.width > data.canvas.height * 1.15); // 가로로 긴 사진: 세로 화면이면 "가로로 돌리면 더 크게"
 
+        data.canvas.style.touchAction = 'none'; // 전체 화면에선 끌기·확대를 앱이 직접 처리 (브라우저 스크롤·화면 확대가 끼어들지 않게)
         box.classList.add('is-fs'); document.body.appendChild(box); document.body.classList.add('photo-fs');
         try { history.pushState({ photoFs: 1 }, ''); } catch (e) {} // 휴대폰 뒤로 가기로 닫히게
         const wrap = data.zoomWrap;
@@ -2612,24 +2632,29 @@
         const { data, ph } = fsPhoto; fsPhoto = null;
         if (data.resetTouches) data.resetTouches();
         data.zoomBox.classList.remove('is-fs'); document.body.classList.remove('photo-fs');
+        data.canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y';
         ph.replaceWith(data.zoomBox);
         applyZoom(data, 1); data.zoomWrap.scrollLeft = 0; data.zoomWrap.scrollTop = 0;
         render(data);
         if (!fromHistory) { try { if (history.state && history.state.photoFs) history.back(); } catch (e) {} }
     }
-    window.addEventListener('popstate', () => { if (fsPhoto) closePhotoFullscreen(true); });
+    window.addEventListener('popstate', () => { if (fsPhoto) closePhotoFullscreen(true); else if (isEditMode) toggleEditMode(true); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && fsPhoto && document.getElementById('modal').style.display !== 'flex') closePhotoFullscreen(); });
 
     function initPhotoZoom(data) {
         const wrap = data.zoomWrap, touches = new Map(); let pinch = null, gesture = false;
-        data.resetTouches = () => { touches.clear(); pinch = null; gesture = false; };
+        let pan = null, fling = 0; // 한 손가락 끌기(전체 화면): 브라우저 기본 스크롤에 맡기면 폰에서 확대 후 끌기가 안 먹어 직접 옮긴다
+        data.resetTouches = () => { touches.clear(); pinch = null; gesture = false; pan = null; };
+        const startPan = (id, x, y, moved) => { cancelAnimationFrame(fling); pan = { id, x, y, sl: wrap.scrollLeft, st: wrap.scrollTop, moved, vx: 0, vy: 0, t: performance.now(), lx: x, ly: y }; };
         const pair = () => { const [a, b] = [...touches.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
         const isFs = () => fsPhoto && fsPhoto.data === data;
         // 캡처 단계에서 먼저 받아, 두 손가락 동작 중에는 캔버스(구역 그리기·누르기)로 넘기지 않는다
         wrap.addEventListener('pointerdown', (e) => {
             if (e.pointerType !== 'touch') return;
             touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (touches.size === 1 && isFs() && !isEditMode) startPan(e.pointerId, e.clientX, e.clientY, false); // 편집 중엔 한 손가락이 칸 그리기
             if (touches.size === 2) {
+                pan = null;
                 gesture = true;
                 if (pendingHistoryState && (isMovingZone || isResizingZone)) saveHistory(pendingHistoryState);
                 isDrawingNewZone = false; isMovingZone = false; isResizingZone = false; pendingHistoryState = null; hasDragged = true;
@@ -2642,6 +2667,17 @@
         wrap.addEventListener('pointermove', (e) => {
             if (!touches.has(e.pointerId)) return;
             touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pan && pan.id === e.pointerId && touches.size === 1) {
+                const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+                if (!pan.moved && Math.hypot(dx, dy) > 6) { pan.moved = true; hasDragged = true; } // 끌기로 확정되면 손을 떼도 칸 창을 열지 않음
+                if (pan.moved) {
+                    wrap.scrollLeft = pan.sl - dx; wrap.scrollTop = pan.st - dy;
+                    const now = performance.now(), dt = Math.max(1, now - pan.t);
+                    pan.vx = (e.clientX - pan.lx) / dt; pan.vy = (e.clientY - pan.ly) / dt; pan.t = now; pan.lx = e.clientX; pan.ly = e.clientY;
+                    e.stopPropagation();
+                }
+                return;
+            }
             if (!gesture) return;
             e.stopPropagation();
             if (!pinch || touches.size < 2) return;
@@ -2662,9 +2698,23 @@
         const end = (e) => {
             if (!touches.has(e.pointerId)) return;
             touches.delete(e.pointerId);
+            if (pan && pan.id === e.pointerId) {
+                // 손을 뗀 속도만큼 조금 더 미끄러지게 (휴대폰 스크롤처럼)
+                let { vx, vy } = pan; const moved = pan.moved; pan = null;
+                if (moved) {
+                    e.stopPropagation();
+                    if (Math.hypot(vx, vy) > 0.2) {
+                        let last = performance.now();
+                        const step = (now) => { const dt = now - last; last = now; wrap.scrollLeft -= vx * dt; wrap.scrollTop -= vy * dt; vx *= Math.pow(0.95, dt / 16); vy *= Math.pow(0.95, dt / 16); if (Math.hypot(vx, vy) > 0.02) fling = requestAnimationFrame(step); };
+                        fling = requestAnimationFrame(step);
+                    }
+                }
+            }
             if (!gesture) return;
             e.stopPropagation();
             if (touches.size < 2) pinch = null;
+            // 두 손가락 중 하나만 떼면 남은 손가락으로 이어서 옮긴다
+            if (touches.size === 1 && isFs() && !isEditMode) { const [[id, t]] = [...touches.entries()]; startPan(id, t.x, t.y, true); }
             if (!touches.size) { gesture = false; if ((data.zoom || 1) < 1.03) setPhotoZoom(data, 1); else render(data); }
         };
         wrap.addEventListener('pointerup', end, true);
