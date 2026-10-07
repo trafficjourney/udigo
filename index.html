@@ -481,13 +481,23 @@
 
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #settingsModal {
+        #modal, #guideModal, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
             z-index: 9999; overflow-y: auto; box-sizing: border-box;
         }
         #settingsModal { z-index: 1020; max-width: 420px; }
+        /* 🖨 인쇄물 미리보기: 벽에 붙일 A4 지도를 그대로 보여준다 */
+        #printModal { z-index: 1090; max-width: 520px; padding: 20px; }
+        #printBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 1085; }
+        body.print-open #printBackdrop { display: block; }
+        .print-sub { font-size: 13px; color: var(--text2); margin: 4px 0 14px; word-break: keep-all; }
+        .print-pages { display: grid; gap: 12px; background: var(--bg); border-radius: var(--radius-md); padding: 12px; }
+        .print-pages img { display: block; width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .print-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .print-actions .btn-base { flex: 1; }
+        .print-tip span { display: inline-flex; align-items: center; gap: 6px; word-break: keep-all; }
 
         h2, h3 { color: var(--text); font-weight: 600; letter-spacing: -0.3px; }
         input[type="text"], select {
@@ -1052,6 +1062,11 @@
             <button type="button" class="btn-xs is-icon" onclick="dismissInstallBanner()" title="닫기" aria-label="닫기"><i class="ti ti-x"></i></button>
         </span>
     </div>
+    <!-- 샘플을 보는 동안: 이 지도를 종이로 뽑아 벽에 붙일 수 있다는 걸 실제 인쇄물로 보여준다 -->
+    <div id="printTipBanner" class="sample-banner print-tip" style="display: none;">
+        <span><i class="ti ti-printer"></i> 이 지도는 A4로 뽑아 벽에 붙일 수 있어요</span>
+        <button type="button" class="btn-xs is-accent" onclick="openPrintPreview()">인쇄물 보기</button>
+    </div>
     <div id="samplePreviewBanner" class="sample-banner" style="display: none;">
         <span id="samplePreviewText"><i class="ti ti-eye"></i> 샘플 미리보기 중이에요. 여기서 바꾼 건 저장되지 않아요</span>
         <button type="button" id="samplePreviewExit" class="btn-xs is-accent" onclick="exitSamplePreview()">내 지도로 돌아가기</button>
@@ -1060,15 +1075,20 @@
     <!-- 🏁 첫 방문(데이터 없음) 화면: 5초 안에 무엇을 해주는 서비스인지 보여준다 -->
     <section id="welcomeCard" class="welcome-card" style="display: none;">
         <button type="button" class="btn-xs welcome-back revisit-only" onclick="closeWelcomeRevisit()"><i class="ti ti-arrow-left"></i> 내 지도로 돌아가기</button>
-        <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="선반 사진 위에 구역이 표시되고, 찾는 칸에 핀이 꽂힌 그림">
-            <rect x="20" y="30" width="200" height="142" rx="10" fill="var(--bg)" stroke="var(--border)" stroke-width="2"/>
-            <g stroke="var(--border)" stroke-width="2"><line x1="20" y1="101" x2="220" y2="101"/><line x1="86" y1="30" x2="86" y2="172"/><line x1="153" y1="30" x2="153" y2="172"/></g>
+        <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="벽에 테이프로 붙인 선반 지도에서 찾는 칸에 핀이 꽂힌 그림">
+            <!-- 벽에 테이프로 붙인 종이: 이 지도를 뽑아 붙여 쓸 수 있다는 걸 글 없이 보여준다 -->
+            <rect x="13" y="22" width="216" height="154" rx="3" fill="#000" opacity=".07"/>
+            <rect x="10" y="19" width="216" height="154" rx="3" fill="var(--card)" stroke="var(--border)" stroke-width="1.5"/>
+            <rect x="20" y="30" width="200" height="132" rx="8" fill="var(--bg)" stroke="var(--border)" stroke-width="2"/>
+            <g stroke="var(--border)" stroke-width="2"><line x1="20" y1="96" x2="220" y2="96"/><line x1="86" y1="30" x2="86" y2="162"/><line x1="153" y1="30" x2="153" y2="162"/></g>
             <g fill="none" stroke="var(--accent-text)" stroke-width="2" stroke-dasharray="5 4" opacity=".4">
-                <rect x="27" y="37" width="52" height="57" rx="5"/><rect x="160" y="37" width="53" height="57" rx="5"/>
-                <rect x="27" y="108" width="52" height="57" rx="5"/><rect x="93" y="108" width="53" height="57" rx="5"/><rect x="160" y="108" width="53" height="57" rx="5"/>
+                <rect x="27" y="37" width="52" height="52" rx="5"/><rect x="160" y="37" width="53" height="52" rx="5"/>
+                <rect x="27" y="103" width="52" height="52" rx="5"/><rect x="93" y="103" width="53" height="52" rx="5"/><rect x="160" y="103" width="53" height="52" rx="5"/>
             </g>
+            <rect x="2" y="12" width="40" height="13" rx="1.5" fill="var(--accent2)" opacity=".55" transform="rotate(-24 22 18)"/>
+            <rect x="198" y="12" width="40" height="13" rx="1.5" fill="var(--accent2)" opacity=".55" transform="rotate(24 218 18)"/>
             <g class="welcome-hero-hit">
-                <rect x="93" y="37" width="53" height="57" rx="5" fill="var(--accent2)" fill-opacity=".35" stroke="var(--accent-text)" stroke-width="3"/>
+                <rect x="93" y="37" width="53" height="52" rx="5" fill="var(--accent2)" fill-opacity=".35" stroke="var(--accent-text)" stroke-width="3"/>
                 <circle cx="104" cy="48" r="9" fill="var(--accent)"/><text x="104" y="52" font-size="11" font-weight="700" fill="var(--on-accent)" text-anchor="middle">2</text>
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
@@ -1215,6 +1235,19 @@
     </div>
 </div>
 
+<div id="printBackdrop" onclick="closePrintPreview()"></div>
+<div id="printModal" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+    <div class="settings-head">
+        <h3 id="printTitle"><i class="ti ti-printer"></i> 벽에 붙일 지도</h3>
+        <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
+    </div>
+    <p class="print-sub">A4로 뽑아 선반 옆에 붙여두면, 앱을 열지 않아도 번호만 보고 찾을 수 있어요.</p>
+    <div id="printPages" class="print-pages"></div>
+    <div class="print-actions">
+        <button type="button" class="btn-base btn-secondary" onclick="closePrintPreview()">닫기</button>
+        <button type="button" id="printDownloadBtn" class="btn-base btn-primary" onclick="downloadReportAsPDF()"><i class="ti ti-download"></i> PDF로 받기</button>
+    </div>
+</div>
 <div id="settingsModal">
     <div class="settings-head">
         <h3><i class="ti ti-settings"></i> 설정</h3>
@@ -2149,7 +2182,7 @@
                 <div style="display: flex; gap: 6px; flex-shrink: 0;">
                     <button id="aiBtn-${data.id}" onclick="runAIAnalysis('${data.id}')" class="btn-xs is-accent"><i class="ti ti-sparkles"></i> AI 분석</button>
                     <button onclick="deleteImage('${data.id}')" class="btn-xs is-danger is-icon" title="사진 삭제" aria-label="사진 삭제"><i class="ti ti-trash"></i></button>
-                    <button onclick="downloadReportAsPDF()" class="btn-xs btn-quiet is-icon" title="PDF로 내보내기" aria-label="PDF로 내보내기"><i class="ti ti-file-export"></i></button>
+                    <button onclick="openPrintPreview('${data.id}')" class="btn-xs btn-quiet" title="인쇄해서 벽에 붙이기" aria-label="인쇄해서 벽에 붙이기"><i class="ti ti-printer"></i> 인쇄</button>
                 </div>
             </div><hr style="border: 0; border-top: 1px solid var(--border); margin-top: 8px;">`;
 
@@ -3545,7 +3578,7 @@
             ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(zx, zy, zw, zh);
             ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(zx, zy, zw, zh);
 
-            const r = Math.max(printPx(4), Math.round(Math.min(zw, zh) * 0.14)), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
+            const r = Math.max(printPx(5), Math.round(Math.min(zw, zh) * 0.16)), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.fillStyle = PRINT.ink; ctx.fill();
             ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
@@ -3559,33 +3592,37 @@
 
     // 한 사진의 인쇄 페이지들을 미리 계산: 제목/사진은 첫 페이지에, 범례는 넘치면 다음 페이지로 이어서.
     // 실제로 그리기 전에 각 줄의 높이를 먼저 재야 하므로, 측정 전용 캔버스를 하나 만들어 폰트를 맞춰 잰다.
+    // 벽에 붙여 1m 거리에서 읽히게: 목록 글씨를 키우고 2단으로 나누며, 아래에 기준 날짜와 "바뀌면 다시 뽑기" 안내를 넣는다
     function buildPrintPages(data, index, dateStr) {
         const pageW = printPx(PRINT.pageWmm), pageH = printPx(PRINT.pageHmm), margin = printPx(PRINT.marginMm);
-        const contentW = pageW - margin * 2;
+        const contentW = pageW - margin * 2, colGap = printPx(6), colW = (contentW - colGap) / 2;
         const meas = document.createElement('canvas').getContext('2d');
 
-        const titleFont = `bold ${printPx(6)}px sans-serif`, dateFont = `${printPx(3.2)}px sans-serif`;
-        const nameFont = `bold ${printPx(3.9)}px sans-serif`, itemFont = `${printPx(3.5)}px sans-serif`;
-        const nameLineH = printPx(5.2), itemLineH = printPx(4.6), rowGap = printPx(3.5), badgeR = printPx(3.2);
-        const textIndent = badgeR * 2 + printPx(3);
+        const titleFont = `bold ${printPx(7)}px sans-serif`, dateFont = `${printPx(3.6)}px sans-serif`, footFont = `${printPx(3.2)}px sans-serif`;
+        const nameFont = `bold ${printPx(4.8)}px sans-serif`, itemFont = `${printPx(4.4)}px sans-serif`;
+        const nameLineH = printPx(6.2), itemLineH = printPx(5.6), rowGap = printPx(4), badgeR = printPx(3.8);
+        const textIndent = badgeR * 2 + printPx(2.5), headH = printPx(12) + printPx(7), footH = printPx(10);
 
-        meas.font = nameFont;
         const photoH = data.canvas ? data.canvas.height * (contentW / data.canvas.width) : 0;
         const rows = data.zones.map((z, zi) => {
-            meas.font = nameFont; const nameLines = wrapCanvasText(meas, z.name || `${zi + 1}번 구역`, contentW - textIndent);
+            meas.font = nameFont; const nameLines = wrapCanvasText(meas, z.name || `${zi + 1}번 구역`, colW - textIndent);
             meas.font = itemFont; const itemText = z.items.length ? z.items.map(it => it.name).join(', ') : '비어 있음';
-            const itemLines = wrapCanvasText(meas, itemText, contentW - textIndent);
-            const h = nameLines.length * nameLineH + itemLines.length * itemLineH + rowGap;
-            return { z, zi, nameLines, itemLines, h };
+            const itemLines = wrapCanvasText(meas, itemText, colW - textIndent);
+            return { z, zi, nameLines, itemLines, h: nameLines.length * nameLineH + itemLines.length * itemLineH + rowGap };
         });
 
-        const pages = []; // 각 페이지: { photo: bool, rows: [...] }
-        let page = { photo: true, rows: [] };
-        let y = margin + printPx(11) + photoH + printPx(8); // 제목줄 + 사진 다음 시작 y (첫 페이지 기준)
+        // 쪽 나누기: 첫 쪽은 사진 아래부터, 왼쪽 단을 채운 뒤 오른쪽 단, 그래도 넘치면 다음 쪽
+        const pages = [];
+        let page = { photo: true, cols: [[], []] }, col = 0;
+        const top0 = () => margin + headH + (page.photo ? photoH + printPx(8) : 0);
+        let y = top0();
+        const limitY = pageH - margin - footH;
         rows.forEach(row => {
-            const limitY = pageH - margin;
-            if (y + row.h > limitY) { pages.push(page); page = { photo: false, rows: [] }; y = margin; }
-            page.rows.push(row); y += row.h;
+            if (y + row.h > limitY) {
+                if (col === 0) { col = 1; y = top0(); }
+                else { pages.push(page); page = { photo: false, cols: [[], []] }; col = 0; y = top0(); }
+            }
+            page.cols[col].push(row); y += row.h;
         });
         pages.push(page);
 
@@ -3597,38 +3634,71 @@
 
             ctx.textBaseline = 'alphabetic';
             ctx.font = titleFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left';
-            ctx.fillText((data.title || `#${index + 1}`) + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(6));
+            ctx.fillText((data.title || `#${index + 1}`) + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(7));
             ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'right';
-            ctx.fillText(dateStr, pageW - margin, cy + printPx(6));
-            cy += printPx(11);
-            ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.5); ctx.beginPath();
+            ctx.fillText(dateStr, pageW - margin, cy + printPx(7));
+            cy += printPx(12);
+            ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.6); ctx.beginPath();
             ctx.moveTo(margin, cy); ctx.lineTo(pageW - margin, cy); ctx.stroke();
             cy += printPx(7);
 
             if (pg.photo && data.canvas) { cy += drawPrintPhoto(ctx, data, margin, cy, contentW) + printPx(8); }
 
-            pg.rows.forEach(row => {
-                ctx.beginPath(); ctx.arc(margin + badgeR, cy + badgeR, badgeR, 0, Math.PI * 2);
-                ctx.fillStyle = PRINT.ink; ctx.fill();
-                ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(badgeR * 1.1)}px sans-serif`;
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(String(row.zi + 1), margin + badgeR, cy + badgeR + 1);
+            pg.cols.forEach((list, ci) => {
+                const x0 = margin + ci * (colW + colGap);
+                let ry0 = cy;
+                list.forEach(row => {
+                    ctx.beginPath(); ctx.arc(x0 + badgeR, ry0 + badgeR, badgeR, 0, Math.PI * 2);
+                    ctx.fillStyle = PRINT.ink; ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(badgeR * 1.15)}px sans-serif`;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(String(row.zi + 1), x0 + badgeR, ry0 + badgeR + 1);
 
-                ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-                ctx.font = nameFont; ctx.fillStyle = PRINT.ink;
-                row.nameLines.forEach((line, li) => ctx.fillText(line, margin + textIndent, cy + nameLineH * (li + 1) - printPx(1.2)));
-                let ry = cy + row.nameLines.length * nameLineH;
-                ctx.font = itemFont; ctx.fillStyle = PRINT.sub;
-                row.itemLines.forEach((line, li) => ctx.fillText(line, margin + textIndent, ry + itemLineH * (li + 1) - printPx(1.2)));
-                ry += row.itemLines.length * itemLineH;
+                    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                    ctx.font = nameFont; ctx.fillStyle = PRINT.ink;
+                    row.nameLines.forEach((line, li) => ctx.fillText(line, x0 + textIndent, ry0 + nameLineH * (li + 1) - printPx(1.4)));
+                    let ry = ry0 + row.nameLines.length * nameLineH;
+                    ctx.font = itemFont; ctx.fillStyle = '#3d3b36';
+                    row.itemLines.forEach((line, li) => ctx.fillText(line, x0 + textIndent, ry + itemLineH * (li + 1) - printPx(1.4)));
+                    ry += row.itemLines.length * itemLineH;
 
-                ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.2); ctx.beginPath();
-                ctx.moveTo(margin, ry + printPx(1.5)); ctx.lineTo(pageW - margin, ry + printPx(1.5)); ctx.stroke();
-                cy = ry + rowGap;
+                    ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.2); ctx.beginPath();
+                    ctx.moveTo(x0, ry + printPx(1.5)); ctx.lineTo(x0 + colW, ry + printPx(1.5)); ctx.stroke();
+                    ry0 = ry + rowGap;
+                });
             });
+
+            // 아래 안내: 종이는 바뀌면 낡으니, 고치고 다시 뽑는 습관을 알려준다
+            ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.3); ctx.beginPath();
+            ctx.moveTo(margin, pageH - margin - printPx(7)); ctx.lineTo(pageW - margin, pageH - margin - printPx(7)); ctx.stroke();
+            ctx.font = footFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            ctx.fillText(`${dateStr} · 위치가 바뀌면 앱에서 고치고 다시 뽑아 붙이세요`, margin, pageH - margin - printPx(1));
+            ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - margin, pageH - margin - printPx(1));
 
             return canvas.toDataURL('image/jpeg', 0.92);
         });
+    }
+
+    // 인쇄물 미리보기: 보고 있는 사진 한 장의 A4 페이지를 그대로 보여주고, 받기는 전체 사진을 한 PDF로
+    function openPrintPreview(dataId) {
+        const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
+        if (!photos.length) { alert("먼저 사진을 등록해주세요."); return; }
+        const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
+        const pages = buildPrintPages(data, photos.indexOf(data), printDateStr());
+        document.getElementById('printPages').innerHTML = pages.map((src, i) => `<img src="${src}" alt="${escapeHtml(data.title || '')} 인쇄물 ${i + 1}쪽">`).join('');
+        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${photos.length > 1 ? ` (${photos.length}장)` : ''}`;
+        document.getElementById('printModal').style.display = 'block';
+        document.body.classList.add('print-open'); lockPageScroll();
+    }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePrintPreview(); });
+    function closePrintPreview() {
+        if (document.getElementById('printModal').style.display !== 'block') return;
+        document.getElementById('printModal').style.display = 'none';
+        document.body.classList.remove('print-open'); unlockPageScroll();
+    }
+    function printDateStr() {
+        const t = new Date();
+        return `${t.getFullYear()}.${String(t.getMonth() + 1).padStart(2, '0')}.${String(t.getDate()).padStart(2, '0')} 기준`;
     }
 
     async function downloadReportAsPDF() {
@@ -3642,8 +3712,7 @@
         }
 
         try {
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')} 기준`;
+            const dateStr = printDateStr();
             let firstPage = true;
             photos.forEach((data, pi) => {
                 buildPrintPages(data, pi, dateStr).forEach(imgData => {
@@ -3698,6 +3767,7 @@
             });
             activateHeroSearch();
             if (deleteSampleBtn && safeStorage.getItem('isSampleData') === '1') deleteSampleBtn.style.display = 'flex';
+            if (isSamplePreview || safeStorage.getItem('isSampleData') === '1') document.getElementById('printTipBanner').style.display = 'flex';
             if (isSamplePreview) {
                 document.getElementById('samplePreviewBanner').style.display = 'flex';
                 if (currentSampleKey() === 'organizer') {
