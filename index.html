@@ -3906,7 +3906,7 @@
     // 🖨 인쇄용 창고 지도: 화면 캡처(html2canvas) 대신 페이지를 캔버스에 직접 그려서 이미지로 넣는다.
     //    jsPDF 내장 폰트(Helvetica)는 한글 글리프가 없어 doc.text()로 한글을 쓰면 글자가 깨지므로
     //    (숫자·기호까지 같이 깨지는 걸 실측으로 확인) 제목·범례까지 전부 캔버스 텍스트로 그린다.
-    //    사진 위에는 번호만 남기고(말풍선·개수 표시 없이), 물건 목록은 그 아래 번호별 범례로 분리한다.
+    //    사진 위에는 화면처럼 노란 쪽지, 그 아래에는 가나다순 "물건 찾아보기"(물건 → 칸 번호).
     // ────────────────────────────────────────────────────────────
     const PRINT = { pageWmm: 210, pageHmm: 297, marginMm: 14, pxPerMm: 8, ink: '#1a1a18', sub: '#6b6960', line: '#e0dbd0' };
     function printPx(mm) { return Math.round(mm * PRINT.pxPerMm); }
@@ -3932,59 +3932,126 @@
         return lines.length ? lines : [''];
     }
 
-    // 구역 사진 부분: 번호 배지 + 이중 테두리만 그린다 (개수 표시는 아래 범례가 대신함)
+    // 인쇄 사진: 화면처럼 칸마다 노란 쪽지에 물건 이름 + 쪽지 구석에 작은 칸 번호 (장 앞에서 "여기 뭐 있지?"에 바로 답)
+    // 칸 높이에 다 들어가면 전부, 모자라면 글자를 조금 줄여 보고, 그래도 넘치면 앞에서부터 + "+N개 더" (빠진 물건은 아래 찾아보기에 다 있다)
+    function drawPrintBadge(ctx, cx, cy, r, text) {
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = PRINT.ink; ctx.fill(); ctx.lineWidth = printPx(0.35); ctx.strokeStyle = '#fff'; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(r * (text.length > 1 ? 1.0 : 1.2))}px sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, cx, cy + 1);
+    }
+    function layoutPrintNote(ctx, z, zw, zh, fsMm) {
+        const fs = printPx(fsMm), lh = Math.round(fs * 1.3), padX = printPx(1.6), padY = printPx(1.1), inset = printPx(2.4);
+        const maxW = zw - inset - printPx(1) - padX * 2, maxH = zh - inset - printPx(1) - padY * 2;
+        ctx.font = `600 ${fs}px sans-serif`;
+        const wrapName = (t) => wrapCanvasText(ctx, t, Math.max(fs, maxW));
+        const names = z.items.map(it => it.name), n = names.length;
+        const build = (k) => { // 앞에서 k개 + 나머지 개수
+            const lines = []; names.slice(0, k).forEach(t => wrapName(t).forEach((l, i) => lines.push({ t: l, cont: i > 0 })));
+            if (k < n) lines.push({ t: `+${n - k}개 더`, more: true });
+            return lines;
+        };
+        for (let k = n; k >= 1; k--) { const lines = build(k); if (lines.length * lh <= maxH) return { fs, lh, padX, padY, inset, lines, fit: k === n }; }
+        // 한 줄도 안 들어가는 낮은 칸: "첫 물건 +N" 한 줄을 말줄임
+        let t = names[0]; const tail = n > 1 ? ` +${n - 1}` : '';
+        while (t.length > 1 && ctx.measureText(t + '…' + tail).width > maxW) t = t.slice(0, -1);
+        if (t !== names[0]) t += '…';
+        return { fs, lh, padX, padY, inset, lines: [{ t: t + tail }], fit: false };
+    }
     function drawPrintPhoto(ctx, data, x, y, w) {
         const scale = w / data.canvas.width, h = data.canvas.height * scale;
         ctx.save();
         ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, w, h);
         if (data.img && data.img.src) { try { ctx.drawImage(data.img, x, y, w, h); } catch (e) {} }
-        data.zones.forEach((z, i) => {
+        ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+        const badgeR = printPx(2.6);
+        data.zones.forEach((z) => {
             const zx = x + z.x * scale, zy = y + z.y * scale, zw = z.w * scale, zh = z.h * scale;
             ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(zx, zy, zw, zh);
             ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(zx, zy, zw, zh);
-
-            // 번호 원은 한 장 안에서 모두 같은 크기(반지름 5.5mm)로. 칸 크기에 비례시키면 큰 칸 번호만 혼자 커 보였다.
-            // 원이 칸을 덮을 만큼 작은 칸에서만 줄인다 (최소 3.5mm)
-            const r = Math.round(Math.max(printPx(3.5), Math.min(printPx(5.5), Math.min(zw, zh) * 0.35))), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
-            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.fillStyle = PRINT.ink; ctx.fill();
-            ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
-            ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(r * 1.15)}px sans-serif`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(String(i + 1), cx, cy + 1);
+        });
+        data.zones.forEach((z, i) => {
+            const zx = x + z.x * scale, zy = y + z.y * scale, zw = z.w * scale, zh = z.h * scale;
+            const num = String(i + 1);
+            if (!z.items.length) { drawPrintBadge(ctx, zx + badgeR + printPx(1.2), zy + badgeR + printPx(1.2), badgeR, num); return; } // 빈 칸: 번호만
+            let L = layoutPrintNote(ctx, z, zw, zh, 3.8);
+            if (!L.fit) { const s2 = layoutPrintNote(ctx, z, zw, zh, 3.1); if (s2.fit || s2.lines.length > L.lines.length) L = s2; }
+            ctx.font = `600 ${L.fs}px sans-serif`;
+            const textW = Math.max(...L.lines.map(l => ctx.measureText(l.t).width + (l.cont ? L.fs * 0.6 : 0)));
+            const nw = Math.min(zw - L.inset - printPx(1), textW + L.padX * 2), nh = L.lines.length * L.lh + L.padY * 2;
+            const nx = zx + L.inset, ny = zy + L.inset + (L.lines.length === 1 && nh > zh - L.inset ? (zh - nh) / 2 - L.inset : 0);
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = printPx(1.2); ctx.shadowOffsetY = printPx(0.4);
+            ctx.fillStyle = '#fff3a3'; ctx.beginPath(); drawSafeRoundRect(ctx, nx, ny, nw, nh, printPx(0.8)); ctx.fill();
+            ctx.restore();
+            ctx.save(); ctx.beginPath(); ctx.rect(nx, ny, nw, nh); ctx.clip();
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            L.lines.forEach((l, li) => {
+                ctx.font = `${l.more ? 500 : 600} ${L.fs}px sans-serif`; ctx.fillStyle = l.more ? '#7a6a1e' : '#2b2716';
+                ctx.fillText(l.t, nx + L.padX + (l.cont ? L.fs * 0.6 : 0), ny + L.padY + L.lh * (li + 0.5) + 1);
+            });
+            ctx.restore();
+            drawPrintBadge(ctx, Math.max(x + badgeR, nx - printPx(0.6)), Math.max(y + badgeR, ny - printPx(0.6)), badgeR, num);
         });
         ctx.restore();
         return h;
     }
 
-    // 한 사진의 인쇄 페이지들을 미리 계산: 제목/사진은 첫 페이지에, 범례는 넘치면 다음 페이지로 이어서.
+    // 종이에는 검색이 없으니 책 뒤의 찾아보기처럼: 모든 물건을 가나다순으로, 오른쪽에 칸 번호 (세부 위치 메모는 아래 작게)
+    const CHO = ['ㄱ', 'ㄱ', 'ㄴ', 'ㄷ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅂ', 'ㅅ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    function indexInitial(name) {
+        const c = name.trim().charCodeAt(0) - 0xAC00;
+        if (c >= 0 && c < 11172) return CHO[Math.floor(c / 588)];
+        const ch = name.trim().charAt(0).toUpperCase();
+        return /[A-Z]/.test(ch) ? ch : /[0-9]/.test(ch) ? '0-9' : '기타';
+    }
+    function printIndexEntries(data) {
+        const map = new Map();
+        data.zones.forEach((z, zi) => z.items.forEach(it => {
+            const key = it.name.trim(); if (!key) return;
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push({ num: zi + 1, comment: (it.comment || '').trim() });
+        }));
+        return [...map.entries()].map(([name, at]) => ({ name, at: at.sort((a, b) => a.num - b.num) }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    }
+
+    // 한 사진의 인쇄 페이지들: 첫 쪽에 제목·쪽지 사진, 그 아래(넘치면 다음 쪽)에 2단 "물건 찾아보기"
     // 실제로 그리기 전에 각 줄의 높이를 먼저 재야 하므로, 측정 전용 캔버스를 하나 만들어 폰트를 맞춰 잰다.
-    // 벽에 붙여 1m 거리에서 읽히게: 목록 글씨를 키우고 2단으로 나누며, 아래에 기준 날짜와 "바뀌면 다시 뽑기" 안내를 넣는다
     function buildPrintPages(data, index, dateStr) {
         const pageW = printPx(PRINT.pageWmm), pageH = printPx(PRINT.pageHmm), margin = printPx(PRINT.marginMm);
-        const contentW = pageW - margin * 2, colGap = printPx(6), colW = (contentW - colGap) / 2;
+        const contentW = pageW - margin * 2, colGap = printPx(8), colW = (contentW - colGap) / 2;
         const meas = document.createElement('canvas').getContext('2d');
 
         const titleFont = `bold ${printPx(7)}px sans-serif`, dateFont = `${printPx(3.6)}px sans-serif`, footFont = `${printPx(3.2)}px sans-serif`;
-        const nameFont = `bold ${printPx(4.8)}px sans-serif`, itemFont = `${printPx(4.4)}px sans-serif`;
-        const nameLineH = printPx(6.2), itemLineH = printPx(5.6), rowGap = printPx(4), badgeR = printPx(3.8);
-        const textIndent = badgeR * 2 + printPx(2.5), headH = printPx(12) + printPx(7), footH = printPx(10);
+        const secFont = `bold ${printPx(4.4)}px sans-serif`, initFont = `bold ${printPx(3.4)}px sans-serif`;
+        const nameFont = `600 ${printPx(4.2)}px sans-serif`, memoFont = `${printPx(3.2)}px sans-serif`;
+        const nameLineH = printPx(5.6), memoLineH = printPx(4.2), rowGap = printPx(1.2), badgeR = printPx(2.5);
+        const headH = printPx(12) + printPx(7), footH = printPx(10), secH = printPx(9);
 
         const photoH = data.canvas ? data.canvas.height * (contentW / data.canvas.width) : 0;
-        const rows = data.zones.map((z, zi) => {
-            meas.font = nameFont; const nameLines = wrapCanvasText(meas, z.name || `${zi + 1}번 구역`, colW - textIndent);
-            meas.font = itemFont; const itemText = z.items.length ? z.items.map(it => it.name).join(', ') : '비어 있음';
-            const itemLines = wrapCanvasText(meas, itemText, colW - textIndent);
-            return { z, zi, nameLines, itemLines, h: nameLines.length * nameLineH + itemLines.length * itemLineH + rowGap };
+        // 찾아보기 줄: 왼쪽 여백에 첫소리(ㄱ·ㄴ…, 바뀔 때만), 물건 이름 ······ 칸 번호들, 메모가 있으면 아래 줄
+        // (첫소리를 따로 한 줄씩 두면 자리를 많이 먹어 한두 줄만 다음 쪽으로 넘어갔다)
+        const gutter = printPx(6), groupGap = printPx(2.2);
+        const entries = printIndexEntries(data), rows = [];
+        let lastInit = null;
+        entries.forEach(e => {
+            const init = indexInitial(e.name), first = init !== lastInit; lastInit = init;
+            const badgesW = e.at.length > 0 ? [...new Set(e.at.map(a => a.num))].length * (badgeR * 2 + printPx(1)) : 0;
+            meas.font = nameFont; const nameLines = wrapCanvasText(meas, e.name, colW - gutter - badgesW - printPx(6));
+            meas.font = memoFont;
+            const memos = e.at.filter(a => a.comment).flatMap(a => wrapCanvasText(meas, (e.at.length > 1 ? `${a.num}번: ` : '') + a.comment, colW - gutter - printPx(4)));
+            rows.push({ type: 'item', e, init: first ? init : null, nameLines, memos, nums: [...new Set(e.at.map(a => a.num))], h: (first && rows.length ? groupGap : 0) + nameLines.length * nameLineH + memos.length * memoLineH + rowGap });
         });
+        if (!rows.length) rows.push({ type: 'empty', h: nameLineH });
 
-        // 쪽 나누기: 첫 쪽은 사진 아래부터, 왼쪽 단을 채운 뒤 오른쪽 단, 그래도 넘치면 다음 쪽
+        // 쪽 나누기: 첫 쪽은 사진 아래부터, 왼쪽 단을 채운 뒤 오른쪽 단, 그래도 넘치면 다음 쪽 (머리글이 단 맨 끝에 혼자 남지 않게)
         const pages = [];
         let page = { photo: true, cols: [[], []] }, col = 0;
-        const top0 = () => margin + headH + (page.photo ? photoH + printPx(8) : 0);
+        const top0 = () => margin + headH + (page.photo ? photoH + printPx(8) : 0) + secH;
         let y = top0();
         const limitY = pageH - margin - footH;
-        rows.forEach(row => {
+        rows.forEach((row) => {
             if (y + row.h > limitY) {
                 if (col === 0) { col = 1; y = top0(); }
                 else { pages.push(page); page = { photo: false, cols: [[], []] }; col = 0; y = top0(); }
@@ -4011,27 +4078,47 @@
 
             if (pg.photo && data.canvas) { cy += drawPrintPhoto(ctx, data, margin, cy, contentW) + printPx(8); }
 
+            // 찾아보기 제목
+            ctx.font = secFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            ctx.fillText('물건 찾아보기', margin, cy + printPx(5));
+            const secW = ctx.measureText('물건 찾아보기').width;
+            ctx.font = dateFont; ctx.fillStyle = PRINT.sub;
+            ctx.fillText('가나다순 · 오른쪽 숫자 = 사진 속 칸 번호', margin + secW + printPx(3), cy + printPx(5));
+            cy += secH;
+
             pg.cols.forEach((list, ci) => {
                 const x0 = margin + ci * (colW + colGap);
-                let ry0 = cy;
+                let ry = cy;
                 list.forEach(row => {
-                    ctx.beginPath(); ctx.arc(x0 + badgeR, ry0 + badgeR, badgeR, 0, Math.PI * 2);
-                    ctx.fillStyle = PRINT.ink; ctx.fill();
-                    ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(badgeR * 1.15)}px sans-serif`;
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(String(row.zi + 1), x0 + badgeR, ry0 + badgeR + 1);
-
-                    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-                    ctx.font = nameFont; ctx.fillStyle = PRINT.ink;
-                    row.nameLines.forEach((line, li) => ctx.fillText(line, x0 + textIndent, ry0 + nameLineH * (li + 1) - printPx(1.4)));
-                    let ry = ry0 + row.nameLines.length * nameLineH;
-                    ctx.font = itemFont; ctx.fillStyle = '#3d3b36';
-                    row.itemLines.forEach((line, li) => ctx.fillText(line, x0 + textIndent, ry + itemLineH * (li + 1) - printPx(1.4)));
-                    ry += row.itemLines.length * itemLineH;
-
-                    ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.2); ctx.beginPath();
-                    ctx.moveTo(x0, ry + printPx(1.5)); ctx.lineTo(x0 + colW, ry + printPx(1.5)); ctx.stroke();
-                    ry0 = ry + rowGap;
+                    if (row.type === 'empty') {
+                        ctx.font = nameFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                        ctx.fillText('아직 적은 물건이 없어요', x0, ry + nameLineH - printPx(1.4)); ry += row.h; return;
+                    }
+                    const rowTop = ry;
+                    // 단이 바뀌어 같은 첫소리가 이어지면 단 맨 위에 첫소리를 한 번 더 적는다
+                    const ini = row.init || (ry === cy ? indexInitial(row.e.name) : null);
+                    if (ini) {
+                        if (row.init && ry > cy) { ry += groupGap; ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.25); ctx.beginPath(); ctx.moveTo(x0, ry - groupGap / 2); ctx.lineTo(x0 + colW, ry - groupGap / 2); ctx.stroke(); }
+                        ctx.font = initFont; ctx.fillStyle = '#a08a2a'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                        ctx.fillText(ini, x0, ry + nameLineH - printPx(1.6));
+                    }
+                    const nx0 = x0 + gutter;
+                    // 물건 이름 ······ ② ⑤
+                    ctx.font = nameFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                    row.nameLines.forEach((line, li) => ctx.fillText(line, nx0, ry + nameLineH * (li + 1) - printPx(1.4)));
+                    const lastW = ctx.measureText(row.nameLines[row.nameLines.length - 1]).width;
+                    const by = ry + nameLineH * (row.nameLines.length - 0.5);
+                    let bx = x0 + colW - badgeR;
+                    [...row.nums].reverse().forEach(nm => { drawPrintBadge(ctx, bx, by, badgeR, String(nm)); bx -= badgeR * 2 + printPx(1); });
+                    const dotFrom = nx0 + lastW + printPx(2), dotTo = bx + badgeR - printPx(1);
+                    if (dotTo - dotFrom > printPx(3)) {
+                        ctx.save(); ctx.strokeStyle = '#b9b4aa'; ctx.lineWidth = printPx(0.35); ctx.setLineDash([printPx(0.4), printPx(1.2)]); ctx.lineCap = 'round';
+                        ctx.beginPath(); ctx.moveTo(dotFrom, by + printPx(0.8)); ctx.lineTo(dotTo, by + printPx(0.8)); ctx.stroke(); ctx.restore();
+                    }
+                    let my = ry + row.nameLines.length * nameLineH;
+                    ctx.font = memoFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                    row.memos.forEach((m, mi) => ctx.fillText(m, nx0 + printPx(3), my + memoLineH * (mi + 1) - printPx(1.1)));
+                    ry = rowTop + row.h - (row.init && rowTop === cy && rows.indexOf(row) > 0 ? groupGap : 0);
                 });
             });
 
