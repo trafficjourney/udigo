@@ -3664,7 +3664,9 @@
             ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(zx, zy, zw, zh);
             ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(zx, zy, zw, zh);
 
-            const r = Math.max(printPx(5), Math.round(Math.min(zw, zh) * 0.16)), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
+            // 번호 원은 한 장 안에서 모두 같은 크기(반지름 5.5mm)로. 칸 크기에 비례시키면 큰 칸 번호만 혼자 커 보였다.
+            // 원이 칸을 덮을 만큼 작은 칸에서만 줄인다 (최소 3.5mm)
+            const r = Math.round(Math.max(printPx(3.5), Math.min(printPx(5.5), Math.min(zw, zh) * 0.35))), cx = zx + r + printPx(2), cy = zy + r + printPx(2);
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.fillStyle = PRINT.ink; ctx.fill();
             ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
