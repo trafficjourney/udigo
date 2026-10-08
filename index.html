@@ -189,11 +189,11 @@
             --active-zone-bar: #c8a96e;
             --zone-stroke: #33302e;
             --zone-fill-rgb: 51, 48, 46;
-            --hero-bg: #33302e;
-            --hero-text: #ffffff;
-            --hero-text2: rgba(255,255,255,0.7);
-            --hero-chip-bg: rgba(255,255,255,0.08);
-            --hero-chip-border: rgba(255,255,255,0.22);
+            --hero-bg: #ffffff;
+            --hero-text: #2b2827;
+            --hero-text2: #6b6461;
+            --hero-chip-bg: #faf8f4;
+            --hero-chip-border: #e3d3b4;
             --notice-bg: #fbf7ef;
             --notice-border: #ece3d3;
             --notice-text: #33302e;
@@ -208,6 +208,8 @@
             --edit-frame: #c8a96e;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
         :root[data-theme="champagne"] .zl-num { background: #c8a96e; color: #2b2827; }
+        /* 휴대폰 검색 홈: 짙은 바탕은 칙칙해 보여 흰 바탕 + 샴페인골드 테두리 검색창 */
+        :root[data-theme="champagne"] body.hero-search-active .search-bar .search-input-wrap { border: 1.5px solid #c8a96e; }
         :root[data-theme="champagne"] .zone-item.active .zl-num { background: var(--danger); color: #fff; }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
