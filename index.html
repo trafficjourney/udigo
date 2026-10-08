@@ -13,9 +13,9 @@
     <script>
         // 화면 테마: 페인트 전에 적용해서 기본 테마가 잠깐 보였다 바뀌는 깜빡임을 막는다
         // 처음 방문(고른 적 없음)은 모노(흑백)가 기본. 직접 고른 테마는 그대로 유지 (없어진 블랙 테마들은 기본으로)
-        let t = 'mono';
-        try { t = localStorage.getItem('uiTheme') || 'mono'; } catch (e) {}
-        if (t === 'dark' || t === 'redblack' || t === 'gold') t = 'mono';
+        let t = 'champagne';
+        try { t = localStorage.getItem('uiTheme') || 'champagne'; } catch (e) {}
+        if (t === 'dark' || t === 'redblack' || t === 'gold') t = 'champagne';
         if (t !== 'default') document.documentElement.dataset.theme = t;
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
@@ -103,7 +103,7 @@
             --accent-text: var(--accent);  /* 텍스트로 쓰는 강조색 — 어두운 카드 위에서 --accent 자체가 흐리게 읽히는 테마만 덮어씀 */
         }
 
-        /* 💜 인디고 테마 (기본, 저장값은 'mono'): 흰 머리글·남보라(인디고) 버튼. 노랑의 반대색이라 사진 위 노란 쪽지가 가장 또렷하다.
+        /* 💜 인디고 테마 (저장값은 'mono'): 흰 머리글·남보라(인디고) 버튼. 노랑의 반대색이라 사진 위 노란 쪽지가 가장 또렷하다.
            앱 안에서 색이 있는 건 노란 쪽지와 찾은 칸 빨강뿐이라, 사진 위 쪽지가 가장 먼저 눈에 들어온다 */
         :root[data-theme="mono"] {
             --bg: #f3f2f9;
@@ -156,7 +156,7 @@
             --edit-frame: #3b3577;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
-        /* 🥂 샴페인 테마: 흰 바탕 + 옅은 검정 버튼 + 샴페인골드 포인트(번호·테두리). 밝은 금색은 흰 글씨가 안 읽혀 버튼엔 쓰지 않는다 */
+        /* 🥂 샴페인 테마 (기본): 흰 바탕 + 옅은 검정 버튼 + 샴페인골드 포인트(번호·테두리). 밝은 금색은 흰 글씨가 안 읽혀 버튼엔 쓰지 않는다 */
         :root[data-theme="champagne"] {
             --bg: #faf8f4;
             --card: #ffffff;
@@ -1486,11 +1486,11 @@
     <div class="settings-group">
         <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
-            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
-                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
+            <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙 (기본)">
+                <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>기본</span>
             </button>
-            <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙">
-                <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>샴페인</span>
+            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고">
+                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>인디고</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
@@ -2302,7 +2302,7 @@
         });
     }
 
-    // 🎨 화면 테마 전환 (기본 모노 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
+    // 🎨 화면 테마 전환 (기본 샴페인 / 인디고 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
     const THEME_META_COLORS = { mono: '#ffffff', champagne: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
     function setTheme(name) {
         if (name === 'default') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = name;
