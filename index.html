@@ -103,57 +103,57 @@
             --accent-text: var(--accent);  /* 텍스트로 쓰는 강조색 — 어두운 카드 위에서 --accent 자체가 흐리게 읽히는 테마만 덮어씀 */
         }
 
-        /* ⚫⚪ 모노 테마 (기본): 흰 머리글·검정 글씨·검정 주요 버튼, 강조도 회색 단계로만.
+        /* 🩶 슬레이트 테마 (기본, 저장값은 'mono'): 흰 머리글·푸른 기 도는 회색 버튼, 강조도 회색 단계로만.
            앱 안에서 색이 있는 건 노란 쪽지와 찾은 칸 빨강뿐이라, 사진 위 쪽지가 가장 먼저 눈에 들어온다 */
         :root[data-theme="mono"] {
-            --bg: #f4f4f4;
+            --bg: #eef1f4;
             --card: #ffffff;
-            --border: #e1e1e1;
-            --accent: #111111;
-            --accent2: #555555;
-            --text: #111111;
-            --text2: #5f5f5f;
-            --text3: #9a9a9a;
-            --search-hl: #e4e4e4;
-            --zone-border: rgba(17,17,17,0.85);
+            --border: #d8dee6;
+            --accent: #475569;
+            --accent2: #7b8798;
+            --text: #1f2937;
+            --text2: #5b6675;
+            --text3: #9aa4b2;
+            --search-hl: #dfe5ec;
+            --zone-border: rgba(71,85,105,0.85);
             --ivory-bg: rgba(255,255,255,0.92);
-            --ivory-border: #e1e1e1;
-            --charcoal: #111111;
+            --ivory-border: #d8dee6;
+            --charcoal: #475569;
             --ivory-text: #ffffff;
-            --charcoal-mute: #5f5f5f;
-            --shadow-focus: 0 0 0 4px rgba(17,17,17,0.16);
+            --charcoal-mute: #5b6675;
+            --shadow-focus: 0 0 0 4px rgba(71,85,105,0.2);
 
-            --accent-hover: #000000;
-            --accent-soft: #ececec;
-            --accent-rgb: 17, 17, 17;
-            --accent-dark-rgb: 17, 17, 17;
+            --accent-hover: #334155;
+            --accent-soft: #e3e8ef;
+            --accent-rgb: 71, 85, 105;
+            --accent-dark-rgb: 71, 85, 105;
             --on-accent2: #ffffff;
             --on-accent: #ffffff;
             --header-bg: rgba(255,255,255,0.94);
-            --header-text: #111111;
-            --badge-bg: #111111;
+            --header-text: #1f2937;
+            --badge-bg: #475569;
             --badge-text: #ffffff;
-            --active-zone-bg: #f0f0f0;
-            --active-zone-bar: #111111;
-            --zone-stroke: #111111;
-            --zone-fill-rgb: 17, 17, 17;
-            --hero-bg: #111111;
+            --active-zone-bg: #e9edf2;
+            --active-zone-bar: #475569;
+            --zone-stroke: #475569;
+            --zone-fill-rgb: 71, 85, 105;
+            --hero-bg: #334155;
             --hero-text: #ffffff;
             --hero-text2: rgba(255,255,255,0.7);
             --hero-chip-bg: rgba(255,255,255,0.08);
             --hero-chip-border: rgba(255,255,255,0.22);
-            --notice-bg: #f2f2f2;
-            --notice-border: #dddddd;
-            --notice-text: #333333;
+            --notice-bg: #edf1f5;
+            --notice-border: #d8dee6;
+            --notice-text: #334155;
             --danger-soft: #f7e4e4;
-            --accent-text: #111111;
+            --accent-text: #334155;
             /* 편집 중 띠: 흰 머리글과 확실히 다르게 검정 띠 + 흰 [완료] */
-            --editbar-bg: #111111;
+            --editbar-bg: #334155;
             --editbar-text: #ffffff;
-            --editbar-line: #111111;
+            --editbar-line: #334155;
             --editbar-done-bg: #ffffff;
-            --editbar-done-text: #111111;
-            --edit-frame: #111111;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
+            --editbar-done-text: #334155;
+            --edit-frame: #475569;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
@@ -851,6 +851,10 @@
             padding: 0; overflow: hidden; overflow: clip; flex-direction: column;
             max-height: 85vh; max-height: 85dvh; width: calc(100% - 24px); max-width: 440px;
         }
+        /* 휴대폰: 아래에서 올라오는 시트로 (위쪽에 사진이 보여 어느 칸인지 알 수 있게) */
+        @media (max-width: 600px) {
+            #modal { top: auto; bottom: 0; left: 0; transform: none; width: 100%; max-width: none; max-height: 78vh; max-height: 78dvh; border-radius: 22px 22px 0 0; border-bottom: 0; }
+        }
         body.zone-modal-open::before { content: ''; position: fixed; inset: 0; background: rgba(26,26,24,0.4); z-index: 9998; }
         .zm-head { display: flex; align-items: flex-start; gap: 8px; padding: 18px 12px 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .zm-name-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -938,7 +942,39 @@
             padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
         }
         .zm-foot .btn-base { min-height: 48px; font-size: 15px; white-space: nowrap; }
-        .zm-delete { background: none; border: 1px solid var(--border); color: var(--danger); box-shadow: none; padding: 0 16px; }
+
+        /* ── 구역 창 칩 모양 (상자 안에 상자를 없애 덜 답답하게) ── */
+        .zm-head { align-items: center; padding: 14px 8px 12px 20px; }
+        .zm-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        .zm-title { display: flex; align-items: center; gap: 6px; color: var(--text3); }
+        #modal .zm-title .zm-name { flex: 1; min-width: 0; height: 40px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; box-shadow: none; font-size: 20px; font-weight: 800; color: var(--text); }
+        #modal .zm-title .zm-name:focus { border-bottom-color: var(--accent); }
+        .zm-title .ti-pencil { font-size: 16px; flex: none; pointer-events: none; }
+        .zm-head .zm-close { margin-top: 0; }
+        .zm-del { color: var(--text3); font-size: 19px; }
+        .zm-body .zm-section-head { margin: 4px 0 10px; }
+        .zm-body .zm-add-head { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+        .zm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        #zmPicked:empty::before { content: attr(data-empty); font-size: 13px; color: var(--text3); padding: 6px 0; }
+        .zm-body .zm-item { border-radius: var(--radius-pill); background: var(--card); border: 1px solid var(--border); max-width: 100%; }
+        .zm-body .zm-item-main { display: flex; gap: 6px; min-height: 40px; padding: 0 12px 0 14px; }
+        .zm-body .zm-check { display: none; }
+        .zm-body .zm-item-name { font-size: 14px; font-weight: 500; }
+        .zm-body .zm-item .ti { font-size: 15px; color: var(--text3); }
+        .zm-body .zm-x { display: none; }
+        .zm-body .zm-memo { display: none; }
+        /* 담긴 칩: 진하게, 메모는 이름 옆 작은 글씨, ×로 빼기 */
+        .zm-body .zm-item.is-checked { background: var(--accent); border-color: var(--accent); }
+        .zm-body .zm-item.is-checked .zm-item-name { color: var(--on-accent); font-weight: 700; }
+        .zm-body .zm-item.is-checked .zm-plus { display: none; }
+        .zm-body .zm-item.is-checked .zm-x { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: 0 -4px 0 2px; border-radius: 50%; background: rgba(255,255,255,0.18); color: var(--on-accent); font-size: 17px; line-height: 1; } /* 아이콘 글꼴이 늦게 떠도 보이게 글자 × */
+        .zm-body .zm-item.is-checked .ti { color: var(--on-accent); opacity: 0.75; }
+        .zm-body .zm-item.is-checked .zm-memo:not(:empty) { display: inline; font-size: 12px; color: var(--on-accent); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 12em; }
+        .zm-body .zm-item.is-checked .zm-memo:not(:empty)::before { content: '· '; }
+        .zm-body .zm-item .cmt, .zm-body .zm-item.is-checked .cmt { display: none; }
+        /* 담긴 칩을 누르면 메모 칸이 열린다 */
+        .zm-body .zm-item.memo-open { flex-basis: 100%; border-radius: var(--radius-md); }
+        .zm-body .zm-item.memo-open .cmt { display: block; width: calc(100% - 20px); margin: 0 10px 10px; background: var(--card); color: var(--text); }
         .zm-save { flex: 1; }
 
         /* 📍 "찾으셨나요?" 알약: 사진을 가리지 않게 오른쪽 아래 리모컨 위에 작게 */
@@ -1276,10 +1312,12 @@
 
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="zoneNameLabel">
     <div class="zm-head">
+        <!-- 구역 이름은 입력 양식이 아니라 제목처럼: 눌러서 바로 고친다 -->
         <div class="zm-name-wrap">
             <label id="zoneNameLabel" for="zoneNameInput" class="zm-label">구역 이름</label>
-            <input type="text" id="zoneNameInput" class="zm-name" maxlength="20" autocomplete="off" enterkeyhint="done">
+            <div class="zm-title"><input type="text" id="zoneNameInput" class="zm-name" maxlength="20" autocomplete="off" enterkeyhint="done"><i class="ti ti-pencil" aria-hidden="true"></i></div>
         </div>
+        <button type="button" class="zm-close zm-del" onclick="deleteZone()" aria-label="구역 삭제" title="구역 삭제"><i class="ti ti-trash"></i></button>
         <button type="button" class="zm-close" onclick="closeModal()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
 
@@ -1290,10 +1328,13 @@
             <div id="industryAskChips" class="zm-industry-chips"></div>
             <button type="button" class="zm-industry-skip" onclick="skipIndustryAsk()">건너뛰기 · 직접 입력할게요</button>
         </div>
+        <!-- 위: 이 칸에 실제로 있는 물건만 칩으로 (눌러서 메모, ×로 빼기) / 아래: 검색 + 후보 칩 (눌러서 담기) -->
         <div class="zm-section-head">
-            <span>이 구역에 있는 물건</span>
+            <span>이 칸에 있는 것</span>
             <span id="zoneItemCount" class="zm-count"></span>
         </div>
+        <div id="zmPicked" class="zm-chips is-picked" data-empty="아직 없어요 · 아래에서 눌러 담아요"></div>
+        <div class="zm-section-head zm-add-head"><span>추가하기</span></div>
         <!-- 상단 검색창과 같은 모양: 입력(찾기·새로 추가) + 돋보기 + 가져오기 버튼들 -->
         <div class="search-input-wrap zm-find">
             <input type="text" id="newItemInput" placeholder="물건 찾기 또는 새로 추가" autocomplete="off" enterkeyhint="done" oninput="applyZoneItemFilter()">
@@ -1307,11 +1348,10 @@
         <button type="button" id="zmAddRow" class="zm-add-new" onclick="addNewItem()" hidden>
             <span class="zm-add-new-icon"><i class="ti ti-plus"></i></span><span id="zmAddRowText"></span>
         </button>
-        <div id="itemList" class="zm-items"></div>
+        <div id="itemList" class="zm-chips"></div>
     </div>
 
     <div class="zm-foot">
-        <button type="button" class="btn-base zm-delete" onclick="deleteZone()"><i class="ti ti-trash"></i> 구역 삭제</button>
         <button type="button" class="btn-base btn-primary zm-save" onclick="saveZone()"><i class="ti ti-check"></i> 저장</button>
     </div>
 
@@ -1359,7 +1399,7 @@
         <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
             <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="모노 (기본)">
-                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#111111"></i></span><span>기본</span>
+                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#475569"></i></span><span>기본</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
@@ -2246,7 +2286,7 @@
         syncIndustryAsk();
         renderZoneItems(false);
         showZoneModal();
-        document.getElementById('itemList').scrollTop = 0;
+        document.querySelector('#modal .zm-body').scrollTop = 0;
     }
 
     // 구역 팝업의 물건 목록. preserve=true면 저장 전 체크/메모 상태를 유지한 채 다시 그린다
@@ -2255,7 +2295,7 @@
         const z = activeZone; if (!z) return;
         const state = new Map();
         if (preserve) {
-            document.querySelectorAll('#itemList .cb').forEach(cb => state.set(cb.value, { checked: cb.checked, comment: cb.parentElement.nextElementSibling.value }));
+            document.querySelectorAll('#modal .zm-body .cb').forEach(cb => state.set(cb.value, { checked: cb.checked, comment: cb.parentElement.nextElementSibling.value }));
         } else {
             z.items.forEach(it => state.set(it.name, { checked: true, comment: it.comment || '' }));
         }
@@ -2264,17 +2304,21 @@
         // 처음 열 때만 체크된 물건을 위로 (누르는 도중엔 순서를 바꾸지 않음)
         if (!preserve) names.sort((a, b) => (state.has(b) ? 1 : 0) - (state.has(a) ? 1 : 0));
 
-        document.getElementById('itemList').innerHTML = names.map(name => {
+        // 담긴 물건은 위 칩 묶음(zmPicked), 나머지 후보는 아래(itemList). 체크박스·메모 칸 구조는 그대로라 저장·가져오기 코드는 그대로 쓴다
+        const chip = (name) => {
             const st = state.get(name) || { checked: false, comment: '' };
             return `<div class="zm-item ${st.checked ? 'is-checked' : ''}">
-                        <label class="zm-item-main">
+                        <label class="zm-item-main" onclick="zmChipClick(event, this)">
                             <input type="checkbox" class="cb" value="${escapeHtml(name)}" ${st.checked ? 'checked' : ''} onchange="toggleCommentField(this)">
                             <span class="zm-check" aria-hidden="true"></span>
-                            <span class="zm-item-name">${escapeHtml(name)}</span>
+                            <span class="zm-item-name">${escapeHtml(name)}</span><small class="zm-memo">${escapeHtml(st.comment)}</small>
+                            <i class="ti ti-plus zm-plus" aria-hidden="true"></i><span class="zm-x" title="빼기" aria-label="빼기">×</span>
                         </label>
-                        <input type="text" class="cmt" placeholder="세부 위치 메모 (예: 맨 윗칸 왼쪽)" value="${escapeHtml(st.comment)}" enterkeyhint="done">
+                        <input type="text" class="cmt" placeholder="세부 위치 메모 (예: 맨 윗칸 왼쪽)" value="${escapeHtml(st.comment)}" enterkeyhint="done" oninput="this.closest('.zm-item').querySelector('.zm-memo').textContent = this.value">
                     </div>`;
-        }).join('');
+        };
+        document.getElementById('zmPicked').innerHTML = names.filter(n => (state.get(n) || {}).checked).map(chip).join('');
+        document.getElementById('itemList').innerHTML = names.filter(n => !(state.get(n) || {}).checked).map(chip).join('');
         updateZoneItemCount();
         applyZoneItemFilter();
     }
@@ -2284,8 +2328,8 @@
     document.getElementById('zoneNameInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) e.target.blur(); });
 
     function updateZoneItemCount() {
-        const n = document.querySelectorAll('#itemList .cb:checked').length;
-        document.getElementById('zoneItemCount').textContent = n ? `${n}개 선택` : '';
+        const n = document.querySelectorAll('#modal .zm-body .cb:checked').length;
+        document.getElementById('zoneItemCount').textContent = n ? `${n}개` : '';
     }
 
     // 편집 모드 물건 목록: 끔 → 요약(칸 안에 3줄까지) → 전체(칸 안에 다, 고른 칸은 넘치면 아래로 펼침). 고른 단계는 기억한다
@@ -2990,7 +3034,22 @@
         }
     }
 
-    function toggleCommentField(cb) { cb.closest('.zm-item').classList.toggle('is-checked', cb.checked); updateZoneItemCount(); }
+    // 칩을 담거나 빼면 위·아래 묶음 사이로 옮긴다
+    function toggleCommentField(cb) {
+        const item = cb.closest('.zm-item'); item.classList.toggle('is-checked', cb.checked);
+        if (cb.checked) document.getElementById('zmPicked').appendChild(item);
+        else { item.classList.remove('memo-open'); document.getElementById('itemList').prepend(item); }
+        updateZoneItemCount(); applyZoneItemFilter();
+    }
+    // 담긴 칩: 몸통을 누르면 메모 칸 열기/닫기, ×를 누르면 빼기. 후보 칩: 누르면 담기(기본 동작)
+    function zmChipClick(e, label) {
+        const item = label.closest('.zm-item');
+        // 체크박스 자신에게 전달된 클릭(라벨이 대신 보내는 것)은 건드리지 않는다 — 막으면 ×로 빼기가 되돌려졌다
+        if (e.target.matches('input') || !item.classList.contains('is-checked') || e.target.closest('.zm-x')) return;
+        e.preventDefault();
+        const open = item.classList.toggle('memo-open');
+        if (open) { const c = item.querySelector('.cmt'); setTimeout(() => c.focus(), 0); }
+    }
     function saveZone() { saveHistory(); markZoneChecked(activeZone); activeZone.name = document.getElementById('zoneNameInput').value; activeZone.items = []; document.querySelectorAll('.cb:checked').forEach(cb => { activeZone.items.push({ name: cb.value, comment: cb.parentElement.nextElementSibling.value || "" }); }); if (activeData.id !== "dummy_root") saveData(); closeModal(); }
     // 구역 창을 닫으면 보기 모드에서는 선택(어두운 배경 + 빨간 테두리)도 같이 푼다 — 창을 닫는 건 "다 봤다"는 뜻이라 사진 전체가 다시 보여야 한다.
     // 편집 모드는 닫은 뒤에도 그 구역을 옮기거나 크기를 바꿀 수 있게 선택을 남긴다
@@ -3052,7 +3111,7 @@
     function addNewItem() {
         const input = document.getElementById('newItemInput'); const val = input.value.trim();
         if (!val) { input.focus(); return; }
-        const existing = [...document.querySelectorAll('#itemList .cb')].find(cb => normalizeForSearch(cb.value) === normalizeForSearch(val));
+        const existing = [...document.querySelectorAll('#modal .zm-body .cb')].find(cb => normalizeForSearch(cb.value) === normalizeForSearch(val));
         const name = existing ? existing.value : val;
         if (!existing && !baseItems.includes(name)) { baseItems.push(name); saveData(); }
         input.value = '';
@@ -3060,24 +3119,24 @@
         checkZoneItem(name);
         const row = findZoneItemRow(name); if (row) row.scrollIntoView({ block: 'nearest' });
     }
-    function findZoneItemRow(name) { const cb = [...document.querySelectorAll('#itemList .cb')].find(el => el.value === name); return cb ? cb.closest('.zm-item') : null; }
+    function findZoneItemRow(name) { const cb = [...document.querySelectorAll('#modal .zm-body .cb')].find(el => el.value === name); return cb ? cb.closest('.zm-item') : null; }
     function checkZoneItem(name, comment) {
         const row = findZoneItemRow(name); if (!row) return false;
         const cb = row.querySelector('.cb'), cmt = row.querySelector('.cmt');
         const changed = !cb.checked;
         cb.checked = true; toggleCommentField(cb);
-        if (comment && cmt && !cmt.value) cmt.value = comment;
+        if (comment && cmt && !cmt.value) { cmt.value = comment; row.querySelector('.zm-memo').textContent = comment; }
         return changed;
     }
 
     // 입력하는 대로 목록 거르기 (초성 포함). 같은 이름이 없으면 “+ 새로 추가” 줄을 보여준다
     function applyZoneItemFilter() {
         const q = document.getElementById('newItemInput').value.trim();
-        const rows = [...document.querySelectorAll('#itemList .zm-item')];
+        const rows = [...document.querySelectorAll('#modal .zm-body .zm-item')];
         let exact = false;
         rows.forEach(row => {
             const name = row.querySelector('.cb').value;
-            const show = !q || !!findMatchRange(name, q);
+            const show = !q || !!findMatchRange(name, q) || row.classList.contains('is-checked'); // 담긴 칩은 늘 보인다
             row.hidden = !show;
             if (q && normalizeForSearch(name) === normalizeForSearch(q)) exact = true;
         });
@@ -3096,8 +3155,8 @@
         const list = candidates.filter(c => c.name && !seen.has(c.name) && seen.add(c.name));
         if (!list.length) return;
         importReview = { source, list, onRetry };
-        const inZone = new Set([...document.querySelectorAll('#itemList .cb:checked')].map(cb => cb.value));
-        const known = new Set([...document.querySelectorAll('#itemList .cb')].map(cb => cb.value));
+        const inZone = new Set([...document.querySelectorAll('#modal .zm-body .cb:checked')].map(cb => cb.value));
+        const known = new Set([...document.querySelectorAll('#modal .zm-body .cb')].map(cb => cb.value));
         document.getElementById('importReviewTitle').textContent = title;
         document.getElementById('importReviewSub').textContent = sub;
         document.getElementById('importReviewRetry').style.display = onRetry ? '' : 'none';
@@ -4470,7 +4529,7 @@
         <button onclick="closeVideoGuideModal()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text2); display: flex;"><i class="ti ti-x"></i></button>
         <h3 style="margin-bottom: 16px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="ti ti-video" style="color: var(--accent); font-size: 18px;"></i> 사용방법 가이드 영상</h3>
         <div style="margin-top: 10px;">
-            <img src="guide.gif?v=2" alt="사용 방법: 사진 찍기, 편집에서 칸 만들기, 업종 고르고 물건 담기, 완료하면 사진 위 쪽지, 물건 이름으로 찾기, 크게 보기, 인쇄" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+            <img src="guide.gif?v=4" alt="사용 방법: 사진 찍기, 편집에서 칸 만들기, 업종 고르고 물건 담기, 완료하면 사진 위 쪽지, 물건 이름으로 찾기, 크게 보기, 인쇄" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
         </div>
     </div>
 </div>
