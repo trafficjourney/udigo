@@ -1110,6 +1110,17 @@
         .zm-body .zm-item.memo-open { flex-basis: 100%; border-radius: var(--radius-md); }
         .zm-body .zm-item.memo-open .cmt { display: block; width: calc(100% - 20px); margin: 0 10px 10px; background: var(--card); color: var(--text); }
         .zm-save { flex: 1; }
+        .zm-find-top { position: sticky; top: -16px; z-index: 1; margin: -16px -20px 14px; padding: 14px 20px 10px; background: var(--card); border-bottom: 1px solid var(--border); }
+        .zm-find-top .zm-status:empty { display: none; }
+        .zm-find-top .zm-add-new { margin-top: 8px; }
+        .zm-more-suggest { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 40px; margin-top: 10px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: none; color: var(--text2); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .zm-more-suggest[hidden] { display: none; }
+        /* 메모가 있는 칩: 노란 테두리 + 쪽지 아이콘으로 한눈에 */
+        .zm-body .zm-item.is-checked.has-memo { box-shadow: 0 0 0 2.5px #ffd84d; }
+        .zm-body .zm-memo-ic { display: none; }
+        .zm-body .zm-item.has-memo .zm-memo-ic { display: inline; color: #ffd84d; opacity: 1; font-size: 15px; }
+        .zl-chip.has-memo { background: #fff6c7; border-color: #f0d36a; }
+        .zl-chip .zl-memo-ic { margin-right: 2px; color: #b8901a; font-size: 12px; }
 
         /* 📍 "찾으셨나요?" 알약: 사진을 가리지 않게 오른쪽 아래 리모컨 위에 작게 */
         .found-pill {
@@ -1467,31 +1478,35 @@
             <div id="industryAskChips" class="zm-industry-chips"></div>
             <button type="button" class="zm-industry-skip" onclick="skipIndustryAsk()">건너뛰기 · 직접 입력할게요</button>
         </div>
-        <!-- 위: 이 칸에 실제로 있는 물건만 칩으로 (눌러서 메모, ×로 빼기) / 아래: 검색 + 후보 칩 (눌러서 담기) -->
+        <!-- 맨 위: 검색(찾기·새로 추가) — 가장 많이 하는 일이 "이름 치고 담기"라서. 스크롤해도 위에 붙어 있다 -->
+        <div class="zm-find-top">
+        <!-- 상단 검색창과 같은 모양: 입력(찾기·새로 추가) + 돋보기 + 가져오기 버튼들 -->
+            <div class="search-input-wrap zm-find">
+                <input type="text" id="newItemInput" placeholder="물건 찾기 또는 새로 추가" autocomplete="off" enterkeyhint="done" oninput="applyZoneItemFilter()">
+                <span class="voice-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+                <i class="ti ti-search"></i>
+                <!-- 📷 추후 OCR(창고에 적어둔 라벨·메모 사진에서 가져오기) 버튼을 이 자리에 같은 .icon-btn으로 추가하고,
+                     인식 결과는 openImportReview({ source: 'ocr', candidates: [{ name, comment }] })로 넘기면 확인 목록이 그대로 재사용된다. -->
+                <button type="button" id="voiceItemBtn" class="icon-btn" onclick="startVoiceItemEntry()" title="말로 여러 개 추가" aria-label="말로 여러 개 추가"><i class="ti ti-microphone"></i></button>
+            </div>
+            <div id="voiceItemStatus" class="zm-status" role="status" aria-live="polite"></div>
+            <button type="button" id="zmAddRow" class="zm-add-new" onclick="addNewItem()" hidden>
+                <span class="zm-add-new-icon"><i class="ti ti-plus"></i></span><span id="zmAddRowText"></span>
+            </button>
+        </div>
+        <!-- 담긴 물건(눌러서 메모, ×로 빼기) / 아래: 자주 쓰는 물건 후보(눌러서 담기, 처음엔 8개만) -->
         <div class="zm-section-head">
             <span>이 구역에 있는 것</span>
             <span id="zoneItemCount" class="zm-count"></span>
         </div>
-        <div id="zmPicked" class="zm-chips is-picked" data-empty="아직 없어요 · 아래에서 눌러 담아요"></div>
-        <div class="zm-section-head zm-add-head"><span>추가하기</span></div>
-        <!-- 상단 검색창과 같은 모양: 입력(찾기·새로 추가) + 돋보기 + 가져오기 버튼들 -->
-        <div class="search-input-wrap zm-find">
-            <input type="text" id="newItemInput" placeholder="물건 찾기 또는 새로 추가" autocomplete="off" enterkeyhint="done" oninput="applyZoneItemFilter()">
-            <span class="voice-bars" aria-hidden="true"><span></span><span></span><span></span></span>
-            <i class="ti ti-search"></i>
-            <!-- 📷 추후 OCR(창고에 적어둔 라벨·메모 사진에서 가져오기) 버튼을 이 자리에 같은 .icon-btn으로 추가하고,
-                 인식 결과는 openImportReview({ source: 'ocr', candidates: [{ name, comment }] })로 넘기면 확인 목록이 그대로 재사용된다. -->
-            <button type="button" id="voiceItemBtn" class="icon-btn" onclick="startVoiceItemEntry()" title="말로 여러 개 추가" aria-label="말로 여러 개 추가"><i class="ti ti-microphone"></i></button>
-        </div>
-        <div id="voiceItemStatus" class="zm-status" role="status" aria-live="polite"></div>
-        <button type="button" id="zmAddRow" class="zm-add-new" onclick="addNewItem()" hidden>
-            <span class="zm-add-new-icon"><i class="ti ti-plus"></i></span><span id="zmAddRowText"></span>
-        </button>
+        <div id="zmPicked" class="zm-chips is-picked" data-empty="아직 없어요 · 위에서 찾거나 아래에서 눌러 담아요"></div>
+        <div class="zm-section-head zm-add-head"><span>자주 쓰는 물건</span></div>
         <div id="itemList" class="zm-chips"></div>
+        <button type="button" id="zmMoreSuggest" class="zm-more-suggest" onclick="zmShowAllSuggest = true; applyZoneItemFilter();" hidden>더보기 <i class="ti ti-chevron-down"></i></button>
     </div>
 
     <div class="zm-foot">
-        <button type="button" class="btn-base btn-primary zm-save" onclick="saveZone()"><i class="ti ti-check"></i> 저장</button>
+        <button type="button" class="btn-base btn-primary zm-save" onclick="saveZone()"><i class="ti ti-check"></i> 완료</button>
     </div>
 
     <!-- ✅ 가져오기 확인 목록: 말(음성)·추후 OCR로 읽은 물건을 바로 적용하지 않고 한 번 더 확인 -->
@@ -2430,6 +2445,7 @@
         document.getElementById('zoneNameInput').value = z.name;
         document.getElementById('newItemInput').value = '';
         document.getElementById('voiceItemStatus').textContent = '';
+        zmShowAllSuggest = false;
         closeImportReview();
         syncIndustryAsk();
         renderZoneItems(false);
@@ -2455,14 +2471,14 @@
         // 담긴 물건은 위 칩 묶음(zmPicked), 나머지 후보는 아래(itemList). 체크박스·메모 칸 구조는 그대로라 저장·가져오기 코드는 그대로 쓴다
         const chip = (name) => {
             const st = state.get(name) || { checked: false, comment: '' };
-            return `<div class="zm-item ${st.checked ? 'is-checked' : ''}">
+            return `<div class="zm-item ${st.checked ? 'is-checked' : ''} ${st.comment ? 'has-memo' : ''}">
                         <label class="zm-item-main" onclick="zmChipClick(event, this)">
                             <input type="checkbox" class="cb" value="${escapeHtml(name)}" ${st.checked ? 'checked' : ''} onchange="toggleCommentField(this)">
                             <span class="zm-check" aria-hidden="true"></span>
-                            <span class="zm-item-name">${escapeHtml(name)}</span><small class="zm-memo">${escapeHtml(st.comment)}</small>
+                            <i class="ti ti-note zm-memo-ic" aria-label="메모 있음"></i><span class="zm-item-name">${escapeHtml(name)}</span><small class="zm-memo">${escapeHtml(st.comment)}</small>
                             <i class="ti ti-plus zm-plus" aria-hidden="true"></i><span class="zm-x" title="빼기" aria-label="빼기">×</span>
                         </label>
-                        <input type="text" class="cmt" placeholder="세부 위치 메모 (예: 맨 윗칸 왼쪽)" value="${escapeHtml(st.comment)}" enterkeyhint="done" oninput="this.closest('.zm-item').querySelector('.zm-memo').textContent = this.value">
+                        <input type="text" class="cmt" placeholder="세부 위치 메모 (예: 맨 윗칸 왼쪽)" value="${escapeHtml(st.comment)}" enterkeyhint="done" oninput="const it = this.closest('.zm-item'); it.querySelector('.zm-memo').textContent = this.value; it.classList.toggle('has-memo', !!this.value.trim())">
                     </div>`;
         };
         document.getElementById('zmPicked').innerHTML = names.filter(n => (state.get(n) || {}).checked).map(chip).join('');
@@ -3195,8 +3211,8 @@
                     // 메모(유통기한 임박 같은 중요한 말)는 칩에서 빼는 대신 줄 아래에 따로 한 줄로: "우유 · 유통기한 짧은 것 앞쪽"
                     const memos = z.items.filter(it => (it.comment || '').trim()).map(it => `<span class="zl-memo-item"><b>${escapeHtml(it.name)}:</b> ${escapeHtml(it.comment.trim())}</span>`);
                     const chip = (it) => isEditMode
-                        ? `<button type="button" class="zl-chip is-movable" data-name="${escapeHtml(it.name)}" onclick="event.stopPropagation(); startMoveItem('${data.id}', ${i}, this.dataset.name)" title="눌러서 다른 구역으로 옮기기">${escapeHtml(it.name)}<i class="ti ti-arrows-move"></i></button>`
-                        : `<span class="zl-chip">${escapeHtml(it.name)}</span>`;
+                        ? `<button type="button" class="zl-chip is-movable${it.comment ? ' has-memo' : ''}" data-name="${escapeHtml(it.name)}" onclick="event.stopPropagation(); startMoveItem('${data.id}', ${i}, this.dataset.name)" title="눌러서 다른 구역으로 옮기기">${it.comment ? '<i class="ti ti-note zl-memo-ic" aria-label="메모 있음"></i>' : ''}${escapeHtml(it.name)}<i class="ti ti-arrows-move"></i></button>`
+                        : `<span class="zl-chip${it.comment ? ' has-memo' : ''}">${it.comment ? '<i class="ti ti-note zl-memo-ic" aria-label="메모 있음"></i>' : ''}${escapeHtml(it.name)}</span>`;
                     const go = isEditMode ? `editZone('${data.id}', ${i})` : `selectZone('${data.id}', ${i})`;
                     return `<div role="button" tabindex="0" class="zone-item zl-row ${isEditMode ? 'is-edit' : ''} ${z === activeZone ? 'active' : ''}" onclick="${go}" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ${go}; }" aria-label="${escapeHtml(z.name || '이름 없는 구역')} ${isEditMode ? '고치기' : '사진에서 보기'}">
                         <span class="zl-num">${i + 1}</span>
@@ -3209,7 +3225,7 @@
                     </div>`;
                 }).join('')}</div>${zones.length > (ZL_ROWS || 6) ? (listOpen
                     ? `<button type="button" class="zl-more-rows is-open" onclick="toggleZoneListMore('${data.id}', false)"><i class="ti ti-chevron-up"></i> 목록 접기</button>`
-                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)" aria-label="나머지 구역 ${zones.length - ZL_ROWS}개 더 보기"><span class="zl-more-n">+${zones.length - ZL_ROWS}</span><span class="zl-more-txt"><b>구역 ${zones.length - ZL_ROWS}개 더 있어요</b><small>${zones.slice(ZL_ROWS).map(z => escapeHtml(z.name || '이름 없음')).join(' · ')}</small></span><i class="ti ti-chevron-down"></i></button>`) : ''}`;
+                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)" aria-label="구역 더보기"><span class="zl-more-n">+${zones.length - ZL_ROWS}</span><span class="zl-more-txt"><b>더보기</b><small>${zones.slice(ZL_ROWS).map(z => escapeHtml(z.name || '이름 없음')).join(' · ')}</small></span><i class="ti ti-chevron-down"></i></button>`) : ''}`;
                 // 그림(애니메이션)마다 다시 그리지 않게: 내용·펼침 상태가 같으면 그대로 둔다
                 const key = html + '|' + [...(expandedZoneChips || [])].join(',');
                 if (listContainer._zlKey !== key) { listContainer.innerHTML = html; listContainer._zlKey = key; if (typeof clampZoneChips === 'function') clampZoneChips(listContainer); }
@@ -3267,7 +3283,7 @@
             hidden.forEach(c => c.hidden = true);
             box.appendChild(btn);
             const visible = chips.filter(c => !c.hidden);
-            const label = () => { btn.textContent = `+${hidden.length}개 더`; };
+            const label = () => { btn.textContent = "더보기"; };
             label();
             while (btn.offsetTop > limitTop && visible.length > 1) { const c = visible.pop(); c.hidden = true; hidden.push(c); label(); }
         });
@@ -3293,10 +3309,23 @@
         const open = item.classList.toggle('memo-open');
         if (open) { const c = item.querySelector('.cmt'); setTimeout(() => c.focus(), 0); }
     }
-    function saveZone() { saveHistory(); markZoneChecked(activeZone); activeZone.name = document.getElementById('zoneNameInput').value; activeZone.items = []; document.querySelectorAll('.cb:checked').forEach(cb => { activeZone.items.push({ name: cb.value, comment: cb.parentElement.nextElementSibling.value || "" }); }); if (activeData.id !== "dummy_root") saveData(); closeModal(); }
+    // 구역 창은 닫을 때 자동 저장된다 ([완료]·×·뒤로 가기 모두). 바뀐 게 없으면 아무것도 하지 않는다.
+    // [완료]는 "확인했다"는 뜻이라 바뀐 게 없어도 확인 날짜를 새로 적는다
+    function commitZoneModal(confirmed) {
+        if (!activeZone || !activeData || !activeData.zones.includes(activeZone) || document.getElementById('modal').style.display !== 'flex') return;
+        const name = document.getElementById('zoneNameInput').value;
+        const items = [...document.querySelectorAll('#modal .zm-body .cb:checked')].map(cb => ({ name: cb.value, comment: cb.parentElement.nextElementSibling.value || "" }));
+        const changed = name !== activeZone.name || JSON.stringify(items) !== JSON.stringify(activeZone.items.map(i => ({ name: i.name, comment: i.comment || "" })));
+        if (!changed && !confirmed) return;
+        if (changed) saveHistory();
+        markZoneChecked(activeZone); activeZone.name = name; activeZone.items = items;
+        if (activeData.id !== "dummy_root") saveData();
+    }
+    function saveZone() { commitZoneModal(true); closeModal(); }
     // 구역 창을 닫으면 보기 모드에서는 선택(어두운 배경 + 빨간 테두리)도 같이 푼다 — 창을 닫는 건 "다 봤다"는 뜻이라 사진 전체가 다시 보여야 한다.
     // 편집 모드는 닫은 뒤에도 그 구역을 옮기거나 크기를 바꿀 수 있게 선택을 남긴다
     function closeModal() {
+        commitZoneModal(false);
         hideZoneModal();
         if (isEditMode) showSearchArrow = true; else { activeZone = null; showSearchArrow = false; }
         if (activeData) render(activeData);
@@ -3373,16 +3402,20 @@
     }
 
     // 입력하는 대로 목록 거르기 (초성 포함). 같은 이름이 없으면 “+ 새로 추가” 줄을 보여준다
+    var ZM_SUGGEST = 8, zmShowAllSuggest = false;
     function applyZoneItemFilter() {
         const q = document.getElementById('newItemInput').value.trim();
         const rows = [...document.querySelectorAll('#modal .zm-body .zm-item')];
-        let exact = false;
+        let exact = false, pool = 0, cut = 0;
         rows.forEach(row => {
-            const name = row.querySelector('.cb').value;
-            const show = !q || !!findMatchRange(name, q) || row.classList.contains('is-checked'); // 담긴 칩은 늘 보인다
+            const name = row.querySelector('.cb').value, picked = row.classList.contains('is-checked');
+            let show = !q || !!findMatchRange(name, q) || picked; // 담긴 칩은 늘 보인다
+            // 검색어가 없을 땐 후보를 처음 8개만 (나머지는 [더보기])
+            if (show && !picked && !q) { pool++; if (pool > ZM_SUGGEST && !zmShowAllSuggest) { show = false; cut++; } }
             row.hidden = !show;
             if (q && normalizeForSearch(name) === normalizeForSearch(q)) exact = true;
         });
+        document.getElementById('zmMoreSuggest').hidden = !cut;
         const addRow = document.getElementById('zmAddRow');
         addRow.hidden = !q || exact;
         document.getElementById('zmAddRowText').textContent = `'${q}' 새로 추가`;
