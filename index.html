@@ -885,6 +885,19 @@
         .welcome-beta { text-align: center; margin-bottom: 8px; }
         .hero-beta { display: none; justify-content: center; margin-top: -6px; }
         .hero-beta .beta-pill { background: var(--hero-chip-bg); border: 1px solid var(--hero-chip-border); color: var(--hero-text); }
+        .setup-promo { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 360px; margin: 12px auto 0; padding: 10px 12px; border-radius: var(--radius-md); background: #fff6c7; border: 1px solid #f0d36a; color: #3a2f0a; text-decoration: none; text-align: left; }
+        .setup-promo[hidden] { display: none; }
+        .setup-promo-ic { font-size: 22px; color: #b8901a; flex: none; }
+        .setup-promo-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; line-height: 1.35; word-break: keep-all; }
+        .setup-promo-text b { font-size: 14px; }
+        .setup-promo-go { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 800; color: #8a6a10; }
+        .setup-promo:active { transform: scale(0.99); }
+        .ws-setup { padding: 18px 16px; border-radius: var(--radius-md); background: #fffbe8; border: 1px solid #f0d36a; }
+        .ws-setup .ws-h .ti { color: #b8901a; }
+        .ws-setup-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--text); }
+        .ws-setup-list .ti { color: #b8901a; margin-right: 4px; }
+        .ws-setup-cond { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text2); word-break: keep-all; }
+        .ws-setup-go { width: 100%; text-decoration: none; }
         .welcome-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--text2); }
         .welcome-trust span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
         .welcome-trust .ti { font-size: 15px; color: var(--accent2); }
@@ -1427,6 +1440,11 @@
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
             <button class="btn-base btn-secondary btn-lg" onclick="document.getElementById('fileInput').click()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
             <p class="revisit-only welcome-revisit-note">지금 쓰던 지도는 그대로 있어요. 예시는 저장하지 않고 미리보기로 열려요.</p>
+            <a class="setup-promo" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden>
+                <i class="ti ti-gift setup-promo-ic" aria-hidden="true"></i>
+                <span class="setup-promo-text"><b>매장에 직접 가서 무료 세팅</b><span>10월 31일까지 · 다산동·구리시 · 선착순 10팀</span></span>
+                <span class="setup-promo-go">신청 <i class="ti ti-chevron-right"></i></span>
+            </a>
             <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><span><i class="ti ti-device-mobile"></i> 내 폰에 저장</span></p>
         </div>
         <!-- 첫 화면은 단순하게: 아래에 더 있다는 표시만 두고, 정리 전/후·업종 예시는 한 화면 아래에 -->
@@ -4360,6 +4378,9 @@
     }
     // 첫 화면 아래: 정리 전/후 비교(예시 사진 위에 쪽지가 붙었다 떨어졌다) + 업종별 예시 카드 (누르면 그 사진으로 예시 열기)
     let wsTimer = null;
+    // 무료 방문 세팅 행사: 끝나는 날(10월 31일)이 지나면 첫 화면 안내가 저절로 사라진다
+    const SETUP_PROMO_END = new Date('2026-11-01T00:00:00+09:00');
+    function setupPromoOn() { return Date.now() < SETUP_PROMO_END.getTime(); }
     function renderWelcomeShowcase() {
         const box = document.getElementById('welcomeShowcase'), photos = SAMPLE_DEMO_DATA.savedSystemData;
         if (!box || box.childElementCount || !photos.length) return;
@@ -4371,6 +4392,10 @@
             <section class="ws-sec"><h3 class="ws-h">벽에 붙이면 폰 없이도 찾아요</h3><p class="ws-p">A4로 뽑아 선반 옆에 붙여 두면, 직원·알바생도 폰을 꺼내지 않고 <b>꺼낼 때도, 다시 가져다 놓을 때도</b> 자리를 바로 찾아요.</p>
             <div class="ws-print"><img src="print-sample.jpg" alt="인쇄물 예시: 선반 사진에 구역 번호와 쪽지, 아래에 가나다순 물건 찾아보기" loading="lazy" width="600" height="849"></div>
             <ul class="ws-points"><li><b>찾을 때</b> 가나다순 목록에서 물건 이름 → 오른쪽 번호 → 사진 속 그 구역</li><li><b>넣을 때</b> 쓰고 난 물건도 원래 자리로, 사람마다 다르게 두지 않아요</li></ul></section>
+            ${setupPromoOn() ? `<section class="ws-sec ws-setup"><h3 class="ws-h"><i class="ti ti-gift"></i> 처음 세팅, 직접 가서 해드려요</h3><p class="ws-p">베타 기간 동안 매장에 찾아가 처음부터 끝까지 세팅해 드려요. 비용은 없어요.</p>
+            <ul class="ws-setup-list"><li><i class="ti ti-camera"></i> 선반·냉장고 사진 찍기</li><li><i class="ti ti-border-corners"></i> 구역 나누고 물건 이름 입력</li><li><i class="ti ti-printer"></i> A4 인쇄물 뽑아 선반 옆에 붙이기</li></ul>
+            <p class="ws-setup-cond">10월 31일까지 · 남양주 다산동·구리시 · 선착순 10팀<br>써보신 뒤 짧은 후기 한 줄만 부탁드려요</p>
+            <a class="btn-base btn-primary btn-lg ws-setup-go" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener"><i class="ti ti-calendar-event"></i> 무료 방문 세팅 신청하기</a></section>` : ''}
             <section class="ws-sec"><h3 class="ws-h">이런 곳에 써요</h3><p class="ws-p">눌러서 예시를 바로 열어 보세요.</p>
             <div class="ws-cases">${photos.map(p => `<button type="button" class="ws-case" data-id="${p.id}"><img src="${p.imgData}" alt="" loading="lazy"><b>${escapeHtml(p.title)}</b><span>구역 ${p.zones.length} · 물건 ${p.zones.reduce((n, z) => n + z.items.length, 0)}<i class="ti ti-chevron-right"></i></span></button>`).join('')}</div></section>`;
         const ba = box.querySelector('#wsBa'), img = ba.querySelector('img');
@@ -4388,7 +4413,7 @@
         if (!show) document.body.classList.remove('welcome-revisit');
         const card = document.getElementById('welcomeCard'); if (card) card.style.display = show ? 'flex' : 'none';
         document.body.classList.toggle('welcome-open', show); // 첫 화면에서는 사진용 하단 조작 바를 숨기고 카드를 화면 높이에 맞춘다
-        if (show) { syncIndustryUI(); renderWelcomeShowcase(); } else clearInterval(wsTimer);
+        if (show) { syncIndustryUI(); renderWelcomeShowcase(); document.querySelectorAll('.setup-promo').forEach(a => a.hidden = !setupPromoOn()); } else clearInterval(wsTimer);
         const sampleBtn = document.getElementById('sampleDataBtn'); if (sampleBtn && show) sampleBtn.style.display = 'none';
         const dummy = document.getElementById('section-dummy_root'); if (dummy) dummy.style.display = show ? 'none' : '';
         const actions = document.getElementById('bottomActions'); if (actions) actions.style.display = show ? 'none' : 'flex';
