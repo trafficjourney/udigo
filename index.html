@@ -2602,8 +2602,8 @@
         layer.dataset.key = key;
         layer.classList.toggle('has-focus', !!focus);
         layer.style.setProperty('--note-fs', fs + 'px'); layer.style.setProperty('--note-lh', lineH + 'px');
-        // 칸 번호 동그라미: PC는 화면이 넓어 쪽지 글자에 비해 번호가 너무 작아 보여 더 크게. 동그라미 지름의 60%만큼 쪽지 밖(칸 안)으로 걸친다
-        const numFs = Math.round(fs * (isMobileDevice() ? 0.72 : 1) * 10) / 10, numD = numFs * 1.6, numOff = Math.round(numD * 0.6), slotPad = numOff + 2;
+        // 칸 번호 동그라미: PC는 화면이 넓어 쪽지 글자에 비해 번호가 너무 작아 보여 더 크게. 쪽지 모서리에 걸치되 대부분은 칸 안에 들어와 옆 칸 번호와 헷갈리지 않게
+        const numFs = Math.round(fs * (isMobileDevice() ? 0.72 : 1) * 10) / 10, numD = numFs * 1.6, numOff = Math.round(numD * 0.6), slotPad = numOff - Math.round(numD * 0.15); // 동그라미가 칸 모서리에 살짝(지름의 15%) 걸치게
         layer.style.setProperty('--num-fs', numFs + 'px'); layer.style.setProperty('--num-off', numOff + 'px');
         layer.style.setProperty('--slot-pad', slotPad + 'px'); layer.style.setProperty('--note-padl', Math.max(6, Math.round(numD - numOff) + 3) + 'px');
         const W = data.canvas.width, H = data.canvas.height;
@@ -2613,11 +2613,13 @@
             const num = document.createElement('span'); num.className = 'zone-num'; num.textContent = zi + 1;
             const slot = document.createElement('div');
             slot.style.cssText = `left:${z.x / W * 100}%;top:${z.y / H * 100}%;width:${z.w / W * 100}%;height:${z.h / H * 100}%`;
+            // 사진 맨 위·맨 왼쪽 칸은 걸친 부분이 사진 밖으로 잘리지 않게 그쪽만 칸 안으로 붙인다
+            if (z.y * s < numOff) slot.style.paddingTop = (numOff + 1) + 'px'; if (z.x * s < numOff) slot.style.paddingLeft = (numOff + 1) + 'px';
             layer.appendChild(slot);
             if (!z.items.length) { slot.className = 'zone-note-slot is-empty' + (z === focus ? ' is-focus' : ''); slot.appendChild(num); return; } // 빈 칸: 번호만 (칸이 있다는 표시)
             const names = z.items.map(i => i.name), n = names.length;
             const tiny = z.h * s - padY * 2 < lineH; // 칸이 쪽지 한 줄보다 낮으면 작은 쪽지를 칸 가운데에 걸쳐 붙인다
-            slot.className = 'zone-note-slot' + (tiny ? ' is-tiny' : '');
+            slot.className = 'zone-note-slot' + (tiny ? ' is-tiny' : ''); if (tiny) slot.style.paddingTop = '';
             const note = document.createElement('div');
             note.className = 'zone-note' + (tiny ? ' is-tiny' : '') + (z === focus ? ' is-focus' : '');
             const fill = (lines, more) => note.replaceChildren(num, ...lines.map((t, i) => { const l = document.createElement('div'); l.textContent = t; l.className = more && i === lines.length - 1 ? 'more' : 'it'; return l; }));
@@ -2631,7 +2633,7 @@
             if (tiny) { oneLine(); return; }
             // 좁은 칸에선 이름이 줄을 바꿔 길어진다 → 실제로 그려 보고 칸 높이를 넘으면 뒤에서부터 줄여 "+N개 더"로 묶는다
             // 좁은 칸(글자 6자 폭 미만): 글자를 조금 줄이고 구분선, "+2개 더" 대신 "+2"
-            const room = slot.clientHeight - slotPad - 2, narrow = slot.clientWidth < fs * 6; // 칸 위아래 여백 (위: 번호 자리 + 2px 아래)
+            const room = slot.clientHeight - (parseFloat(slot.style.paddingTop) || slotPad) - 2, narrow = slot.clientWidth < fs * 6; // 칸 위아래 여백 (위: 번호 자리 + 2px 아래)
             if (narrow) note.classList.add('narrow');
             const moreLabel = (m) => narrow ? `+${m}` : `+${m}개 더`;
             fill(names, false);
