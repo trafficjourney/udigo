@@ -428,9 +428,9 @@
         .zoom-stage { position: relative; width: 100%; }
         .zoom-stage canvas { width: 100%; height: auto; max-width: none; margin: 0; }
         .note-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: 5px 3px 2px 5px; transition: opacity 0.2s; }
+        .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: var(--slot-pad, 5px) 3px 2px var(--slot-pad, 5px); transition: opacity 0.2s; }
         .zone-note-slot.is-tiny { align-items: center; padding-top: 0; padding-bottom: 0; }
-        .zone-note { position: relative; max-width: 100%; min-width: 0; padding: 3px 6px; background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
+        .zone-note { position: relative; max-width: 100%; min-width: 0; padding: 3px 6px 3px var(--note-padl, 6px); background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
         .zone-note > div { word-break: keep-all; overflow-wrap: anywhere; }
         .zone-note.one-line > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zone-note .it { padding-left: 0.7em; text-indent: -0.7em; } /* 줄이 바뀐 긴 이름은 들여 써서 다른 물건처럼 보이지 않게 */
@@ -445,10 +445,8 @@
         .zone-note.is-tiny { min-width: 2.8em; padding: 0 5px; font-size: 0.86em; line-height: 1.45; }
         .zone-note.is-focus { outline: 2.5px solid #c44444; outline-offset: 1px; }
         .note-layer.has-focus .zone-note:not(.is-focus), .note-layer.has-focus .is-empty:not(.is-focus) { opacity: 0.3; }
-        /* 칸 번호: 쪽지 왼쪽 위 구석의 작은 동그라미 (빈 칸은 번호만) */
-        .zone-num { position: absolute; top: -0.95em; left: -0.95em; min-width: 1.5em; height: 1.5em; padding: 0 0.3em; border-radius: 0.75em; display: inline-flex; align-items: center; justify-content: center; background: #2b2716; color: #fff3a3; font-size: calc(var(--note-fs, 12.5px) * 0.68); font-weight: 800; line-height: 1; text-indent: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-        .num-top .zone-num { top: -0.3em; } .num-left .zone-num { left: -0.3em; }
-        .num-top.num-left { padding-left: 1.3em; }
+        /* 칸 번호: 쪽지 왼쪽 위 구석의 동그라미 (빈 칸은 번호만). 칸이 붙어 있어도 어느 칸 번호인지 헷갈리지 않게 동그라미 전체가 칸 안에 들어온다 */
+        .zone-num { position: absolute; top: calc(var(--num-off, 6px) * -1); left: calc(var(--num-off, 6px) * -1); min-width: 1.6em; height: 1.6em; padding: 0 0.3em; border-radius: 0.8em; display: inline-flex; align-items: center; justify-content: center; background: #2b2716; color: #fff3a3; font-size: var(--num-fs, 8.5px); font-weight: 800; line-height: 1; text-indent: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         .is-empty .zone-num { position: static; background: rgba(43,39,22,0.62); color: #fff; }
         .zone-note.is-focus .zone-num, .is-empty.is-focus .zone-num { background: #c44444; color: #fff; }
         .zoom-ctl { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
@@ -2604,6 +2602,10 @@
         layer.dataset.key = key;
         layer.classList.toggle('has-focus', !!focus);
         layer.style.setProperty('--note-fs', fs + 'px'); layer.style.setProperty('--note-lh', lineH + 'px');
+        // 칸 번호 동그라미: PC는 화면이 넓어 쪽지 글자에 비해 번호가 너무 작아 보여 더 크게. 동그라미 지름의 60%만큼 쪽지 밖(칸 안)으로 걸친다
+        const numFs = Math.round(fs * (isMobileDevice() ? 0.72 : 1) * 10) / 10, numD = numFs * 1.6, numOff = Math.round(numD * 0.6), slotPad = numOff + 2;
+        layer.style.setProperty('--num-fs', numFs + 'px'); layer.style.setProperty('--num-off', numOff + 'px');
+        layer.style.setProperty('--slot-pad', slotPad + 'px'); layer.style.setProperty('--note-padl', Math.max(6, Math.round(numD - numOff) + 3) + 'px');
         const W = data.canvas.width, H = data.canvas.height;
         layer.replaceChildren();
         data.zones.forEach((z, zi) => {
@@ -2620,8 +2622,6 @@
             note.className = 'zone-note' + (tiny ? ' is-tiny' : '') + (z === focus ? ' is-focus' : '');
             const fill = (lines, more) => note.replaceChildren(num, ...lines.map((t, i) => { const l = document.createElement('div'); l.textContent = t; l.className = more && i === lines.length - 1 ? 'more' : 'it'; return l; }));
             slot.appendChild(note);
-            // 사진 맨 위·맨 왼쪽에 붙은 칸은 번호가 사진 밖으로 잘리지 않게 쪽지 안쪽으로
-            if (z.y * s < fs) note.classList.add('num-top'); if (z.x * s < fs) note.classList.add('num-left');
             // 한 줄짜리: 첫 물건 이름만 말줄임하고 "+N"은 끝까지 남긴다
             const oneLine = () => {
                 const l = document.createElement('div'), nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = names[0]; l.appendChild(nm);
@@ -2631,7 +2631,7 @@
             if (tiny) { oneLine(); return; }
             // 좁은 칸에선 이름이 줄을 바꿔 길어진다 → 실제로 그려 보고 칸 높이를 넘으면 뒤에서부터 줄여 "+N개 더"로 묶는다
             // 좁은 칸(글자 6자 폭 미만): 글자를 조금 줄이고 구분선, "+2개 더" 대신 "+2"
-            const room = slot.clientHeight - 7, narrow = slot.clientWidth < fs * 6; // 7 = 칸 위아래 여백 (5px 위: 번호 자리 + 2px 아래)
+            const room = slot.clientHeight - slotPad - 2, narrow = slot.clientWidth < fs * 6; // 칸 위아래 여백 (위: 번호 자리 + 2px 아래)
             if (narrow) note.classList.add('narrow');
             const moreLabel = (m) => narrow ? `+${m}` : `+${m}개 더`;
             fill(names, false);
