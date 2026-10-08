@@ -764,6 +764,24 @@
         }
         .settings-row:first-child, .settings-row[hidden] + .settings-row { border-top: 0; }
         .settings-row[hidden] { display: none; }
+        .settings-row-sub { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--text3); }
+        .month-report { position: fixed; inset: 0; z-index: 1030; display: flex; align-items: flex-end; justify-content: center; background: rgba(26,26,24,0.45); }
+        .month-report[hidden] { display: none; }
+        .mr-card { width: 100%; max-width: 420px; background: var(--card); border-radius: 20px 20px 0 0; padding: 18px 18px calc(22px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-lg); }
+        @media (min-width: 601px) { .month-report { align-items: center; } .mr-card { border-radius: 20px; } }
+        .mr-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .mr-head h3 { font-size: 18px; }
+        .mr-big { padding: 18px 16px; border-radius: 16px; background: var(--accent-soft); color: var(--text2); font-size: 14px; text-align: center; }
+        .mr-big b { display: block; margin: 2px 0; font-size: 34px; font-weight: 800; color: var(--accent-text); line-height: 1.15; }
+        .mr-saved { margin: 10px 0 14px; text-align: center; font-size: 13.5px; color: var(--text); font-weight: 600; }
+        .mr-rows { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .mr-rows > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; font-size: 14px; }
+        .mr-rows > div + div { border-top: 1px solid var(--border); }
+        .mr-rows span { color: var(--text2); display: inline-flex; align-items: center; gap: 6px; }
+        .mr-rows b { color: var(--text); text-align: right; white-space: nowrap; }
+        .mr-link { margin-left: 6px; border: 0; background: none; color: var(--accent-text); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
+        .mr-note { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; font-size: 12px; color: var(--text3); }
+        .settings-row[hidden] { display: none; }
         .settings-row i { font-size: 18px; color: var(--text2); }
         @media (hover: hover) { .settings-row:hover { background: var(--bg); } }
         .settings-row:active { background: var(--bg); }
@@ -1488,6 +1506,20 @@
     </button>
 </div>
 
+<!-- 이번 달 창고지기: 이번 달 얼마나 바로 찾았는지 (이 폰에만 저장) -->
+<div id="monthReport" class="month-report" hidden onclick="if (event.target === this) closeMonthReport()">
+    <div class="mr-card" role="dialog" aria-labelledby="mrTitle">
+        <div class="mr-head"><h3 id="mrTitle"><span id="mrMonth"></span> 창고지기</h3><button type="button" class="btn-ghost" onclick="closeMonthReport()" aria-label="닫기"><i class="ti ti-x"></i></button></div>
+        <div class="mr-big"><span>이번 달 물건</span><b><span id="mrFinds">0</span>번</b><span>을 바로 찾았어요</span></div>
+        <p class="mr-saved" id="mrSaved"></p>
+        <div class="mr-rows">
+            <div><span><i class="ti ti-calendar"></i> 이번 달 쓴 날</span><b id="mrDays"></b></div>
+            <div><span><i class="ti ti-printer"></i> 인쇄물</span><b id="mrPrinted"></b></div>
+        </div>
+        <p class="mr-note"><i class="ti ti-lock"></i> 이 폰에만 저장돼요. 어디로도 보내지 않아요.</p>
+    </div>
+</div>
+
 <!-- 사진 [⋯] 메뉴: 사진마다 버튼 세트를 반복하지 않고 하나로 -->
 <div id="photoMenu" class="photo-menu" role="menu" hidden>
     <button type="button" role="menuitem" data-act="ai"><i class="ti ti-sparkles"></i> AI로 구역 다시 찾기</button>
@@ -1657,6 +1689,7 @@
     </div>
     <div class="settings-list">
         <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
+        <button id="monthReportRow" class="settings-row" onclick="openMonthReport()"><i class="ti ti-calendar-stats"></i> 이번 달 창고지기<span id="monthReportSub" class="settings-row-sub"></span></button>
         <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기</button>
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
@@ -2474,6 +2507,7 @@
         if (!sel.options.length) sel.innerHTML = Object.entries(INDUSTRY_TEMPLATES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join('');
         syncIndustryUI();
         document.getElementById('installAppRow').hidden = isInstalledApp();
+        { const m = monthSummary(), row = document.getElementById('monthReportRow'); row.hidden = !isRealUse(); document.getElementById('monthReportSub').textContent = m.finds ? `${m.finds}번 찾음` : ''; }
         document.getElementById('settingsModal').style.display = 'block';
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -3733,9 +3767,30 @@
     function recordUsageDay() {
         if (!isRealUse()) return;
         const u = readUsage(), t = new Date(), today = `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; // 기기 시간 기준 날짜
-        if (!u.days.includes(today)) { u.days = [...u.days, today].slice(-10); writeUsage(u); }
+        if (!u.days.includes(today)) { u.days = [...u.days, today].slice(-62); if (!u.since) u.since = today; writeUsage(u); } // 이번 달 쓴 날을 세려고 두 달치까지
     }
-    function recordFind() { if (!isRealUse()) return; const u = readUsage(); u.finds = (u.finds || 0) + 1; writeUsage(u); }
+    const monthKey = (t = new Date()) => `${t.getFullYear()}-${t.getMonth() + 1}`;
+    function recordFind() { if (!isRealUse()) return; const u = readUsage(); u.finds = (u.finds || 0) + 1; u.monthFinds = u.monthFinds || {}; const k = monthKey(); u.monthFinds[k] = (u.monthFinds[k] || 0) + 1; writeUsage(u); }
+    function recordPrinted() { if (!isRealUse()) return; const u = readUsage(), t = new Date(); u.printedAt = `${t.getMonth() + 1}월 ${t.getDate()}일`; writeUsage(u); }
+    // 이번 달 창고지기: 사장님이 얼마나 아꼈는지 보여주는 작은 성과 화면 (이 폰에만 저장된 숫자, 어디로도 보내지 않음)
+    function monthSummary() {
+        const u = readUsage(), t = new Date(), k = monthKey(t);
+        const finds = (u.monthFinds || {})[k] || 0;
+        const days = (u.days || []).filter(d => d.startsWith(k + '-')).length;
+        return { month: t.getMonth() + 1, finds, days, printedAt: u.printedAt || '' };
+    }
+    function openMonthReport() {
+        closeSettingsModal();
+        const toast = document.getElementById('toast'); if (toast) toast.classList.remove('show');
+        const m = monthSummary();
+        document.getElementById('mrMonth').textContent = `${m.month}월`;
+        document.getElementById('mrFinds').textContent = m.finds;
+        document.getElementById('mrSaved').textContent = m.finds ? `한 번에 1분씩만 아꼈어도 약 ${m.finds}분이에요` : '물건을 찾을 때마다 여기에 쌓여요';
+        document.getElementById('mrDays').textContent = `${m.days}일`;
+        document.getElementById('mrPrinted').innerHTML = m.printedAt ? `${m.printedAt} 뽑음` : `<button type="button" class="mr-link" onclick="closeMonthReport(); openPrintPreview();">아직 안 뽑았어요 · 보기</button>`;
+        document.getElementById('monthReport').hidden = false;
+    }
+    function closeMonthReport() { document.getElementById('monthReport').hidden = true; }
     function isFamiliarUser() { const u = readUsage(); return u.days.length >= INSTALL_AFTER_DAYS || (u.finds || 0) >= INSTALL_AFTER_FINDS; }
     function maybeShowInstallBanner() {
         if (isInstalledApp() || !isRealUse() || !isFamiliarUser()) return;
@@ -4849,7 +4904,7 @@
                     doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm);
                 });
             });
-            doc.save(`changgojigi_map_${fileDate()}.pdf`);
+            doc.save(`changgojigi_map_${fileDate()}.pdf`); recordPrinted();
         } catch (error) {
             console.error("PDF 생성 중 오류 발생:", error);
             alert("PDF 생성 중 문제가 발생했습니다.");
