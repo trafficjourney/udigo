@@ -634,6 +634,12 @@
         .print-actions .btn-base { flex: 1; }
         .sample-banner > span { word-break: keep-all; }
         .sample-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .guide-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: var(--text2); line-height: 1.6; text-align: left; }
+        .guide-steps li { display: flex; gap: 10px; align-items: flex-start; }
+        .guide-steps li > .ti { font-size: 20px; color: var(--accent-text); margin-top: 2px; flex: none; }
+        .guide-steps b { color: var(--text); }
+        .guide-steps li > div > b:first-child { display: block; font-size: 14px; }
+        .guide-steps small { display: block; font-size: 11px; color: var(--text3); }
 
         h2, h3 { color: var(--text); font-weight: 600; letter-spacing: -0.3px; }
         input[type="text"], select {
@@ -1300,62 +1306,27 @@
     <button type="button" class="edit-bar-done" onclick="toggleEditMode()"><i class="ti ti-check"></i> 완료</button>
 </div>
 
-<div id="guideModal" style="display:block; line-height: 1.6;">
-    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">1분 만에 끝내는 매장 지도 만들기</h2>
+<div id="guideModal" style="display:none; line-height: 1.6;">
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">창고지기 사용법</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-        <ul style="padding-left: 10px; margin: 0; font-size: 13px; color: var(--text2); line-height: 1.8;">
-            <ul style="list-style: none; padding: 0;">
-              <li style="margin-bottom: 12px;">
-                <i class="ti ti-camera" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>사진 등록:</b> 매장 창고나 비품실 사진을 올려주세요.
-              </li>
-
-              <li style="margin-bottom: 12px;">
-                <i class="ti ti-pencil-minus" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>구역 수정:</b> 화면 오른쪽 아래 <b>[구역 고치기]</b>를 눌러 시작하고, 끝나면 <b>[완료]</b>를 누르세요. 드래그해서 구역을 그릴 수 있습니다.
-              </li>
-
-              <li style="margin-bottom: 12px;">
-                <i class="ti ti-robot" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>AI 자동 분석:</b> 이게 귀찮으면 사진 등록 후 <b>[AI 분석]</b>을 누르면 수납 구역을 자동으로 찾아줍니다.
-                <span style="display: block; font-size: 11px; color: var(--text3); margin-top: 2px;">분석할 때 사진만 외부 AI 서버로 전송돼요.</span>
-              </li>
-
-              <li style="margin-bottom: 12px;">
-                <i class="ti ti-search" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>비품 검색:</b> 상단 검색창이나 <b>[마이크 아이콘]</b>으로 등록해둔 물건을 찾으세요.
-              </li>
-
-              <li style="margin-bottom: 12px;">
-                <i class="ti ti-printer" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>인쇄:</b> 사진 위 <b>[인쇄]</b>로 A4 지도를 뽑아 선반 옆에 붙여두세요.
-              </li>
-            </ul>
-        </ul>
+        <ol class="guide-steps">
+            <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
+            <li><i class="ti ti-search"></i><div><b>물건 찾기</b><span>위쪽 검색창에 이름이나 초성(ㅅㄹ)을 치거나, 마이크를 눌러 말로 찾아요.</span></div></li>
+            <li><i class="ti ti-printer"></i><div><b>벽에 붙이기</b><span>아래 인쇄 버튼으로 A4를 뽑아 선반 옆에 붙여 두면, 폰 없이도 꺼낼 때·다시 넣을 때 자리를 찾아요.</span></div></li>
+        </ol>
     </div>
-    <p style="font-size: 12px; color: var(--text3); margin: 0 0 12px; text-align: center;">이 안내는 처음 한 번만 떠요. 다시 보려면 첫 화면의 "사용방법 보기"</p>
     <div style="display: flex; gap: 8px; width: 100%;">
-        <button onclick="closeGuideModal(); openVideoGuideModal();" class="btn-base" style="background: var(--card); border: 1px solid var(--accent-text); color: var(--accent-text); flex: 1;"><i class="ti ti-video" style="margin-right: 4px; font-size: 16px;"></i> 영상보기</button>
-        <button onclick="closeGuideModal();" class="btn-base btn-primary" style="flex: 1.5;">확인했습니다, 시작하기!</button>
+        <button onclick="closeGuideModal(); openVideoGuideModal();" class="btn-base" style="background: var(--card); border: 1px solid var(--accent-text); color: var(--accent-text); flex: 1;"><i class="ti ti-video" style="margin-right: 4px; font-size: 16px;"></i> 영상 보기</button>
+        <button onclick="closeGuideModal();" class="btn-base btn-primary" style="flex: 1.5;">닫기</button>
     </div>
 </div>
 <script>
-    // 안내창은 사진이 생긴 뒤 처음 한 번만 자동으로 띄운다. 매일 여는 사람에게 매번 뜨면 검색하려다 창부터 닫아야 했다.
-    // (다시 보고 싶으면 첫 화면·설정의 "사용방법 보기")
+    // 사용법 안내창: 💡 버튼·첫 화면 "사용방법 보기"로만 연다
     function closeGuideModal() {
         document.getElementById('guideModal').style.display = 'none';
         try { localStorage.setItem('guideSeen', '1'); } catch (e) {}
     }
-    // 페인트 전에 즉시 판단해서, 이미 봤거나 아직 사진이 없으면 깜빡임 없이 바로 숨긴다.
-    (function () {
-        try {
-            const seen = localStorage.getItem('guideSeen') === '1' || parseInt(localStorage.getItem('guideHiddenUntil') || '0', 10) > 0;
-            const hasData = localStorage.getItem('hasSavedPhotos') === '1' || JSON.parse(localStorage.getItem('savedSystemData') || '[]').length > 0;
-            if (seen || !hasData) {
-                document.write('<style>#guideModal{display:none !important;}</style>');
-            }
-        } catch (e) {}
-    })();
+    // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
 <div class="search-bar">
@@ -1392,6 +1363,7 @@
         <div class="sample-banner-actions">
             <button type="button" class="btn-xs is-accent" onclick="openPrintPreview()"><i class="ti ti-printer"></i> 인쇄물 보기</button>
             <button type="button" class="btn-xs is-danger" onclick="clearSampleData()">샘플 삭제</button>
+            <button type="button" class="btn-xs is-icon" onclick="hideSampleBanner()" title="닫기" aria-label="닫기"><i class="ti ti-x"></i></button>
         </div>
     </div>
     <div id="installBanner" class="sample-banner install-banner" style="display: none;">
@@ -3737,8 +3709,11 @@
     }
     function recordFind() { if (!isRealUse()) return; const u = readUsage(); u.finds = (u.finds || 0) + 1; writeUsage(u); }
     function isFamiliarUser() { const u = readUsage(); return u.days.length >= INSTALL_AFTER_DAYS || (u.finds || 0) >= INSTALL_AFTER_FINDS; }
+    // 위쪽 안내 띠는 한 번에 하나만: 예시 띠가 떠 있으면 설치 안내는 다음에
+    function anyBannerShown() { return ['deleteSampleBtn', 'samplePreviewBanner', 'installBanner'].some(id => { const e = document.getElementById(id); return e && e.style.display === 'flex'; }); }
+    function hideSampleBanner() { document.getElementById('deleteSampleBtn').style.display = 'none'; try { sessionStorage.setItem('sampleBannerHidden', '1'); } catch (e) {} }
     function maybeShowInstallBanner() {
-        if (isInstalledApp() || !isRealUse() || !isFamiliarUser()) return;
+        if (isInstalledApp() || !isRealUse() || !isFamiliarUser() || anyBannerShown()) return;
         if (!deferredInstallPrompt && !isIOS()) return;
         const until = parseInt(safeStorage.getItem('installBannerHiddenUntil') || '0', 10);
         if (until && Date.now() < until) return;
@@ -4906,7 +4881,8 @@
                 if (focus && imageList.some(d => String(d.id) === focus)) { deactivateHeroSearch(); setTimeout(() => showPhoto(focus, true), 50); }
             });
             activateHeroSearch();
-            if (deleteSampleBtn && safeStorage.getItem('isSampleData') === '1') deleteSampleBtn.style.display = 'flex';
+            let bannerHidden = false; try { bannerHidden = sessionStorage.getItem('sampleBannerHidden') === '1'; } catch (e) {}
+            if (deleteSampleBtn && safeStorage.getItem('isSampleData') === '1' && !bannerHidden) deleteSampleBtn.style.display = 'flex';
             if (isSamplePreview) {
                 document.getElementById('samplePreviewBanner').style.display = 'flex';
                 if (currentSampleKey() === 'organizer') {
