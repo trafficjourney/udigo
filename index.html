@@ -2111,6 +2111,8 @@
         document.body.classList.toggle('editing', isEditMode);
         if (isEditMode) navPush('edit');
         else if (fromHistory !== true) navClose('edit');
+        // 편집을 끝내면 고르던 칸 선택을 푼다 (남겨두면 보기 화면에서 그 칸만 밝고 나머지 쪽지가 어둡게 가려졌다)
+        if (!isEditMode) { activeZone = null; showSearchArrow = false; }
         // 편집 모드에선 목록 칩이 커져서 위쪽 사진의 목록이 길어진다 → 보던 사진이 밀리지 않게 전환 후 제자리로
         const line = innerHeight * 0.35;
         const anchorSec = [...document.querySelectorAll('.image-section')].find(s => s.offsetParent && s.getBoundingClientRect().bottom > line);
@@ -4518,7 +4520,7 @@
         <button onclick="closeVideoGuideModal()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text2); display: flex;"><i class="ti ti-x"></i></button>
         <h3 style="margin-bottom: 16px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="ti ti-video" style="color: var(--accent); font-size: 18px;"></i> 사용방법 가이드 영상</h3>
         <div style="margin-top: 10px;">
-            <img src="guide.gif" alt="창고 등록 방법 가이드" style="width: 100%; max-width: 100%; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+            <img src="guide.gif?v=2" alt="사용 방법: 사진 찍기, 편집에서 칸 만들기, 업종 고르고 물건 담기, 완료하면 사진 위 쪽지, 물건 이름으로 찾기, 크게 보기, 인쇄" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
         </div>
     </div>
 </div>
