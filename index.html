@@ -710,15 +710,16 @@
         .zl-row-memo .ti { flex: none; font-size: 14px; margin-top: 1px; color: var(--warn); }
         .zl-memo-item b { font-weight: 700; }
         .zl-memo-sep { color: var(--text3); }
-        .zl-row-top { flex: none; max-width: 42%; display: flex; flex-direction: column; min-width: 0; }
+        .zl-row-top { flex: 0 0 100%; display: flex; align-items: baseline; gap: 8px; min-width: 0; } /* 폰: 이름은 윗줄, 칩은 아래 줄 전체 폭으로 */
         .zl-row .zl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zl-row .zone-checked { white-space: nowrap; }
-        .zl-row-items { flex: 1; min-width: 0; display: flex; gap: 5px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
-        .zl-row .zl-chip { flex: none; font-size: 12.5px; padding: 3px 9px; white-space: nowrap; }
+        .zl-row-items { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+        .zl-row .zl-chip { flex: none; max-width: 100%; font-size: 12.5px; padding: 3px 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zl-row .zl-empty { margin: 0; padding: 0; }
         .zl-more { flex: none; align-self: center; font-size: 12px; font-weight: 600; color: var(--text2); padding: 0 2px; }
         .zl-go { flex: none; color: var(--text3); font-size: 16px; }
-        @media (min-width: 720px) { .zl-row-top { max-width: 30%; } .zl-row-items { -webkit-mask-image: none; mask-image: none; flex-wrap: wrap; } }
+        @media (max-width: 719px) { .zl-row { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; } .zl-row .zl-go { align-self: center; } } /* 폰: 번호를 이름 줄에 맞춤 */
+        @media (min-width: 720px) { .zl-row-top { flex: none; max-width: 30%; flex-direction: column; align-items: flex-start; gap: 0; } } /* 넓은 화면: 이름 옆에 칩 */
         .zl-grid { display: grid; grid-template-columns: 1fr 1fr; margin: 0 -1px -1px 0; }
         .zl-grid .zone-item, .zl-grid .zone-item:last-child { padding: 10px 10px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); min-width: 0; }
         .zl-grid .zone-item.is-wide { grid-column: 1 / -1; }
@@ -3042,9 +3043,8 @@
             // 메모는 칸 창·인쇄물에 있으니 빼고, 날짜는 다시 볼 때가 된(오래된) 칸만 표시한다.
             // 편집 모드는 칩을 끌어 다른 칸으로 옮겨야 해서 아래의 2열 격자(칩 전부 표시)를 그대로 쓴다
             if (!isEditMode && data.id !== 'dummy_root') {
-                const MAX_CHIPS = 3;
                 listContainer.innerHTML = `<div class="zl-rows">${zones.map((z, i) => {
-                    const shown = z.items.slice(0, MAX_CHIPS), more = z.items.length - shown.length;
+                    const shown = z.items, more = 0; // 칩은 모두 보여준다 (폰에서도 줄을 바꿔 다 나오게)
                     // 메모(유통기한 임박 같은 중요한 말)는 칩에서 빼는 대신 줄 아래에 따로 한 줄로: "우유 · 유통기한 짧은 것 앞쪽"
                     const memos = z.items.filter(it => (it.comment || '').trim()).map(it => `<span class="zl-memo-item"><b>${escapeHtml(it.name)}:</b> ${escapeHtml(it.comment.trim())}</span>`);
                     return `<button type="button" class="zone-item zl-row ${z === activeZone ? 'active' : ''}" onclick="selectZone('${data.id}', ${i})">
