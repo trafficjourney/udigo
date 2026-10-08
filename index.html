@@ -532,6 +532,8 @@
         .zoom-ctl button i { font-size: 16px; }
         .zoom-ctl .zoom-full { padding: 0; width: 46px; height: 46px; border-radius: 23px; background: rgba(26,26,24,0.72); border: 1.5px solid rgba(255,255,255,0.75); color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.3); } /* 크게 보기: 자주 쓸 기능이라 크게 */
         .zoom-ctl .zoom-full i { font-size: 24px; }
+        .zoom-ctl .zoom-full { opacity: 0.6; transition: opacity 0.15s; } /* 쪽지를 가리지 않게 살짝 흐리게 */
+        .zoom-ctl .zoom-full:hover, .zoom-ctl .zoom-full:active, .zoom-ctl .zoom-full:focus-visible { opacity: 1; }
         .zoom-box.zoomed .zoom-ctl .zoom-reset, .zoom-ctl .zoom-full { display: inline-flex; }
         /* 크게 보기(전체 화면): 사진 칸을 화면 가득 띄운다. 구역 창(#modal)은 이보다 위에 뜬다 */
         .fs-bar { display: none; }
@@ -591,6 +593,20 @@
         @media (hover: hover) { .fab-btn:hover { background: var(--charcoal); color: var(--ivory-text); border-color: var(--charcoal); box-shadow: var(--shadow-sm); } }
         .fab-btn:active { transform: scale(0.92); }
 
+        .photo-more-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-size: 18px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .photo-more-btn:active { transform: scale(0.94); }
+        .photo-menu { position: fixed; z-index: 1050; min-width: 210px; padding: 6px; border-radius: var(--radius-md); background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+        .photo-menu[hidden] { display: none; }
+        .photo-menu button { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+        .photo-menu button .ti { font-size: 18px; color: var(--text2); }
+        .photo-menu button:hover, .photo-menu button:active { background: var(--accent-soft); }
+        .photo-menu button.is-danger, .photo-menu button.is-danger .ti { color: var(--danger, #c44444); }
+        .font-pill { display: flex; align-items: center; height: 34px; border: 1px solid var(--ivory-border); border-radius: 17px; background: var(--card); box-shadow: var(--shadow-xs); overflow: hidden; }
+        .font-pill button { height: 100%; padding: 0 9px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; cursor: pointer; }
+        .font-pill button.is-big { font-size: 16px; }
+        .font-pill sub, .font-pill sup { font-size: 10px; margin-left: 1px; }
+        .font-pill button:active { background: var(--accent-soft); }
+        .font-pill-sep { width: 1px; height: 18px; background: var(--border); }
         #printFab { color: var(--accent-text); }
         #printFab .ti { font-size: 17px; }
         body.editing #printFab { display: none; }
@@ -872,7 +888,16 @@
         .welcome-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--text2); }
         .welcome-trust span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
         .welcome-trust .ti { font-size: 15px; color: var(--accent2); }
-        .ws { width: 100%; max-width: 520px; margin: 28px auto 4px; text-align: left; }
+        .ws { width: 100%; max-width: 520px; margin: 28px auto 4px; text-align: left; scroll-margin-top: 80px; }
+        .welcome-more { display: inline-flex; align-items: center; gap: 4px; margin: 18px auto 0; padding: 6px 12px; border: 0; background: none; color: var(--text2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .welcome-more .ti { animation: more-bob 1.6s ease-in-out infinite; }
+        @keyframes more-bob { 50% { transform: translateY(3px); } }
+        @media (prefers-reduced-motion: reduce) { .welcome-more .ti { animation: none; } }
+        /* 첫 화면 한 장에는 그림·제목·버튼만(세로 가운데): 정리 전/후·업종 예시는 그 아래, 내려야 보인다 */
+        .welcome-top { display: flex; flex-direction: column; justify-content: center; width: 100%; min-height: calc(100vh - var(--welcome-offset, 124px) - 16px); min-height: calc(100dvh - var(--welcome-offset, 124px) - 16px); }
+        .welcome-top .welcome-more { align-self: center; }
+        .welcome-top > * { flex-shrink: 0; }
+        .welcome-top .welcome-actions { margin-top: 24px; width: 100%; }
         .ws:empty { display: none; }
         .ws-sec + .ws-sec { margin-top: 28px; }
         .ws-h { margin: 0 0 4px; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); }
@@ -886,6 +911,13 @@
         .ws-ba-switch { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
         .ws-ba-switch button { min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
         .ws-ba-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+        .ws-print { position: relative; width: min(78%, 320px); margin: 18px auto 14px; transform: rotate(-1.5deg); }
+        .ws-print img { display: block; width: 100%; height: auto; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(0,0,0,0.14); background: #fff; }
+        .ws-print::before, .ws-print::after { content: ''; position: absolute; top: -9px; width: 60px; height: 20px; background: var(--accent2); opacity: 0.45; }
+        .ws-print::before { left: -14px; transform: rotate(-28deg); }
+        .ws-print::after { right: -14px; transform: rotate(28deg); }
+        .ws-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 1.5; color: var(--text2); word-break: keep-all; }
+        .ws-points b { display: inline-block; min-width: 48px; color: var(--accent-text); }
         .ws-cases { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 8px; scrollbar-width: thin; }
         .ws-case { flex: 0 0 44%; max-width: 200px; scroll-snap-align: start; padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; text-align: left; font: inherit; cursor: pointer; }
         .ws-case img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--bg); }
@@ -1367,6 +1399,7 @@
     <!-- 🏁 첫 방문(데이터 없음) 화면: 5초 안에 무엇을 해주는 서비스인지 보여준다 -->
     <section id="welcomeCard" class="welcome-card" style="display: none;">
         <button type="button" class="btn-xs welcome-back revisit-only" onclick="closeWelcomeRevisit()"><i class="ti ti-arrow-left"></i> 내 지도로 돌아가기</button>
+        <div class="welcome-top">
         <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="벽에 테이프로 붙인 선반 지도에서 찾는 구역에 노란 쪽지가 붙고 핀이 꽂힌 그림">
             <!-- 벽에 테이프로 붙인 종이: 이 지도를 뽑아 붙여 쓸 수 있다는 걸 글 없이 보여준다 -->
             <rect x="13" y="22" width="216" height="154" rx="3" fill="#000" opacity=".07"/>
@@ -1390,16 +1423,14 @@
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
         <p class="welcome-sub">물건 이름만 대면 어느 구역인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
-        <ol class="welcome-steps">
-            <li><i class="ti ti-camera"></i><b>찍기</b><span>선반·냉동고 사진</span></li>
-            <li><i class="ti ti-border-corners"></i><b>표시</b><span>구역마다 물건</span></li>
-            <li><i class="ti ti-search"></i><b>찾기</b><span>폰이나 인쇄물로</span></li>
-        </ol>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
             <button class="btn-base btn-secondary btn-lg" onclick="document.getElementById('fileInput').click()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
             <p class="revisit-only welcome-revisit-note">지금 쓰던 지도는 그대로 있어요. 예시는 저장하지 않고 미리보기로 열려요.</p>
             <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><span><i class="ti ti-device-mobile"></i> 내 폰에 저장</span></p>
+        </div>
+        <!-- 첫 화면은 단순하게: 아래에 더 있다는 표시만 두고, 정리 전/후·업종 예시는 한 화면 아래에 -->
+        <button type="button" class="welcome-more" onclick="document.getElementById('welcomeShowcase').scrollIntoView({ behavior: 'smooth', block: 'start' })">어떻게 되는지 보기 <i class="ti ti-chevron-down"></i></button>
         </div>
         <!-- 정리 전/후 비교 + 업종별 예시 (예시 사진으로 그린다: renderWelcomeShowcase) -->
         <div id="welcomeShowcase" class="ws"></div>
@@ -1429,8 +1460,7 @@
 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="addImage(this)">
 
 <div class="floating-remote" id="floatingRemote">
-    <button class="fab-btn fab-font" onclick="changeFontSize(2)">+</button>
-    <button class="fab-btn fab-font" onclick="changeFontSize(-2)">-</button>
+    <span class="fab-font font-pill" role="group" aria-label="쪽지 글자 크기"><button type="button" onclick="changeFontSize(-2)" title="글자 작게" aria-label="글자 작게">가<sub>−</sub></button><span class="font-pill-sep" aria-hidden="true"></span><button type="button" class="is-big" onclick="changeFontSize(2)" title="글자 크게" aria-label="글자 크게">가<sup>+</sup></button></span>
     <button id="detailToggleBtn" onclick="toggleDetails()" class="fab-btn" title="말풍선 토글"><i class="ti ti-message-circle"></i></button>
     <button id="undoBtn" onclick="undo()" class="fab-btn" title="되돌리기" disabled><i class="ti ti-arrow-back-up"></i></button>
     <button id="printFab" onclick="openPrintPreview(fsPhoto ? fsPhoto.data.id : undefined)" class="fab-btn" title="인쇄물 보기 (종이·PDF)" aria-label="인쇄물 보기"><i class="ti ti-printer"></i></button>
@@ -1438,6 +1468,14 @@
         <i id="modeIcon" class="ti ti-pencil" style="font-size: 14px;"></i>
         <span id="modeText" style="margin-left: 4px;">구역 고치기</span>
     </button>
+</div>
+
+<!-- 사진 [⋯] 메뉴: 사진마다 버튼 세트를 반복하지 않고 하나로 -->
+<div id="photoMenu" class="photo-menu" role="menu" hidden>
+    <button type="button" role="menuitem" data-act="ai"><i class="ti ti-sparkles"></i> AI로 구역 다시 찾기</button>
+    <button type="button" role="menuitem" data-act="print"><i class="ti ti-printer"></i> 이 사진 인쇄물 보기</button>
+    <button type="button" role="menuitem" data-act="rename"><i class="ti ti-pencil"></i> 사진 이름 바꾸기</button>
+    <button type="button" role="menuitem" data-act="delete" class="is-danger"><i class="ti ti-trash"></i> 사진 삭제</button>
 </div>
 
 <!-- 📍 검색으로 찾은 뒤: 깜박임이 끝나면 작은 알약 → 누르거나 앱으로 돌아오면 확인 바로 펼침 -->
@@ -1555,7 +1593,7 @@
         <h3 id="printTitle"><i class="ti ti-printer"></i> 벽에 붙일 지도</h3>
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <p class="print-sub">A4로 뽑아 붙여두면, 앱을 열지 않아도 물건 이름으로 자리를 찾을 수 있어요.</p>
+    <p class="print-sub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
     <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진을 합친 전체 찾아보기 -->
     <div id="printTabs" class="print-tabs" role="tablist" hidden>
         <button type="button" role="tab" data-tab="photo" onclick="renderPrintPreview('photo')"></button>
@@ -2535,6 +2573,30 @@
         syncDetailBtn(); showToast(`물건 목록: ${BUBBLE_LEVELS[bubbleLevel]}`);
         imageList.forEach(data => render(data));
     }
+    // 사진 [⋯] 메뉴
+    let photoMenuId = null;
+    function openPhotoMenu(e, dataId) {
+        e.stopPropagation();
+        const menu = document.getElementById('photoMenu');
+        if (!menu.hidden && photoMenuId === dataId) { closePhotoMenu(); return; }
+        photoMenuId = dataId; menu.hidden = false;
+        const r = e.currentTarget.getBoundingClientRect(), mw = menu.offsetWidth, mh = menu.offsetHeight;
+        menu.style.left = Math.max(8, Math.min(innerWidth - mw - 8, r.right - mw)) + 'px';
+        menu.style.top = (r.bottom + 6 + mh > innerHeight ? Math.max(8, r.top - mh - 6) : r.bottom + 6) + 'px';
+    }
+    function closePhotoMenu() { const m = document.getElementById('photoMenu'); if (m) m.hidden = true; photoMenuId = null; }
+    document.getElementById('photoMenu').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-act]'); if (!b) return;
+        const id = photoMenuId; closePhotoMenu();
+        if (b.dataset.act === 'ai') runAIAnalysis(id);
+        else if (b.dataset.act === 'print') openPrintPreview(id);
+        else if (b.dataset.act === 'rename') renameImage(id);
+        else if (b.dataset.act === 'delete') deleteImage(id);
+    });
+    document.addEventListener('pointerdown', (e) => { if (!e.target.closest('#photoMenu, .photo-more-btn')) closePhotoMenu(); });
+    window.addEventListener('scroll', closePhotoMenu, { passive: true });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePhotoMenu(); });
+
     function editZone(dataId, index) { activeData = imageList.find(d => d.id == dataId); activeZone = activeData.zones[index]; expandZoneList(dataId); showSearchArrow = false; openModal(activeZone); render(activeData); }
 
     function createNewCanvasElement(data) {
@@ -2545,9 +2607,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
                 <h3 id="title-${data.id}" style="margin:0; font-size:16px; color: var(--accent-text); cursor: pointer; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" onclick="renameImage('${data.id}')">${data.title}</h3>
                 <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                    <button id="aiBtn-${data.id}" onclick="runAIAnalysis('${data.id}')" class="btn-xs is-accent"><i class="ti ti-sparkles"></i> AI 분석</button>
-                    <button onclick="openPrintPreview('${data.id}')" class="btn-xs btn-quiet" title="인쇄해서 벽에 붙이기" aria-label="인쇄해서 벽에 붙이기"><i class="ti ti-printer"></i> 인쇄</button>
-                    <button onclick="deleteImage('${data.id}')" class="btn-xs is-danger is-icon" title="사진 삭제" aria-label="사진 삭제"><i class="ti ti-trash"></i></button>
+                    <button type="button" class="photo-more-btn" onclick="openPhotoMenu(event, '${data.id}')" title="사진 메뉴" aria-label="사진 메뉴" aria-haspopup="menu"><i class="ti ti-dots"></i></button>
                 </div>
             </div><hr style="border: 0; border-top: 1px solid var(--border); margin-top: 8px;">`;
 
@@ -4308,6 +4368,9 @@
         box.innerHTML = `<section class="ws-sec"><h3 class="ws-h">선반 사진에 쪽지를 붙여요</h3><p class="ws-p">구역마다 뭐가 있는지 사진 위에 적어 두면, 선반 앞에 가지 않아도 바로 찾아요.</p>
             <div class="ws-ba" id="wsBa"><img src="${first.imgData}" alt="${escapeHtml(first.title)} 사진"><div class="ws-ba-notes">${notes}</div><span class="ws-ba-tag">정리 전</span></div>
             <div class="ws-ba-switch" role="group" aria-label="정리 전후 보기"><button type="button" data-after="0" aria-pressed="true">정리 전</button><button type="button" data-after="1" aria-pressed="false">창고지기로 정리 후</button></div></section>
+            <section class="ws-sec"><h3 class="ws-h">벽에 붙이면 폰 없이도 찾아요</h3><p class="ws-p">A4로 뽑아 선반 옆에 붙여 두면, 직원·알바생도 폰을 꺼내지 않고 <b>꺼낼 때도, 다시 가져다 놓을 때도</b> 자리를 바로 찾아요.</p>
+            <div class="ws-print"><img src="print-sample.jpg" alt="인쇄물 예시: 선반 사진에 구역 번호와 쪽지, 아래에 가나다순 물건 찾아보기" loading="lazy" width="600" height="849"></div>
+            <ul class="ws-points"><li><b>찾을 때</b> 가나다순 목록에서 물건 이름 → 오른쪽 번호 → 사진 속 그 구역</li><li><b>넣을 때</b> 쓰고 난 물건도 원래 자리로, 사람마다 다르게 두지 않아요</li></ul></section>
             <section class="ws-sec"><h3 class="ws-h">이런 곳에 써요</h3><p class="ws-p">눌러서 예시를 바로 열어 보세요.</p>
             <div class="ws-cases">${photos.map(p => `<button type="button" class="ws-case" data-id="${p.id}"><img src="${p.imgData}" alt="" loading="lazy"><b>${escapeHtml(p.title)}</b><span>구역 ${p.zones.length} · 물건 ${p.zones.reduce((n, z) => n + z.items.length, 0)}<i class="ti ti-chevron-right"></i></span></button>`).join('')}</div></section>`;
         const ba = box.querySelector('#wsBa'), img = ba.querySelector('img');
