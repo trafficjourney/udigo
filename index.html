@@ -103,57 +103,57 @@
             --accent-text: var(--accent);  /* 텍스트로 쓰는 강조색 — 어두운 카드 위에서 --accent 자체가 흐리게 읽히는 테마만 덮어씀 */
         }
 
-        /* ⚫⚪ 모노 테마 (기본): 흰 머리글·검정 글씨·검정 주요 버튼, 강조도 회색 단계로만.
+        /* 🩶 슬레이트 테마 (기본, 저장값은 'mono'): 흰 머리글·푸른 기 도는 회색 버튼, 강조도 회색 단계로만.
            앱 안에서 색이 있는 건 노란 쪽지와 찾은 칸 빨강뿐이라, 사진 위 쪽지가 가장 먼저 눈에 들어온다 */
         :root[data-theme="mono"] {
-            --bg: #f4f4f4;
+            --bg: #eef1f4;
             --card: #ffffff;
-            --border: #e1e1e1;
-            --accent: #111111;
-            --accent2: #555555;
-            --text: #111111;
-            --text2: #5f5f5f;
-            --text3: #9a9a9a;
-            --search-hl: #e4e4e4;
-            --zone-border: rgba(17,17,17,0.85);
+            --border: #d8dee6;
+            --accent: #475569;
+            --accent2: #7b8798;
+            --text: #1f2937;
+            --text2: #5b6675;
+            --text3: #9aa4b2;
+            --search-hl: #dfe5ec;
+            --zone-border: rgba(71,85,105,0.85);
             --ivory-bg: rgba(255,255,255,0.92);
-            --ivory-border: #e1e1e1;
-            --charcoal: #111111;
+            --ivory-border: #d8dee6;
+            --charcoal: #475569;
             --ivory-text: #ffffff;
-            --charcoal-mute: #5f5f5f;
-            --shadow-focus: 0 0 0 4px rgba(17,17,17,0.16);
+            --charcoal-mute: #5b6675;
+            --shadow-focus: 0 0 0 4px rgba(71,85,105,0.2);
 
-            --accent-hover: #000000;
-            --accent-soft: #ececec;
-            --accent-rgb: 17, 17, 17;
-            --accent-dark-rgb: 17, 17, 17;
+            --accent-hover: #334155;
+            --accent-soft: #e3e8ef;
+            --accent-rgb: 71, 85, 105;
+            --accent-dark-rgb: 71, 85, 105;
             --on-accent2: #ffffff;
             --on-accent: #ffffff;
             --header-bg: rgba(255,255,255,0.94);
-            --header-text: #111111;
-            --badge-bg: #111111;
+            --header-text: #1f2937;
+            --badge-bg: #475569;
             --badge-text: #ffffff;
-            --active-zone-bg: #f0f0f0;
-            --active-zone-bar: #111111;
-            --zone-stroke: #111111;
-            --zone-fill-rgb: 17, 17, 17;
-            --hero-bg: #111111;
+            --active-zone-bg: #e9edf2;
+            --active-zone-bar: #475569;
+            --zone-stroke: #475569;
+            --zone-fill-rgb: 71, 85, 105;
+            --hero-bg: #334155;
             --hero-text: #ffffff;
             --hero-text2: rgba(255,255,255,0.7);
             --hero-chip-bg: rgba(255,255,255,0.08);
             --hero-chip-border: rgba(255,255,255,0.22);
-            --notice-bg: #f2f2f2;
-            --notice-border: #dddddd;
-            --notice-text: #333333;
+            --notice-bg: #edf1f5;
+            --notice-border: #d8dee6;
+            --notice-text: #334155;
             --danger-soft: #f7e4e4;
-            --accent-text: #111111;
+            --accent-text: #334155;
             /* 편집 중 띠: 흰 머리글과 확실히 다르게 검정 띠 + 흰 [완료] */
-            --editbar-bg: #111111;
+            --editbar-bg: #334155;
             --editbar-text: #ffffff;
-            --editbar-line: #111111;
+            --editbar-line: #334155;
             --editbar-done-bg: #ffffff;
-            --editbar-done-text: #111111;
-            --edit-frame: #111111;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
+            --editbar-done-text: #334155;
+            --edit-frame: #475569;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
@@ -1399,7 +1399,7 @@
         <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
             <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="모노 (기본)">
-                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#111111"></i></span><span>기본</span>
+                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#475569"></i></span><span>기본</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
@@ -4529,7 +4529,7 @@
         <button onclick="closeVideoGuideModal()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text2); display: flex;"><i class="ti ti-x"></i></button>
         <h3 style="margin-bottom: 16px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="ti ti-video" style="color: var(--accent); font-size: 18px;"></i> 사용방법 가이드 영상</h3>
         <div style="margin-top: 10px;">
-            <img src="guide.gif?v=3" alt="사용 방법: 사진 찍기, 편집에서 칸 만들기, 업종 고르고 물건 담기, 완료하면 사진 위 쪽지, 물건 이름으로 찾기, 크게 보기, 인쇄" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+            <img src="guide.gif?v=4" alt="사용 방법: 사진 찍기, 편집에서 칸 만들기, 업종 고르고 물건 담기, 완료하면 사진 위 쪽지, 물건 이름으로 찾기, 크게 보기, 인쇄" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
         </div>
     </div>
 </div>
