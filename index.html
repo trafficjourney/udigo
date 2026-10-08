@@ -719,7 +719,15 @@
         .zl-row .zl-empty { margin: 0; padding: 0; }
         .zl-chip[hidden] { display: none !important; }
         .zl-row .zl-chip-more { cursor: pointer; border: 1px solid var(--accent2); background: var(--card); color: var(--accent-text); font-weight: 700; }
-        .zl-more-rows { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 48px; border: 0; border-top: 1px solid var(--border); background: var(--bg); color: var(--accent-text); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .zl-more-rows { display: flex; align-items: center; gap: 10px; width: calc(100% - 20px); margin: 10px; min-height: 52px; padding: 8px 14px; border: 1.5px solid var(--accent); border-radius: 12px; background: var(--accent-soft); color: var(--text); font: inherit; text-align: left; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .zl-more-rows:active { transform: scale(0.99); }
+        .zl-more-rows .zl-more-n { flex: 0 0 auto; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 17px; background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; }
+        .zl-more-rows .zl-more-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+        .zl-more-rows .zl-more-txt b { font-size: 15px; font-weight: 800; }
+        .zl-more-rows .zl-more-txt small { font-size: 12.5px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .zl-more-rows > .ti { flex: 0 0 auto; font-size: 22px; color: var(--accent); }
+        .zl-more-rows.is-open { justify-content: center; min-height: 44px; background: var(--card); border-width: 1px; border-color: var(--border); color: var(--text2); box-shadow: none; }
+        .zl-more-rows.is-open > .ti { font-size: 18px; color: var(--text2); }
         .zl-more { flex: none; align-self: center; font-size: 12px; font-weight: 600; color: var(--text2); padding: 0 2px; }
         .zl-go { flex: none; color: var(--text3); font-size: 16px; }
         @media (max-width: 719px) { .zl-row { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; } .zl-row .zl-go { align-self: center; } } /* 폰: 번호를 이름 줄에 맞춤 */
@@ -3070,8 +3078,8 @@
                         <i class="ti ${isEditMode ? 'ti-pencil' : 'ti-chevron-right'} zl-go" aria-hidden="true"></i>
                     </div>`;
                 }).join('')}</div>${zones.length > (ZL_ROWS || 6) ? (listOpen
-                    ? `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', false)"><i class="ti ti-chevron-up"></i> 접기</button>`
-                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)"><i class="ti ti-chevron-down"></i> 나머지 ${zones.length - ZL_ROWS}칸 더보기</button>`) : ''}`;
+                    ? `<button type="button" class="zl-more-rows is-open" onclick="toggleZoneListMore('${data.id}', false)"><i class="ti ti-chevron-up"></i> 목록 접기</button>`
+                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)" aria-label="나머지 ${zones.length - ZL_ROWS}칸 더보기"><span class="zl-more-n">+${zones.length - ZL_ROWS}</span><span class="zl-more-txt"><b>칸 ${zones.length - ZL_ROWS}개 더 있어요</b><small>${zones.slice(ZL_ROWS).map(z => escapeHtml(z.name || '이름 없음')).join(' · ')}</small></span><i class="ti ti-chevron-down"></i></button>`) : ''}`;
                 // 그림(애니메이션)마다 다시 그리지 않게: 내용·펼침 상태가 같으면 그대로 둔다
                 const key = html + '|' + [...(expandedZoneChips || [])].join(',');
                 if (listContainer._zlKey !== key) { listContainer.innerHTML = html; listContainer._zlKey = key; if (typeof clampZoneChips === 'function') clampZoneChips(listContainer); }
