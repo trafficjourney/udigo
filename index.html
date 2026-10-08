@@ -21,16 +21,16 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <title>창고지기 - 사진 한 장으로 만드는 창고 지도</title>
     <!-- 카톡·SNS 링크 미리보기 (이미지 주소는 반드시 전체 주소여야 카톡이 읽는다) -->
-    <meta name="description" content="선반 사진에 칸을 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요. A4로 뽑아 벽에 붙일 수도 있어요.">
+    <meta name="description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요. A4로 뽑아 벽에 붙일 수도 있어요.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="창고지기">
     <meta property="og:title" content="창고지기 - 사진 한 장이 창고 지도가 돼요">
-    <meta property="og:description" content="선반 사진에 칸을 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요.">
+    <meta property="og:description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요.">
     <meta property="og:url" content="https://trafficjourney.github.io/udigo/">
     <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=6">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="창고지기: 사진 한 장이 창고 지도가 돼요. 선반 사진 위 칸마다 노란 쪽지가 붙어 있고 찾은 칸에 빨간 테두리">
+    <meta property="og:image:alt" content="창고지기: 사진 한 장이 창고 지도가 돼요. 선반 사진 위 구역마다 노란 쪽지가 붙어 있고 찾은 구역에 빨간 테두리">
     <meta property="og:locale" content="ko_KR">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -484,6 +484,20 @@
         .zoom-stage { position: relative; width: 100%; }
         .zoom-stage canvas { width: 100%; height: auto; max-width: none; margin: 0; }
         .note-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        /* 구역이 없는 사진: 가운데 [+ 첫 구역 만들기] → 고치는 중이면 "끌어서 그려요" 안내 (손가락 입력은 아래 캔버스가 받는다) */
+        .first-zone { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .first-zone[hidden] { display: none; }
+        .first-zone-btn { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 52px; padding: 0 24px; border: 0; border-radius: 26px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 17px; font-weight: 800; box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: pointer; }
+        .first-zone-btn .ti { font-size: 20px; }
+        .first-zone-hint { display: none; position: relative; flex-direction: column; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,0.62); color: #fff; text-align: center; font-size: 15px; line-height: 1.4; }
+        .first-zone.is-edit .first-zone-btn { display: none; }
+        .first-zone.is-edit .first-zone-hint { display: flex; }
+        .first-zone-demo { position: relative; width: 84px; height: 52px; }
+        .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
+        .first-zone-demo::after { content: ''; position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(255,210,0,0.85); border: 2px solid #fff; animation: fz-finger 2s ease-in-out infinite; }
+        @keyframes fz-draw { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 84px; height: 52px; opacity: 1; } 100% { width: 84px; height: 52px; opacity: 0; } }
+        @keyframes fz-finger { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 84px; top: 52px; opacity: 1; } 100% { left: 84px; top: 52px; opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .first-zone-demo::before { animation: none; width: 84px; height: 52px; } .first-zone-demo::after { animation: none; left: 84px; top: 52px; } }
         .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: var(--slot-pad, 5px) 3px 2px var(--slot-pad, 5px); transition: opacity 0.2s; }
         .zone-note-slot.is-tiny { align-items: center; padding-top: 0; padding-bottom: 0; }
         .zone-note { position: relative; max-width: 100%; min-width: 0; padding: 3px 6px 3px var(--note-padl, 6px); background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
@@ -1206,7 +1220,7 @@
 <!-- 편집 중 띠: 지금 편집 모드라는 것과 끝내는 방법(완료)을 화면 위에 계속 보여준다 -->
 <div id="editBar" class="edit-bar" hidden>
     <i class="ti ti-pencil edit-bar-icon" aria-hidden="true"></i>
-    <div class="edit-bar-text"><b>편집 중</b><span>끌어서 칸 만들기 · 칸 눌러 물건 적기</span></div>
+    <div class="edit-bar-text"><b>구역 고치는 중</b><span>끌어서 구역 만들기 · 구역 눌러 물건 적기</span></div>
     <button type="button" class="edit-bar-done" onclick="toggleEditMode()"><i class="ti ti-check"></i> 완료</button>
 </div>
 
@@ -1222,7 +1236,7 @@
 
               <li style="margin-bottom: 12px;">
                 <i class="ti ti-pencil-minus" style="margin-right: 5px; color: var(--text2);"></i>
-                <b>구역 수정:</b> 화면 오른쪽 아래 <b>[편집]</b>을 눌러 편집을 시작하고, 끝나면 <b>[완료]</b>를 누르세요. 드래그해서 구역을 그릴 수 있습니다.
+                <b>구역 수정:</b> 화면 오른쪽 아래 <b>[구역 고치기]</b>를 눌러 시작하고, 끝나면 <b>[완료]</b>를 누르세요. 드래그해서 구역을 그릴 수 있습니다.
               </li>
 
               <li style="margin-bottom: 12px;">
@@ -1318,7 +1332,7 @@
     <!-- 🏁 첫 방문(데이터 없음) 화면: 5초 안에 무엇을 해주는 서비스인지 보여준다 -->
     <section id="welcomeCard" class="welcome-card" style="display: none;">
         <button type="button" class="btn-xs welcome-back revisit-only" onclick="closeWelcomeRevisit()"><i class="ti ti-arrow-left"></i> 내 지도로 돌아가기</button>
-        <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="벽에 테이프로 붙인 선반 지도에서 찾는 칸에 노란 쪽지가 붙고 핀이 꽂힌 그림">
+        <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="벽에 테이프로 붙인 선반 지도에서 찾는 구역에 노란 쪽지가 붙고 핀이 꽂힌 그림">
             <!-- 벽에 테이프로 붙인 종이: 이 지도를 뽑아 붙여 쓸 수 있다는 걸 글 없이 보여준다 -->
             <rect x="13" y="22" width="216" height="154" rx="3" fill="#000" opacity=".07"/>
             <rect x="10" y="19" width="216" height="154" rx="3" fill="var(--card)" stroke="var(--border)" stroke-width="1.5"/>
@@ -1339,10 +1353,10 @@
         </svg>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
-        <p class="welcome-sub">물건 이름만 대면 어느 칸인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
+        <p class="welcome-sub">물건 이름만 대면 어느 구역인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
         <ol class="welcome-steps">
             <li><i class="ti ti-camera"></i><b>찍기</b><span>선반·냉동고 사진</span></li>
-            <li><i class="ti ti-border-corners"></i><b>표시</b><span>칸마다 물건</span></li>
+            <li><i class="ti ti-border-corners"></i><b>표시</b><span>구역마다 물건</span></li>
             <li><i class="ti ti-search"></i><b>찾기</b><span>폰이나 인쇄물로</span></li>
         </ol>
         <div class="welcome-actions">
@@ -1383,9 +1397,9 @@
     <button class="fab-btn fab-font" onclick="changeFontSize(-2)">-</button>
     <button id="detailToggleBtn" onclick="toggleDetails()" class="fab-btn" title="말풍선 토글"><i class="ti ti-message-circle"></i></button>
     <button id="undoBtn" onclick="undo()" class="fab-btn" title="되돌리기" disabled><i class="ti ti-arrow-back-up"></i></button>
-    <button id="mainModeBtn" onclick="toggleEditMode()" title="구역·물건 편집하기" aria-label="구역·물건 편집하기">
+    <button id="mainModeBtn" onclick="toggleEditMode()" title="구역·물건 고치기" aria-label="구역·물건 고치기">
         <i id="modeIcon" class="ti ti-pencil" style="font-size: 14px;"></i>
-        <span id="modeText" style="margin-left: 4px;">편집</span>
+        <span id="modeText" style="margin-left: 4px;">구역 고치기</span>
     </button>
 </div>
 
@@ -1452,7 +1466,7 @@
         </div>
         <!-- 위: 이 칸에 실제로 있는 물건만 칩으로 (눌러서 메모, ×로 빼기) / 아래: 검색 + 후보 칩 (눌러서 담기) -->
         <div class="zm-section-head">
-            <span>이 칸에 있는 것</span>
+            <span>이 구역에 있는 것</span>
             <span id="zoneItemCount" class="zm-count"></span>
         </div>
         <div id="zmPicked" class="zm-chips is-picked" data-empty="아직 없어요 · 아래에서 눌러 담아요"></div>
@@ -2138,7 +2152,7 @@
         const listDiv = document.getElementById('list-' + dataId), arrow = document.getElementById('arrow-' + dataId);
         if (open) closedZoneLists.delete(String(dataId)); else closedZoneLists.add(String(dataId));
         if (listDiv) listDiv.style.display = open ? "block" : "none";
-        if (arrow) arrow.innerText = open ? "▼ 리스트 접기" : "▲ 리스트 펼치기";
+        if (arrow) arrow.innerText = open ? "▼ 목록 접기" : "▲ 목록 펼치기";
     }
     function expandZoneList(dataId) { setZoneListOpen(dataId, true); }
 
@@ -2242,15 +2256,15 @@
         if (isEditMode) {
             if (icon) icon.className = 'ti ti-check';
             if (modeText) modeText.innerText = '완료';
-            if (btn) btn.title = btn.ariaLabel = '편집 끝내기';
+            if (btn) btn.title = btn.ariaLabel = '구역 고치기 끝내기';
             if (btn) btn.classList.remove('view-mode');
             if (undoBtn) undoBtn.style.display = "flex";
             const dBtn = document.getElementById('detailToggleBtn'); if (dBtn) dBtn.style.display = "flex";
         } else {
             if(overlay) overlay.style.display = 'none';
             if (icon) icon.className = 'ti ti-pencil';
-            if (modeText) modeText.innerText = '편집';
-            if (btn) btn.title = btn.ariaLabel = '구역·물건 편집하기';
+            if (modeText) modeText.innerText = '구역 고치기';
+            if (btn) btn.title = btn.ariaLabel = '구역·물건 고치기';
             if (btn) btn.classList.add('view-mode');
             if (undoBtn) undoBtn.style.display = "none";
             const dBtn = document.getElementById('detailToggleBtn'); if (dBtn) dBtn.style.display = "none";
@@ -2494,7 +2508,7 @@
         const listWrapper = document.createElement('div'); listWrapper.style.cssText = "margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card);";
         const toggleHeader = document.createElement('div'); toggleHeader.style.cssText = "padding: 12px 16px; background: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; font-size: 13px; font-weight: 500; color: var(--text); border-bottom: 1px solid var(--border);";
         const listOpen = !closedZoneLists.has(String(data.id));
-        toggleHeader.innerHTML = `<span><i class="ti ti-list" style="margin-right:4px; color:var(--text2);"></i>구역 목록<span class="zl-summary" id="count-${data.id}"></span></span><span id="arrow-${data.id}" style="font-size:11px; color:var(--text2); flex-shrink:0;">${listOpen ? "▼ 리스트 접기" : "▲ 리스트 펼치기"}</span>`;
+        toggleHeader.innerHTML = `<span><i class="ti ti-list" style="margin-right:4px; color:var(--text2);"></i>구역 목록<span class="zl-summary" id="count-${data.id}"></span></span><span id="arrow-${data.id}" style="font-size:11px; color:var(--text2); flex-shrink:0;">${listOpen ? "▼ 목록 접기" : "▲ 목록 펼치기"}</span>`;
         const listDiv = document.createElement('div'); listDiv.id = 'list-' + data.id; listDiv.style.display = listOpen ? "block" : "none";
         if (zlResizeObserver) zlResizeObserver.observe(listDiv);
         toggleHeader.onclick = () => setZoneListOpen(data.id, listDiv.style.display === "none");
@@ -2513,9 +2527,14 @@
         zoomCtl.querySelector('.zoom-full').onclick = () => openPhotoFullscreen(data);
         // 전체 화면 위쪽 줄: 사진 이름 · 사용법 · 닫기 (전체 화면일 때만 보임)
         const fsBar = document.createElement('div'); fsBar.className = 'fs-bar';
-        fsBar.innerHTML = `<div class="fs-text"><b class="fs-title"></b><span>두 손가락으로 벌리면 더 크게 · 칸을 누르면 물건 목록</span><span class="fs-rotate"><i class="ti ti-device-mobile-rotated"></i> 폰을 가로로 돌리면 사진이 더 크게 보여요</span></div><button type="button" class="fs-close" aria-label="크게 보기 닫기"><i class="ti ti-x"></i></button>`;
+        fsBar.innerHTML = `<div class="fs-text"><b class="fs-title"></b><span>두 손가락으로 벌리면 더 크게 · 구역을 누르면 물건 목록</span><span class="fs-rotate"><i class="ti ti-device-mobile-rotated"></i> 폰을 가로로 돌리면 사진이 더 크게 보여요</span></div><button type="button" class="fs-close" aria-label="크게 보기 닫기"><i class="ti ti-x"></i></button>`;
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
-        stage.append(canvas, noteLayer); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl);
+        // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
+        const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
+        firstZone.innerHTML = `<button type="button" class="first-zone-btn"><i class="ti ti-plus"></i> 첫 구역 만들기</button><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>구역을 그려요</b></div>`;
+        firstZone.querySelector('.first-zone-btn').onclick = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
+        stage.append(canvas, noteLayer, firstZone); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl);
+        data.firstZone = firstZone;
         data.zoomBox = zoomBox; data.zoomWrap = zoomWrap; data.noteStage = stage; data.noteLayer = noteLayer; data.zoom = 1;
         canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y';
         section.appendChild(headerContainer); section.appendChild(zoomBox); section.appendChild(listWrapper);
@@ -2547,7 +2566,7 @@
                 const isFirstPhoto = !imageList.some(d => d.id !== 'dummy_root');
                 finalImg.onload = () => {
                     data.img = finalImg; createNewCanvasElement(data); showPhoto(data.id, true); render(data); saveData();
-                    if (isFirstPhoto) showToast('다음: 오른쪽 아래 [편집]을 누르고, 사진 위를 끌어서 칸을 나눠보세요', 6000);
+                    if (isFirstPhoto) showToast('다음: 사진 가운데 [첫 구역 만들기]를 눌러 보세요', 6000);
                 };
             };
             img.src = e.target.result;
@@ -3052,6 +3071,12 @@
         }
     }
 
+    function syncFirstZone(data) {
+        const fz = data && data.firstZone; if (!fz) return;
+        const empty = data.id !== 'dummy_root' && !data.zones.length;
+        fz.hidden = !empty; fz.classList.toggle('is-edit', empty && isEditMode);
+    }
+
     function render(data, bounce = 0) {
         if (!data || !data.ctx) return; const { ctx, canvas, img, zones } = data; ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (img && img.src) { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); } else {
@@ -3061,10 +3086,11 @@
             ctx.textBaseline = 'middle';
 
             ctx.fillStyle = '#9b9890'; ctx.font = '20px sans-serif';
-            ctx.fillText('* 오른쪽 아래 \'편집\'을 눌러 구역을 그려보세요', boxX + boxW/2, boxY + boxH/2 + 0);
+            ctx.fillText('* 오른쪽 아래 \'구역 고치기\'를 눌러 구역을 그려보세요', boxX + boxW/2, boxY + boxH/2 + 0);
             ctx.fillText('* 사진 등록 하기를 눌러 사진 추가', boxX + boxW/2, boxY + boxH/2 + 30);
             ctx.fillText('* 슥 드래그하여 구역을 만들어보세요!', boxX + boxW/2, boxY + boxH/2 + 60);
         }
+        syncFirstZone(data);
         const countEl = document.getElementById('count-' + data.id);
         if (countEl) countEl.textContent = zones.length ? `· 구역 ${zones.length} · 물건 ${zones.reduce((n, z) => n + z.items.length, 0)}` : '· 아직 없음';
 
@@ -3172,7 +3198,7 @@
                     </div>`;
                 }).join('')}</div>${zones.length > (ZL_ROWS || 6) ? (listOpen
                     ? `<button type="button" class="zl-more-rows is-open" onclick="toggleZoneListMore('${data.id}', false)"><i class="ti ti-chevron-up"></i> 목록 접기</button>`
-                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)" aria-label="나머지 ${zones.length - ZL_ROWS}칸 더보기"><span class="zl-more-n">+${zones.length - ZL_ROWS}</span><span class="zl-more-txt"><b>칸 ${zones.length - ZL_ROWS}개 더 있어요</b><small>${zones.slice(ZL_ROWS).map(z => escapeHtml(z.name || '이름 없음')).join(' · ')}</small></span><i class="ti ti-chevron-down"></i></button>`) : ''}`;
+                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)" aria-label="나머지 구역 ${zones.length - ZL_ROWS}개 더 보기"><span class="zl-more-n">+${zones.length - ZL_ROWS}</span><span class="zl-more-txt"><b>구역 ${zones.length - ZL_ROWS}개 더 있어요</b><small>${zones.slice(ZL_ROWS).map(z => escapeHtml(z.name || '이름 없음')).join(' · ')}</small></span><i class="ti ti-chevron-down"></i></button>`) : ''}`;
                 // 그림(애니메이션)마다 다시 그리지 않게: 내용·펼침 상태가 같으면 그대로 둔다
                 const key = html + '|' + [...(expandedZoneChips || [])].join(',');
                 if (listContainer._zlKey !== key) { listContainer.innerHTML = html; listContainer._zlKey = key; if (typeof clampZoneChips === 'function') clampZoneChips(listContainer); }
@@ -4206,11 +4232,11 @@
         if (!box || box.childElementCount || !photos.length) return;
         const first = photos[0];
         const notes = first.zones.filter(z => z.items.length).map(z => `<span class="ws-ba-note" data-x="${z.x}" data-y="${z.y}" data-w="${z.w}">${escapeHtml(z.items[0].name)}${z.items.length > 1 ? ' +' + (z.items.length - 1) : ''}</span>`).join('');
-        box.innerHTML = `<section class="ws-sec"><h3 class="ws-h">선반 사진에 쪽지를 붙여요</h3><p class="ws-p">칸마다 뭐가 있는지 사진 위에 적어 두면, 선반 앞에 가지 않아도 바로 찾아요.</p>
+        box.innerHTML = `<section class="ws-sec"><h3 class="ws-h">선반 사진에 쪽지를 붙여요</h3><p class="ws-p">구역마다 뭐가 있는지 사진 위에 적어 두면, 선반 앞에 가지 않아도 바로 찾아요.</p>
             <div class="ws-ba" id="wsBa"><img src="${first.imgData}" alt="${escapeHtml(first.title)} 사진"><div class="ws-ba-notes">${notes}</div><span class="ws-ba-tag">정리 전</span></div>
             <div class="ws-ba-switch" role="group" aria-label="정리 전후 보기"><button type="button" data-after="0" aria-pressed="true">정리 전</button><button type="button" data-after="1" aria-pressed="false">창고지기로 정리 후</button></div></section>
             <section class="ws-sec"><h3 class="ws-h">이런 곳에 써요</h3><p class="ws-p">눌러서 예시를 바로 열어 보세요.</p>
-            <div class="ws-cases">${photos.map(p => `<button type="button" class="ws-case" data-id="${p.id}"><img src="${p.imgData}" alt="" loading="lazy"><b>${escapeHtml(p.title)}</b><span>칸 ${p.zones.length} · 물건 ${p.zones.reduce((n, z) => n + z.items.length, 0)}<i class="ti ti-chevron-right"></i></span></button>`).join('')}</div></section>`;
+            <div class="ws-cases">${photos.map(p => `<button type="button" class="ws-case" data-id="${p.id}"><img src="${p.imgData}" alt="" loading="lazy"><b>${escapeHtml(p.title)}</b><span>구역 ${p.zones.length} · 물건 ${p.zones.reduce((n, z) => n + z.items.length, 0)}<i class="ti ti-chevron-right"></i></span></button>`).join('')}</div></section>`;
         const ba = box.querySelector('#wsBa'), img = ba.querySelector('img');
         const place = () => { const h = 800 * img.naturalHeight / img.naturalWidth; ba.querySelectorAll('.ws-ba-note').forEach(n => { n.style.left = (n.dataset.x / 8) + '%'; n.style.top = (n.dataset.y / h * 100) + '%'; n.style.maxWidth = (n.dataset.w / 8 - 2) + '%'; }); };
         if (img.complete) place(); else img.onload = place;
@@ -4423,7 +4449,7 @@
             ctx.fillText('물건 찾아보기', margin, cy + printPx(5));
             const secW = ctx.measureText('물건 찾아보기').width;
             ctx.font = dateFont; ctx.fillStyle = PRINT.sub;
-            ctx.fillText('가나다순 · 오른쪽 숫자 = 사진 속 칸 번호', margin + secW + printPx(3), cy + printPx(5));
+            ctx.fillText('가나다순 · 오른쪽 숫자 = 사진 속 구역 번호', margin + secW + printPx(3), cy + printPx(5));
             cy += secH;
 
             pg.cols.forEach((list, ci) => {
@@ -4562,7 +4588,7 @@
                 });
                 cy += legendH;
                 ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-                ctx.fillText('가나다순 · 오른쪽 A-2 = A 사진의 2번 칸', margin, cy - printPx(1.6));
+                ctx.fillText('가나다순 · 오른쪽 A-2 = A 사진의 2번 구역', margin, cy - printPx(1.6));
             }
             pg.cols.forEach((list, ci) => {
                 const x0 = margin + ci * (colW + colGap); let ry = cy;
@@ -4682,7 +4708,7 @@
 
         if (btn) btn.classList.add('view-mode');
         if (icon) icon.className = 'ti ti-pencil';
-        if (modeText) modeText.innerText = '편집';
+        if (modeText) modeText.innerText = '구역 고치기';
         if (undoBtn) undoBtn.style.display = "none";
         if (detailBtn) detailBtn.style.display = "none"; // 말풍선은 편집 모드 전용
         syncDetailBtn();
@@ -4761,7 +4787,7 @@
         <button onclick="closeVideoGuideModal()" style="position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text2); display: flex;"><i class="ti ti-x"></i></button>
         <h3 style="margin-bottom: 16px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="ti ti-video" style="color: var(--accent); font-size: 18px;"></i> 사용방법 가이드 영상</h3>
         <div style="margin-top: 10px;">
-            <img src="guide.gif?v=5" alt="사용 방법: 사진 올리기, 편집에서 칸 만들고 물건 적기, 물건 이름으로 찾기" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+            <img src="guide.gif?v=5" alt="사용 방법: 사진 올리기, 구역 만들고 물건 적기, 물건 이름으로 찾기" style="display: block; width: auto; max-width: 100%; max-height: 72vh; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
         </div>
     </div>
 </div>
