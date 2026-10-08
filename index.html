@@ -12,9 +12,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
         // 화면 테마: 페인트 전에 적용해서 기본 테마가 잠깐 보였다 바뀌는 깜빡임을 막는다
-        // 처음 방문(고른 적 없음)은 옐로우 & 네이비가 기본. 'default'(그린)를 직접 고른 사람은 그대로 유지
-        let t = 'yellow';
-        try { t = localStorage.getItem('uiTheme') || 'yellow'; } catch (e) {}
+        // 처음 방문(고른 적 없음)은 모노(흑백)가 기본. 직접 고른 테마는 그대로 유지 (없어진 블랙 테마들은 기본으로)
+        let t = 'mono';
+        try { t = localStorage.getItem('uiTheme') || 'mono'; } catch (e) {}
+        if (t === 'dark' || t === 'redblack' || t === 'gold') t = 'mono';
         if (t !== 'default') document.documentElement.dataset.theme = t;
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
@@ -102,105 +103,57 @@
             --accent-text: var(--accent);  /* 텍스트로 쓰는 강조색 — 어두운 카드 위에서 --accent 자체가 흐리게 읽히는 테마만 덮어씀 */
         }
 
-        /* ⚫🟡 블랙 & 옐로우 테마: 검정 바탕 + 노란 강조 (어두운 매장·야간에도 눈부시지 않게) */
-        :root[data-theme="dark"] {
-            color-scheme: dark;
-            --bg: #0f0f10;
-            --card: #1b1b1d;
-            --border: #7a7a7f;
-            --accent: #ffd200;
-            --accent2: #e6bd00;
-            --text: #f2f2ef;
-            --text2: #b6b6b0;
-            --text3: #86867f;
-            --danger: #ff6b6b;
-            --warn: #f0a54a;
-            --search-hl: #5a4a00;
-            --zone-border: rgba(255,210,0,0.85);
-            --ivory-bg: rgba(27,27,29,0.92);
-            --ivory-border: #7a7a7f;
-            --charcoal: #2c2c30;
-            --ivory-text: #f2f2ef;
-            --charcoal-mute: #b6b6b0;
-            --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.45);
-            --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
-            --shadow-lg: 0 16px 40px rgba(0,0,0,0.6);
-            --shadow-focus: 0 0 0 4px rgba(230,189,0,0.3);
+        /* ⚫⚪ 모노 테마 (기본): 흰 머리글·검정 글씨·검정 주요 버튼, 강조도 회색 단계로만.
+           앱 안에서 색이 있는 건 노란 쪽지와 찾은 칸 빨강뿐이라, 사진 위 쪽지가 가장 먼저 눈에 들어온다 */
+        :root[data-theme="mono"] {
+            --bg: #f4f4f4;
+            --card: #ffffff;
+            --border: #e1e1e1;
+            --accent: #111111;
+            --accent2: #555555;
+            --text: #111111;
+            --text2: #5f5f5f;
+            --text3: #9a9a9a;
+            --search-hl: #e4e4e4;
+            --zone-border: rgba(17,17,17,0.85);
+            --ivory-bg: rgba(255,255,255,0.92);
+            --ivory-border: #e1e1e1;
+            --charcoal: #111111;
+            --ivory-text: #ffffff;
+            --charcoal-mute: #5f5f5f;
+            --shadow-focus: 0 0 0 4px rgba(17,17,17,0.16);
 
-            --accent-hover: #ffe04d;
-            --accent-soft: #2b2710;
-            --accent-rgb: 230, 189, 0;
-            --accent-dark-rgb: 255, 210, 0;
-            --on-accent2: #141414;
-            --on-accent: #141414;
-            --header-bg: rgba(15,15,16,0.92);
-            --badge-bg: #ffd200;
-            --badge-text: #141414;
-            --active-zone-bg: #2b2710;
-            --active-zone-bar: #ffd200;
-            --zone-stroke: #ffd200;
-            --zone-fill-rgb: 255, 210, 0;
-            --hero-bg: #0f0f10;
-            --hero-text: #f2f2ef;
-            --hero-text2: rgba(242,242,239,0.7);
-            --hero-chip-bg: rgba(255,255,255,0.07);
-            --hero-chip-border: rgba(255,255,255,0.16);
-            --notice-bg: #2b2710;
-            --notice-border: #4a4214;
-            --notice-text: #ffd966;
-            --danger-soft: #3a1f1f;
-        }
-
-        /* ⚫🔴 블랙 & 레드 테마: 검정 바탕 + 빨강·금 강조 (중식당 느낌) */
-        :root[data-theme="redblack"] {
-            color-scheme: dark;
-            --bg: #130f0f;
-            --card: #1f1616;
-            --border: #a07070;
-            --accent: #c62828;
-            --accent2: #d4af37;
-            --text: #f3ece3;
-            --text2: #c9b8ae;
-            --text3: #8f7d73;
-            --danger: #ff7043;
-            --warn: #e0a458;
-            --search-hl: #4a2f10;
-            --zone-border: rgba(198,40,40,0.85);
-            --ivory-bg: rgba(31,22,22,0.92);
-            --ivory-border: #a07070;
-            --charcoal: #2a1c1c;
-            --ivory-text: #f3ece3;
-            --charcoal-mute: #c9b8ae;
-            --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.45);
-            --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
-            --shadow-lg: 0 16px 40px rgba(0,0,0,0.6);
-            --shadow-focus: 0 0 0 4px rgba(212,175,55,0.3);
-
-            --accent-hover: #e53935;
-            --accent-soft: #331414;
-            --accent-rgb: 212, 175, 55;
-            --accent-dark-rgb: 198, 40, 40;
-            --on-accent2: #1a1206;
-            --on-accent: #fff;
-            --header-bg: rgba(19,15,15,0.92);
-            --badge-bg: #d4af37;
-            --badge-text: #1a1206;
-            --active-zone-bg: #3a1414;
-            --active-zone-bar: #d4af37;
-            --zone-stroke: #e6c14d;
-            --zone-fill-rgb: 198, 40, 40;
-            --hero-bg: #130f0f;
-            --hero-text: #f3ece3;
-            --hero-text2: rgba(243,236,227,0.7);
-            --hero-chip-bg: rgba(255,255,255,0.07);
-            --hero-chip-border: rgba(255,255,255,0.16);
-            --notice-bg: #3a2410;
-            --notice-border: #5c3a14;
-            --notice-text: #e8c887;
-            --danger-soft: #3a2013;
-            --accent-text: #ec5b5b;  /* 카드 위에서 훨씬 또렷하게 읽히는 밝은 빨강 (주요 버튼의 --accent는 그대로 유지) */
+            --accent-hover: #000000;
+            --accent-soft: #ececec;
+            --accent-rgb: 17, 17, 17;
+            --accent-dark-rgb: 17, 17, 17;
+            --on-accent2: #ffffff;
+            --on-accent: #ffffff;
+            --header-bg: rgba(255,255,255,0.94);
+            --header-text: #111111;
+            --badge-bg: #111111;
+            --badge-text: #ffffff;
+            --active-zone-bg: #f0f0f0;
+            --active-zone-bar: #111111;
+            --zone-stroke: #111111;
+            --zone-fill-rgb: 17, 17, 17;
+            --hero-bg: #111111;
+            --hero-text: #ffffff;
+            --hero-text2: rgba(255,255,255,0.7);
+            --hero-chip-bg: rgba(255,255,255,0.08);
+            --hero-chip-border: rgba(255,255,255,0.22);
+            --notice-bg: #f2f2f2;
+            --notice-border: #dddddd;
+            --notice-text: #333333;
+            --danger-soft: #f7e4e4;
+            --accent-text: #111111;
+            /* 편집 중 띠: 흰 머리글과 확실히 다르게 검정 띠 + 흰 [완료] */
+            --editbar-bg: #111111;
+            --editbar-text: #ffffff;
+            --editbar-line: #111111;
+            --editbar-done-bg: #ffffff;
+            --editbar-done-text: #111111;
+            --edit-frame: #111111;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
@@ -285,13 +238,13 @@
             --hero-chip-bg: rgba(255,255,255,0.6);
             --hero-chip-border: rgba(19,48,107,0.14);
         }
-        .edit-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1068; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px 14px; background: #13306b; color: #fff; border-bottom: 3px solid #ffd200; box-shadow: 0 3px 12px rgba(0,0,0,0.3); } /* 노란 머리글과 겹치지 않게 남색 띠 + 노란 완료 */
+        .edit-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 1068; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px 14px; background: var(--editbar-bg, #13306b); color: var(--editbar-text, #fff); border-bottom: 3px solid var(--editbar-line, #ffd200); box-shadow: 0 3px 12px rgba(0,0,0,0.3); } /* 머리글과 겹치지 않는 색 (기본: 남색 띠 + 노란 완료, 테마가 덮어씀) */
         .edit-bar[hidden] { display: none; }
         .edit-bar-icon { font-size: 20px; flex: none; }
         .edit-bar-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
         .edit-bar-text b { font-size: 15px; }
         .edit-bar-text span { font-size: 12px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .edit-bar-done { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: #ffd200; color: #13306b; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+        .edit-bar-done { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: var(--editbar-done-bg, #ffd200); color: var(--editbar-done-text, #13306b); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
         .edit-bar-done:active { transform: scale(0.96); }
         #editOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -319,7 +272,7 @@
         }
 
         .content-wrapper { padding: 20px; margin-bottom: 160px; }
-        .app-brand { font-size: 18px; font-weight: 800; color: var(--accent-text); white-space: nowrap; user-select: none; letter-spacing: -0.2px; }
+        .app-brand { font-size: 18px; font-weight: 800; color: var(--header-text, var(--accent-text)); white-space: nowrap; user-select: none; letter-spacing: -0.2px; }
 
         .search-input-wrap {
             width: 50%; position: relative; display: flex; align-items: center; gap: 4px;
@@ -718,7 +671,7 @@
         @media (hover: hover) { .settings-row:hover { background: var(--bg); } }
         .settings-row:active { background: var(--bg); }
         /* 🎨 테마 선택: 색 두 개짜리 동그라미 5개를 한 줄로 */
-        .theme-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .theme-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .theme-option {
             display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; min-height: 56px;
             background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-md);
@@ -1405,17 +1358,14 @@
     <div class="settings-group">
         <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
+            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="모노 (기본)">
+                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#111111"></i></span><span>기본</span>
+            </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
                 <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="dark" role="radio" onclick="setTheme('dark')" title="블랙 &amp; 옐로우">
-                <span class="theme-swatch"><i style="background:#0f0f10"></i><i style="background:#ffd200"></i></span><span>블랙</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="redblack" role="radio" onclick="setTheme('redblack')" title="블랙 &amp; 레드">
-                <span class="theme-swatch"><i style="background:#130f0f"></i><i style="background:#c62828"></i></span><span>레드</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔">
                 <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
@@ -2144,7 +2094,7 @@
         imageList.forEach(data => {
             if (data.canvas) {
                 data.canvas.style.touchAction = isEditMode || (fsPhoto && fsPhoto.data === data) ? 'none' : 'pan-x pan-y'; // 크게 보기는 앱이 직접 처리. 보기 모드도 브라우저 화면 확대는 막고 두 손가락은 사진 확대로
-                data.canvas.style.borderColor = isEditMode ? 'var(--warn)' : 'var(--border)';
+                data.canvas.style.borderColor = isEditMode ? 'var(--edit-frame, var(--warn))' : 'var(--border)';
             }
         });
         imageList.forEach(data => render(data));
@@ -2221,8 +2171,8 @@
         });
     }
 
-    // 🎨 화면 테마 전환 (기본 옐로우 & 네이비 / 그린 & 아이보리) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
-    const THEME_META_COLORS = { default: '#f8f6f1', yellow: '#ffd200', dark: '#0f0f10', redblack: '#130f0f', pastel: '#f6f2fb' };
+    // 🎨 화면 테마 전환 (기본 모노 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
+    const THEME_META_COLORS = { mono: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
     function setTheme(name) {
         if (name === 'default') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = name;
         try { localStorage.setItem('uiTheme', name); } catch (e) {}
