@@ -710,15 +710,28 @@
         .zl-row-memo .ti { flex: none; font-size: 14px; margin-top: 1px; color: var(--warn); }
         .zl-memo-item b { font-weight: 700; }
         .zl-memo-sep { color: var(--text3); }
-        .zl-row-top { flex: none; max-width: 42%; display: flex; flex-direction: column; min-width: 0; }
+        .zl-row-top { flex: 0 0 100%; display: flex; align-items: baseline; gap: 8px; min-width: 0; } /* 폰: 이름은 윗줄, 칩은 아래 줄 전체 폭으로 */
         .zl-row .zl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zl-row .zone-checked { white-space: nowrap; }
-        .zl-row-items { flex: 1; min-width: 0; display: flex; gap: 5px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
-        .zl-row .zl-chip { flex: none; font-size: 12.5px; padding: 3px 9px; white-space: nowrap; }
+        .zl-row-items { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+        .zl-row.is-edit .zl-chip { min-height: 34px; }
+        .zl-row .zl-chip { flex: none; max-width: 100%; font-size: 12.5px; padding: 3px 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zl-row .zl-empty { margin: 0; padding: 0; }
+        .zl-chip[hidden] { display: none !important; }
+        .zl-row .zl-chip-more { cursor: pointer; border: 1px solid var(--accent2); background: var(--card); color: var(--accent-text); font-weight: 700; }
+        .zl-more-rows { display: flex; align-items: center; gap: 10px; width: calc(100% - 20px); margin: 10px; min-height: 52px; padding: 8px 14px; border: 1.5px solid var(--accent); border-radius: 12px; background: var(--accent-soft); color: var(--text); font: inherit; text-align: left; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .zl-more-rows:active { transform: scale(0.99); }
+        .zl-more-rows .zl-more-n { flex: 0 0 auto; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 17px; background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; }
+        .zl-more-rows .zl-more-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+        .zl-more-rows .zl-more-txt b { font-size: 15px; font-weight: 800; }
+        .zl-more-rows .zl-more-txt small { font-size: 12.5px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .zl-more-rows > .ti { flex: 0 0 auto; font-size: 22px; color: var(--accent); }
+        .zl-more-rows.is-open { justify-content: center; min-height: 44px; background: var(--card); border-width: 1px; border-color: var(--border); color: var(--text2); box-shadow: none; }
+        .zl-more-rows.is-open > .ti { font-size: 18px; color: var(--text2); }
         .zl-more { flex: none; align-self: center; font-size: 12px; font-weight: 600; color: var(--text2); padding: 0 2px; }
         .zl-go { flex: none; color: var(--text3); font-size: 16px; }
-        @media (min-width: 720px) { .zl-row-top { max-width: 30%; } .zl-row-items { -webkit-mask-image: none; mask-image: none; flex-wrap: wrap; } }
+        @media (max-width: 719px) { .zl-row { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; } .zl-row .zl-go { align-self: center; } } /* 폰: 번호를 이름 줄에 맞춤 */
+        @media (min-width: 720px) { .zl-row-top { flex: none; max-width: 30%; flex-direction: column; align-items: flex-start; gap: 0; } } /* 넓은 화면: 이름 옆에 칩 */
         .zl-grid { display: grid; grid-template-columns: 1fr 1fr; margin: 0 -1px -1px 0; }
         .zl-grid .zone-item, .zl-grid .zone-item:last-child { padding: 10px 10px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); min-width: 0; }
         .zl-grid .zone-item.is-wide { grid-column: 1 / -1; }
@@ -1029,6 +1042,7 @@
         .pick-banner-actions .btn-base { min-height: 40px; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); color: var(--ivory-text); }
         .pick-banner-actions .pick-remove-btn { color: #ff9b9b; }
         body.pick-mode .floating-remote { opacity: 0; pointer-events: none; }
+        body.pick-mode .edit-bar { display: none; } /* 옮길 칸 고르는 동안은 위쪽 고르기 띠가 대신한다 (두 띠가 겹쳐 버튼이 가려졌다) */
         body.pick-mode canvas { cursor: pointer; border-color: var(--accent2); }
 
         /* 🗂 하단 시트 (구역 고르기) */
@@ -2393,6 +2407,7 @@
         const listOpen = !closedZoneLists.has(String(data.id));
         toggleHeader.innerHTML = `<span><i class="ti ti-list" style="margin-right:4px; color:var(--text2);"></i>구역 목록<span class="zl-summary" id="count-${data.id}"></span></span><span id="arrow-${data.id}" style="font-size:11px; color:var(--text2); flex-shrink:0;">${listOpen ? "▼ 리스트 접기" : "▲ 리스트 펼치기"}</span>`;
         const listDiv = document.createElement('div'); listDiv.id = 'list-' + data.id; listDiv.style.display = listOpen ? "block" : "none";
+        if (zlResizeObserver) zlResizeObserver.observe(listDiv);
         toggleHeader.onclick = () => setZoneListOpen(data.id, listDiv.style.display === "none");
 
         listWrapper.appendChild(toggleHeader); listWrapper.appendChild(listDiv);
@@ -3040,23 +3055,34 @@
             });
             // 보기 모드: 칸마다 한 줄 (번호·이름·물건 칩). 줄을 누르면 사진에서 그 칸을 찾아 보여준다.
             // 메모는 칸 창·인쇄물에 있으니 빼고, 날짜는 다시 볼 때가 된(오래된) 칸만 표시한다.
-            // 편집 모드는 칩을 끌어 다른 칸으로 옮겨야 해서 아래의 2열 격자(칩 전부 표시)를 그대로 쓴다
-            if (!isEditMode && data.id !== 'dummy_root') {
-                const MAX_CHIPS = 3;
-                listContainer.innerHTML = `<div class="zl-rows">${zones.map((z, i) => {
-                    const shown = z.items.slice(0, MAX_CHIPS), more = z.items.length - shown.length;
+            // 편집 모드도 같은 한 줄: 칩을 누르면 다른 칸으로 옮기기, 줄(칩 밖)을 누르면 그 칸 창 열기
+            if (data.id !== 'dummy_root') {
+                // 칸이 많으면 처음 ZL_ROWS칸만, 나머지는 [더보기]. 찾은(고른) 칸이 뒤쪽이면 자동으로 펼친다
+                const listKey = String(data.id), listOpen = (expandedZoneLists && expandedZoneLists.has(listKey)) || (activeZone && zones.indexOf(activeZone) >= ZL_ROWS);
+                const visibleCount = listOpen ? zones.length : Math.min(zones.length, ZL_ROWS);
+                const html = `<div class="zl-rows">${zones.slice(0, visibleCount).map((z, i) => {
+                    const shown = z.items, more = 0; // 칩은 모두 그린 뒤 clampZoneChips가 2줄을 넘는 칩을 접는다 (+N개 더)
                     // 메모(유통기한 임박 같은 중요한 말)는 칩에서 빼는 대신 줄 아래에 따로 한 줄로: "우유 · 유통기한 짧은 것 앞쪽"
                     const memos = z.items.filter(it => (it.comment || '').trim()).map(it => `<span class="zl-memo-item"><b>${escapeHtml(it.name)}:</b> ${escapeHtml(it.comment.trim())}</span>`);
-                    return `<button type="button" class="zone-item zl-row ${z === activeZone ? 'active' : ''}" onclick="selectZone('${data.id}', ${i})">
+                    const chip = (it) => isEditMode
+                        ? `<button type="button" class="zl-chip is-movable" data-name="${escapeHtml(it.name)}" onclick="event.stopPropagation(); startMoveItem('${data.id}', ${i}, this.dataset.name)" title="눌러서 다른 구역으로 옮기기">${escapeHtml(it.name)}<i class="ti ti-arrows-move"></i></button>`
+                        : `<span class="zl-chip">${escapeHtml(it.name)}</span>`;
+                    const go = isEditMode ? `editZone('${data.id}', ${i})` : `selectZone('${data.id}', ${i})`;
+                    return `<div role="button" tabindex="0" class="zone-item zl-row ${isEditMode ? 'is-edit' : ''} ${z === activeZone ? 'active' : ''}" onclick="${go}" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ${go}; }" aria-label="${escapeHtml(z.name || '이름 없는 구역')} ${isEditMode ? '고치기' : '사진에서 보기'}">
                         <span class="zl-num">${i + 1}</span>
                         <span class="zl-row-main">
                             <span class="zl-row-top"><span class="zl-name">${escapeHtml(z.name || '이름 없는 구역')}</span>${isZoneStale(z) ? `<span class="zone-checked is-stale">${formatCheckedAgo(z.checkedAt)} 확인</span>` : ''}</span>
-                            <span class="zl-row-items">${z.items.length ? shown.map(it => `<span class="zl-chip">${escapeHtml(it.name)}</span>`).join('') + (more ? `<span class="zl-more">+${more}</span>` : '') : '<span class="zl-empty">비어 있음</span>'}</span>
+                            <span class="zl-row-items" data-key="${data.id}:${i}">${z.items.length ? shown.map(chip).join('') + (more ? `<span class="zl-more">+${more}</span>` : '') : '<span class="zl-empty">비어 있음</span>'}</span>
                             ${memos.length ? `<span class="zl-row-memo"><i class="ti ti-note" aria-hidden="true"></i><span>${memos.join('<span class="zl-memo-sep"> · </span>')}</span></span>` : ''}
                         </span>
-                        <i class="ti ti-chevron-right zl-go" aria-hidden="true"></i>
-                    </button>`;
-                }).join('')}</div>`;
+                        <i class="ti ${isEditMode ? 'ti-pencil' : 'ti-chevron-right'} zl-go" aria-hidden="true"></i>
+                    </div>`;
+                }).join('')}</div>${zones.length > (ZL_ROWS || 6) ? (listOpen
+                    ? `<button type="button" class="zl-more-rows is-open" onclick="toggleZoneListMore('${data.id}', false)"><i class="ti ti-chevron-up"></i> 목록 접기</button>`
+                    : `<button type="button" class="zl-more-rows" onclick="toggleZoneListMore('${data.id}', true)" aria-label="나머지 ${zones.length - ZL_ROWS}칸 더보기"><span class="zl-more-n">+${zones.length - ZL_ROWS}</span><span class="zl-more-txt"><b>칸 ${zones.length - ZL_ROWS}개 더 있어요</b><small>${zones.slice(ZL_ROWS).map(z => escapeHtml(z.name || '이름 없음')).join(' · ')}</small></span><i class="ti ti-chevron-down"></i></button>`) : ''}`;
+                // 그림(애니메이션)마다 다시 그리지 않게: 내용·펼침 상태가 같으면 그대로 둔다
+                const key = html + '|' + [...(expandedZoneChips || [])].join(',');
+                if (listContainer._zlKey !== key) { listContainer.innerHTML = html; listContainer._zlKey = key; if (typeof clampZoneChips === 'function') clampZoneChips(listContainer); }
                 return;
             }
             listContainer.innerHTML = `<div class="zl-grid">${zones.map((z, i) => `
@@ -3076,6 +3102,50 @@
                 </div>`).join('')}</div>`;
         }
     }
+
+    // 📋 구역 목록 더보기: 목록은 처음 ZL_ROWS칸, 칸 안의 칩은 ZL_CHIP_LINES줄까지만 보이고 나머지는 눌러서 펼친다
+    // (한 줄 목록이 칸·물건이 많을 때 끝없이 길어지는 것 방지. 글씨를 줄이는 대신 접는다)
+    var ZL_ROWS = 6, ZL_CHIP_LINES = 2; // var: 스크립트 앞쪽에서 그려질 때도 쓸 수 있게 (const는 선언 전에 쓰면 오류)
+    var expandedZoneLists = new Set(), expandedZoneChips = new Set();
+    function toggleZoneListMore(dataId, open) {
+        if (open) expandedZoneLists.add(String(dataId)); else expandedZoneLists.delete(String(dataId));
+        const d = imageList.find(x => x.id == dataId); if (d) render(d);
+        if (!open) { const l = document.getElementById('list-' + dataId); if (l) l.scrollIntoView({ block: 'nearest' }); }
+    }
+    function toggleZoneChips(e, key) {
+        e.stopPropagation(); // 줄 누르기(사진에서 찾기·칸 고치기)로 넘어가지 않게
+        if (expandedZoneChips.has(key)) expandedZoneChips.delete(key); else expandedZoneChips.add(key);
+        const d = imageList.find(x => String(x.id) === key.split(':')[0]); if (d) render(d);
+    }
+    // 실제로 그려 보고 ZL_CHIP_LINES줄을 넘는 칩은 숨기고 끝에 "+N개 더" 칩을 붙인다 (그 칩이 넘치면 앞 칩을 하나 더 숨김)
+    function clampZoneChips(container) {
+        container._zlWidth = container.clientWidth;
+        if (!container._zlWidth) return; // 접혀 있거나 숨겨진 목록: 보이게 되면 아래 ResizeObserver가 다시 잰다
+        container.querySelectorAll('.zl-row-items[data-key]').forEach(box => {
+            box.querySelectorAll('.zl-chip-more').forEach(b => b.remove()); // 여러 번 불러도 같은 결과
+            const chips = [...box.querySelectorAll('.zl-chip')];
+            chips.forEach(c => c.hidden = false);
+            if (chips.length < 2) return;
+            const key = box.dataset.key, open = expandedZoneChips.has(key);
+            const tops = [...new Set(chips.map(c => c.offsetTop))].sort((a, b) => a - b);
+            if (tops.length <= ZL_CHIP_LINES) return;
+            const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'zl-chip zl-chip-more';
+            btn.onclick = (e) => toggleZoneChips(e, key);
+            if (open) { btn.textContent = '접기'; box.appendChild(btn); return; }
+            const limitTop = tops[ZL_CHIP_LINES - 1];
+            let hidden = chips.filter(c => c.offsetTop > limitTop);
+            hidden.forEach(c => c.hidden = true);
+            box.appendChild(btn);
+            const visible = chips.filter(c => !c.hidden);
+            const label = () => { btn.textContent = `+${hidden.length}개 더`; };
+            label();
+            while (btn.offsetTop > limitTop && visible.length > 1) { const c = visible.pop(); c.hidden = true; hidden.push(c); label(); }
+        });
+    }
+    // 목록 폭이 바뀌면(화면 돌리기, 접힌 목록 펼치기) 줄 수가 달라지니 다시 잰다
+    var zlResizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(entries => entries.forEach(en => {
+        const el = en.target; if (el.clientWidth && el.clientWidth !== el._zlWidth) clampZoneChips(el);
+    })) : null;
 
     // 칩을 담거나 빼면 위·아래 묶음 사이로 옮긴다
     function toggleCommentField(cb) {
