@@ -1200,7 +1200,7 @@
     <!-- 🏁 첫 방문(데이터 없음) 화면: 5초 안에 무엇을 해주는 서비스인지 보여준다 -->
     <section id="welcomeCard" class="welcome-card" style="display: none;">
         <button type="button" class="btn-xs welcome-back revisit-only" onclick="closeWelcomeRevisit()"><i class="ti ti-arrow-left"></i> 내 지도로 돌아가기</button>
-        <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="벽에 테이프로 붙인 선반 지도에서 찾는 칸에 핀이 꽂힌 그림">
+        <svg class="welcome-hero" viewBox="0 0 240 176" role="img" aria-label="벽에 테이프로 붙인 선반 지도에서 찾는 칸에 노란 쪽지가 붙고 핀이 꽂힌 그림">
             <!-- 벽에 테이프로 붙인 종이: 이 지도를 뽑아 붙여 쓸 수 있다는 걸 글 없이 보여준다 -->
             <rect x="13" y="22" width="216" height="154" rx="3" fill="#000" opacity=".07"/>
             <rect x="10" y="19" width="216" height="154" rx="3" fill="var(--card)" stroke="var(--border)" stroke-width="1.5"/>
@@ -1214,7 +1214,8 @@
             <rect x="198" y="12" width="40" height="13" rx="1.5" fill="var(--accent2)" opacity=".55" transform="rotate(24 218 18)"/>
             <g class="welcome-hero-hit">
                 <rect x="93" y="37" width="53" height="52" rx="5" fill="var(--accent2)" fill-opacity=".35" stroke="var(--accent-text)" stroke-width="3"/>
-                <circle cx="104" cy="48" r="9" fill="var(--accent)"/><text x="104" y="52" font-size="11" font-weight="700" fill="var(--on-accent)" text-anchor="middle">2</text>
+                <!-- 찾은 칸에 붙은 노란 쪽지 (숫자는 넣지 않는다) -->
+                <rect x="98" y="58" width="32" height="24" rx="2" fill="#fff3a3"/><g stroke="#8a7a3a" stroke-width="2" stroke-linecap="round"><line x1="103" y1="66" x2="124" y2="66"/><line x1="103" y1="74" x2="117" y2="74"/></g>
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
