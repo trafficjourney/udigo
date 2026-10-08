@@ -543,7 +543,9 @@
         .fs-close { flex: none; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,0.14); color: #fff; font-size: 22px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
         .zoom-box.is-fs .zoom-wrap, .zoom-box.is-fs:not(.zoomed) .zoom-wrap { flex: 1; min-height: 0; overflow: auto; border-radius: 0; }
         .zoom-box.is-fs canvas { border: 0; border-radius: 0; }
-        .zoom-box.is-fs .zoom-ctl { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); right: auto; left: 12px; } /* 오른쪽 아래는 편집 버튼 모음 자리 */
+        .zoom-box.is-fs .zoom-ctl { bottom: calc(env(safe-area-inset-bottom, 0px) + 66px); right: 14px; left: auto; } /* 오른쪽 아래 버튼 모음 바로 위 (PC 넓은 화면에서 왼쪽 끝은 너무 멀었다) */
+        body.photo-fs #printBackdrop { z-index: 1101; }
+        body.photo-fs #printModal { z-index: 1102; } /* 크게 보기 위에서도 인쇄물 창이 보이게 */
         /* 크게 보기에서도 편집·되돌리기 버튼 모음과 편집 중 띠를 위에 띄운다 (확대해서 작은 칸을 정확히 그리게). 글자 크기 +/−는 숨김 */
         body.photo-fs .floating-remote { z-index: 1099; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
         body.photo-fs .floating-remote .fab-font { display: none; }
@@ -1427,7 +1429,7 @@
     <button class="fab-btn fab-font" onclick="changeFontSize(-2)">-</button>
     <button id="detailToggleBtn" onclick="toggleDetails()" class="fab-btn" title="말풍선 토글"><i class="ti ti-message-circle"></i></button>
     <button id="undoBtn" onclick="undo()" class="fab-btn" title="되돌리기" disabled><i class="ti ti-arrow-back-up"></i></button>
-    <button id="printFab" onclick="openPrintPreview()" class="fab-btn" title="인쇄물 보기 (종이·PDF)" aria-label="인쇄물 보기"><i class="ti ti-printer"></i></button>
+    <button id="printFab" onclick="openPrintPreview(fsPhoto ? fsPhoto.data.id : undefined)" class="fab-btn" title="인쇄물 보기 (종이·PDF)" aria-label="인쇄물 보기"><i class="ti ti-printer"></i></button>
     <button id="mainModeBtn" onclick="toggleEditMode()" title="구역·물건 고치기" aria-label="구역·물건 고치기">
         <i id="modeIcon" class="ti ti-pencil" style="font-size: 14px;"></i>
         <span id="modeText" style="margin-left: 4px;">구역 고치기</span>
@@ -4716,7 +4718,8 @@
         document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${photos.length > 1 ? ` (전체 찾아보기 + 사진 ${photos.length}장)` : ''}`;
         renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
         document.getElementById('printModal').style.display = 'block';
-        document.body.classList.add('print-open'); lockPageScroll();
+        // 이미 열려 있는데 또 열면(인쇄 버튼 두 번 등) 잠금이 두 번 걸리고 닫을 때 한 번만 풀려 스크롤이 막힌 채 남았다
+        if (!document.body.classList.contains('print-open')) { document.body.classList.add('print-open'); lockPageScroll(); }
     }
     function renderPrintPreview(tab) {
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
