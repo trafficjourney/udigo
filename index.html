@@ -156,6 +156,60 @@
             --edit-frame: #3b3577;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
+        /* 🥂 샴페인 테마: 흰 바탕 + 옅은 검정 버튼 + 샴페인골드 포인트(번호·테두리). 밝은 금색은 흰 글씨가 안 읽혀 버튼엔 쓰지 않는다 */
+        :root[data-theme="champagne"] {
+            --bg: #faf8f4;
+            --card: #ffffff;
+            --border: #ece3d3;
+            --accent: #33302e;
+            --accent2: #c8a96e;
+            --text: #2b2827;
+            --text2: #6b6461;
+            --text3: #aaa3a0;
+            --search-hl: #f3ead9;
+            --zone-border: rgba(51,48,46,0.85);
+            --ivory-bg: rgba(255,255,255,0.92);
+            --ivory-border: #ece3d3;
+            --charcoal: #33302e;
+            --ivory-text: #ffffff;
+            --charcoal-mute: #6b6461;
+            --shadow-focus: 0 0 0 4px rgba(51,48,46,0.2);
+
+            --accent-hover: #33302e;
+            --accent-soft: #f6efe2;
+            --accent-rgb: 51, 48, 46;
+            --accent-dark-rgb: 51, 48, 46;
+            --on-accent2: #ffffff;
+            --on-accent: #ffffff;
+            --header-bg: rgba(255,255,255,0.94);
+            --header-text: #2b2827;
+            --badge-bg: #c8a96e;
+            --badge-text: #ffffff;
+            --active-zone-bg: #f8f2e6;
+            --active-zone-bar: #c8a96e;
+            --zone-stroke: #33302e;
+            --zone-fill-rgb: 51, 48, 46;
+            --hero-bg: #33302e;
+            --hero-text: #ffffff;
+            --hero-text2: rgba(255,255,255,0.7);
+            --hero-chip-bg: rgba(255,255,255,0.08);
+            --hero-chip-border: rgba(255,255,255,0.22);
+            --notice-bg: #fbf7ef;
+            --notice-border: #ece3d3;
+            --notice-text: #33302e;
+            --danger-soft: #f7e4e4;
+            --accent-text: #33302e;
+            /* 편집 중 띠: 흰 머리글과 확실히 다르게 검정 띠 + 흰 [완료] */
+            --editbar-bg: #33302e;
+            --editbar-text: #ffffff;
+            --editbar-line: #33302e;
+            --editbar-done-bg: #ffffff;
+            --editbar-done-text: #33302e;
+            --edit-frame: #c8a96e;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
+        }
+        :root[data-theme="champagne"] .zl-num { background: #c8a96e; color: #2b2827; }
+        :root[data-theme="champagne"] .zone-item.active .zl-num { background: var(--danger); color: #fff; }
+
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
         :root[data-theme="pastel"] {
             --bg: #f6f2fb;
@@ -1435,6 +1489,9 @@
             <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
                 <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
             </button>
+            <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙">
+                <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>샴페인</span>
+            </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
             </button>
@@ -2246,7 +2303,7 @@
     }
 
     // 🎨 화면 테마 전환 (기본 모노 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
-    const THEME_META_COLORS = { mono: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
+    const THEME_META_COLORS = { mono: '#ffffff', champagne: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
     function setTheme(name) {
         if (name === 'default') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = name;
         try { localStorage.setItem('uiTheme', name); } catch (e) {}
