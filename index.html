@@ -2501,8 +2501,9 @@
         } else {
             z.items.forEach(it => state.set(it.name, { checked: true, comment: it.comment || '' }));
         }
-        // 품목 목록에 없는 물건이 구역에 들어 있어도 저장할 때 사라지지 않도록 함께 보여준다
-        const names = [...new Set([...z.items.map(it => it.name), ...baseItems, ...state.keys()])];
+        // 품목 목록에 없는 물건이 구역에 들어 있어도 저장할 때 사라지지 않도록 함께 보여준다.
+        // 담지 않은 후보는 지금 품목 목록(baseItems)만 — 업종을 고른 뒤 예전 기본 품목이 이 구역에만 남아 보이다가 다음 구역에선 사라져 보였다
+        const names = [...new Set([...z.items.map(it => it.name), ...baseItems, ...[...state.keys()].filter(n => state.get(n).checked)])];
         // 처음 열 때만 체크된 물건을 위로 (누르는 도중엔 순서를 바꾸지 않음)
         if (!preserve) names.sort((a, b) => (state.has(b) ? 1 : 0) - (state.has(a) ? 1 : 0));
 
@@ -3414,6 +3415,8 @@
     function deleteZone() { if (!confirm("이 구역을 정말 삭제하시겠습니까?")) return; saveHistory(); activeData.zones = activeData.zones.filter(z => z !== activeZone); if (activeData.id !== "dummy_root") saveData(); hideZoneModal(); activeZone = null; showSearchArrow = false; render(activeData); }
 
     function saveData() {
+        // 새로 추가한 물건(자주 쓰는 물건 목록)도 같이 저장한다 — 예전엔 메모리에만 있어서 다시 열면 목록에서 사라졌다
+        try { safeStorage.setItem('baseItems', JSON.stringify(baseItems)); } catch (e) {}
         try { const dataToSave = imageList.map(data => ({ id: data.id, title: data.title, imgData: (data.img && data.img.src) ? data.img.src : null, zones: data.zones })); safeStorage.setItem('savedSystemData', JSON.stringify(dataToSave)); } catch (e) {}
         try { safeStorage.setItem('baseItems', JSON.stringify(baseItems)); } catch(e) {}
     }
@@ -3423,7 +3426,7 @@
         if (!val) { input.focus(); return; }
         const existing = [...document.querySelectorAll('#modal .zm-body .cb')].find(cb => normalizeForSearch(cb.value) === normalizeForSearch(val));
         const name = existing ? existing.value : val;
-        if (!existing && !baseItems.includes(name)) { baseItems.push(name); saveData(); }
+        if (!existing && !baseItems.includes(name)) { baseItems.unshift(name); saveData(); } // 직접 넣은 물건은 앞에 (뒤에 두면 [더보기] 속에 숨었다)
         input.value = '';
         renderZoneItems(true);
         checkZoneItem(name);
@@ -3501,7 +3504,7 @@
         if (!importReview) return;
         const chosen = [...document.querySelectorAll('#importReviewList .rv-cb:checked')].map(cb => importReview.list[Number(cb.dataset.index)]);
         let added = false;
-        chosen.forEach(c => { if (!baseItems.includes(c.name) && !findZoneItemRow(c.name)) { baseItems.push(c.name); added = true; } });
+        chosen.forEach(c => { if (!baseItems.includes(c.name) && !findZoneItemRow(c.name)) { baseItems.unshift(c.name); added = true; } });
         if (added) saveData();
         document.getElementById('newItemInput').value = '';
         renderZoneItems(true);
@@ -3570,11 +3573,11 @@
         }
     }
     function pickIndustryAsk(key) {
-        // 직접 추가해 둔 물건은 남기고, 고른 업종의 자주 쓰는 물건을 앞에 둔다
+        // 직접 추가해 둔 물건은 남겨 앞에 두고, 그 뒤에 고른 업종의 자주 쓰는 물건
         const oldDefaults = INDUSTRY_TEMPLATES[currentIndustry() || 'general'].items;
         const custom = baseItems.filter(n => !oldDefaults.includes(n));
         setIndustry(key);
-        baseItems = [...new Set([...INDUSTRY_TEMPLATES[key].items, ...custom])];
+        baseItems = [...new Set([...custom, ...INDUSTRY_TEMPLATES[key].items])];
         try { safeStorage.setItem('baseItems', JSON.stringify(baseItems)); safeStorage.setItem('industryAsked', '1'); } catch (e) {}
         document.getElementById('industryAsk').hidden = true;
         renderZoneItems(true);
@@ -4202,7 +4205,7 @@
             title: `${josa(name, '이', '가')} 있는 곳을 사진에서 눌러주세요`,
             onPick: (toData, toZone) => {
                 saveHistory();
-                if (!baseItems.includes(name)) baseItems.push(name);
+                if (!baseItems.includes(name)) baseItems.unshift(name);
                 if (!toZone.items.some(i => i.name === name)) toZone.items.push({ name, comment: '' });
                 markZoneChecked(toZone);
                 refreshAfterDataChange();
