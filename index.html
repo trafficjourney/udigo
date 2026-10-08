@@ -911,6 +911,13 @@
         .ws-ba-switch { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
         .ws-ba-switch button { min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
         .ws-ba-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+        .ws-print { position: relative; width: min(78%, 320px); margin: 18px auto 14px; transform: rotate(-1.5deg); }
+        .ws-print img { display: block; width: 100%; height: auto; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(0,0,0,0.14); background: #fff; }
+        .ws-print::before, .ws-print::after { content: ''; position: absolute; top: -9px; width: 60px; height: 20px; background: var(--accent2); opacity: 0.45; }
+        .ws-print::before { left: -14px; transform: rotate(-28deg); }
+        .ws-print::after { right: -14px; transform: rotate(28deg); }
+        .ws-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 1.5; color: var(--text2); word-break: keep-all; }
+        .ws-points b { display: inline-block; min-width: 48px; color: var(--accent-text); }
         .ws-cases { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 8px; scrollbar-width: thin; }
         .ws-case { flex: 0 0 44%; max-width: 200px; scroll-snap-align: start; padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; text-align: left; font: inherit; cursor: pointer; }
         .ws-case img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--bg); }
@@ -1586,7 +1593,7 @@
         <h3 id="printTitle"><i class="ti ti-printer"></i> 벽에 붙일 지도</h3>
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <p class="print-sub">A4로 뽑아 붙여두면, 앱을 열지 않아도 물건 이름으로 자리를 찾을 수 있어요.</p>
+    <p class="print-sub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
     <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진을 합친 전체 찾아보기 -->
     <div id="printTabs" class="print-tabs" role="tablist" hidden>
         <button type="button" role="tab" data-tab="photo" onclick="renderPrintPreview('photo')"></button>
@@ -4361,6 +4368,9 @@
         box.innerHTML = `<section class="ws-sec"><h3 class="ws-h">선반 사진에 쪽지를 붙여요</h3><p class="ws-p">구역마다 뭐가 있는지 사진 위에 적어 두면, 선반 앞에 가지 않아도 바로 찾아요.</p>
             <div class="ws-ba" id="wsBa"><img src="${first.imgData}" alt="${escapeHtml(first.title)} 사진"><div class="ws-ba-notes">${notes}</div><span class="ws-ba-tag">정리 전</span></div>
             <div class="ws-ba-switch" role="group" aria-label="정리 전후 보기"><button type="button" data-after="0" aria-pressed="true">정리 전</button><button type="button" data-after="1" aria-pressed="false">창고지기로 정리 후</button></div></section>
+            <section class="ws-sec"><h3 class="ws-h">벽에 붙이면 폰 없이도 찾아요</h3><p class="ws-p">A4로 뽑아 선반 옆에 붙여 두면, 직원·알바생도 폰을 꺼내지 않고 <b>꺼낼 때도, 다시 가져다 놓을 때도</b> 자리를 바로 찾아요.</p>
+            <div class="ws-print"><img src="print-sample.jpg" alt="인쇄물 예시: 선반 사진에 구역 번호와 쪽지, 아래에 가나다순 물건 찾아보기" loading="lazy" width="600" height="849"></div>
+            <ul class="ws-points"><li><b>찾을 때</b> 가나다순 목록에서 물건 이름 → 오른쪽 번호 → 사진 속 그 구역</li><li><b>넣을 때</b> 쓰고 난 물건도 원래 자리로, 사람마다 다르게 두지 않아요</li></ul></section>
             <section class="ws-sec"><h3 class="ws-h">이런 곳에 써요</h3><p class="ws-p">눌러서 예시를 바로 열어 보세요.</p>
             <div class="ws-cases">${photos.map(p => `<button type="button" class="ws-case" data-id="${p.id}"><img src="${p.imgData}" alt="" loading="lazy"><b>${escapeHtml(p.title)}</b><span>구역 ${p.zones.length} · 물건 ${p.zones.reduce((n, z) => n + z.items.length, 0)}<i class="ti ti-chevron-right"></i></span></button>`).join('')}</div></section>`;
         const ba = box.querySelector('#wsBa'), img = ba.querySelector('img');
