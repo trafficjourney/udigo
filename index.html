@@ -12,10 +12,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
         // 화면 테마: 페인트 전에 적용해서 기본 테마가 잠깐 보였다 바뀌는 깜빡임을 막는다
-        // 처음 방문(고른 적 없음)은 차콜 & 샴페인이 기본. 직접 고른 테마는 그대로 유지 (없어진 블랙 테마들은 기본으로)
-        let t = 'gold';
-        try { t = localStorage.getItem('uiTheme') || 'gold'; } catch (e) {}
-        if (t === 'dark' || t === 'redblack') t = 'gold';
+        // 처음 방문(고른 적 없음)은 모노(흑백)가 기본. 직접 고른 테마는 그대로 유지 (없어진 블랙 테마들은 기본으로)
+        let t = 'mono';
+        try { t = localStorage.getItem('uiTheme') || 'mono'; } catch (e) {}
+        if (t === 'dark' || t === 'redblack' || t === 'gold') t = 'mono';
         if (t !== 'default') document.documentElement.dataset.theme = t;
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
@@ -103,56 +103,57 @@
             --accent-text: var(--accent);  /* 텍스트로 쓰는 강조색 — 어두운 카드 위에서 --accent 자체가 흐리게 읽히는 테마만 덮어씀 */
         }
 
-        /* 🥂 차콜 & 샴페인 테마 (기본): 짙은 회색 머리글·주요 버튼 + 아이보리 바탕 + 샴페인 금색 강조.
-           금색은 아이보리 위 글씨로는 흐려서 강조(선택 표시·줄·테두리)에만 쓰고, 글씨와 주요 버튼은 짙은 회색 */
-        :root[data-theme="gold"] {
-            --bg: #f7f3ea;
-            --card: #fffdf8;
-            --border: #e6dfd0;
-            --accent: #2b2b2b;
-            --accent2: #c9a96e;
-            --text: #2b2b2b;
-            --text2: #6b665c;
-            --text3: #9d978a;
-            --search-hl: #f1dfb3;
-            --zone-border: rgba(43,43,43,0.85);
-            --ivory-bg: rgba(255,253,248,0.92);
-            --ivory-border: #e6dfd0;
-            --charcoal: #2b2b2b;
-            --ivory-text: #f7f3ea;
-            --charcoal-mute: #6b665c;
-            --shadow-focus: 0 0 0 4px rgba(201,169,110,0.35);
+        /* ⚫⚪ 모노 테마 (기본): 흰 머리글·검정 글씨·검정 주요 버튼, 강조도 회색 단계로만.
+           앱 안에서 색이 있는 건 노란 쪽지와 찾은 칸 빨강뿐이라, 사진 위 쪽지가 가장 먼저 눈에 들어온다 */
+        :root[data-theme="mono"] {
+            --bg: #f4f4f4;
+            --card: #ffffff;
+            --border: #e1e1e1;
+            --accent: #111111;
+            --accent2: #555555;
+            --text: #111111;
+            --text2: #5f5f5f;
+            --text3: #9a9a9a;
+            --search-hl: #e4e4e4;
+            --zone-border: rgba(17,17,17,0.85);
+            --ivory-bg: rgba(255,255,255,0.92);
+            --ivory-border: #e1e1e1;
+            --charcoal: #111111;
+            --ivory-text: #ffffff;
+            --charcoal-mute: #5f5f5f;
+            --shadow-focus: 0 0 0 4px rgba(17,17,17,0.16);
 
-            --accent-hover: #1a1a1a;
-            --accent-soft: #f3ead6;
-            --accent-rgb: 201, 169, 110;
-            --accent-dark-rgb: 43, 43, 43;
-            --on-accent2: #2b2b2b;
-            --on-accent: #f7f3ea;
-            --header-bg: rgba(43,43,43,0.97);
-            --header-text: #e3c993;
-            --badge-bg: #2b2b2b;
-            --badge-text: #e3c993;
-            --active-zone-bg: #f6eedb;
-            --active-zone-bar: #c9a96e;
-            --zone-stroke: #c9a96e;
-            --zone-fill-rgb: 43, 43, 43;
-            --hero-bg: #2b2b2b;
-            --hero-text: #f7f3ea;
-            --hero-text2: rgba(247,243,234,0.72);
+            --accent-hover: #000000;
+            --accent-soft: #ececec;
+            --accent-rgb: 17, 17, 17;
+            --accent-dark-rgb: 17, 17, 17;
+            --on-accent2: #ffffff;
+            --on-accent: #ffffff;
+            --header-bg: rgba(255,255,255,0.94);
+            --header-text: #111111;
+            --badge-bg: #111111;
+            --badge-text: #ffffff;
+            --active-zone-bg: #f0f0f0;
+            --active-zone-bar: #111111;
+            --zone-stroke: #111111;
+            --zone-fill-rgb: 17, 17, 17;
+            --hero-bg: #111111;
+            --hero-text: #ffffff;
+            --hero-text2: rgba(255,255,255,0.7);
             --hero-chip-bg: rgba(255,255,255,0.08);
-            --hero-chip-border: rgba(201,169,110,0.45);
-            --notice-bg: #f6eedb;
-            --notice-border: #e6d3a8;
-            --notice-text: #7a5c22;
-            --danger-soft: #f6e3df;
-            --accent-text: #8a6a2f;  /* 아이보리·흰 카드 위에서 읽히는 짙은 금색 */
-            /* 편집 중 띠: 짙은 회색 머리글과 겹치지 않게 샴페인 금색 띠 + 짙은 회색 [완료] */
-            --editbar-bg: #c9a96e;
-            --editbar-text: #1f1f1f;
-            --editbar-line: #2b2b2b;
-            --editbar-done-bg: #2b2b2b;
-            --editbar-done-text: #f7f3ea;
+            --hero-chip-border: rgba(255,255,255,0.22);
+            --notice-bg: #f2f2f2;
+            --notice-border: #dddddd;
+            --notice-text: #333333;
+            --danger-soft: #f7e4e4;
+            --accent-text: #111111;
+            /* 편집 중 띠: 흰 머리글과 확실히 다르게 검정 띠 + 흰 [완료] */
+            --editbar-bg: #111111;
+            --editbar-text: #ffffff;
+            --editbar-line: #111111;
+            --editbar-done-bg: #ffffff;
+            --editbar-done-text: #111111;
+            --edit-frame: #111111;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
@@ -1357,8 +1358,8 @@
     <div class="settings-group">
         <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
-            <button type="button" class="theme-option" data-theme-value="gold" role="radio" onclick="setTheme('gold')" title="차콜 &amp; 샴페인 (기본)">
-                <span class="theme-swatch"><i style="background:#2b2b2b"></i><i style="background:#c9a96e"></i></span><span>기본</span>
+            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="모노 (기본)">
+                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#111111"></i></span><span>기본</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
@@ -2093,7 +2094,7 @@
         imageList.forEach(data => {
             if (data.canvas) {
                 data.canvas.style.touchAction = isEditMode || (fsPhoto && fsPhoto.data === data) ? 'none' : 'pan-x pan-y'; // 크게 보기는 앱이 직접 처리. 보기 모드도 브라우저 화면 확대는 막고 두 손가락은 사진 확대로
-                data.canvas.style.borderColor = isEditMode ? 'var(--warn)' : 'var(--border)';
+                data.canvas.style.borderColor = isEditMode ? 'var(--edit-frame, var(--warn))' : 'var(--border)';
             }
         });
         imageList.forEach(data => render(data));
@@ -2170,8 +2171,8 @@
         });
     }
 
-    // 🎨 화면 테마 전환 (기본 차콜 & 샴페인 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
-    const THEME_META_COLORS = { gold: '#2b2b2b', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
+    // 🎨 화면 테마 전환 (기본 모노 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
+    const THEME_META_COLORS = { mono: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
     function setTheme(name) {
         if (name === 'default') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = name;
         try { localStorage.setItem('uiTheme', name); } catch (e) {}
