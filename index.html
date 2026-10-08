@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="창고지기">
@@ -27,7 +27,7 @@
     <meta property="og:title" content="창고지기 - 사진 한 장이 창고 지도가 돼요">
     <meta property="og:description" content="선반 사진에 칸을 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요.">
     <meta property="og:url" content="https://trafficjourney.github.io/udigo/">
-    <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=4">
+    <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=5">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="창고지기: 사진 한 장이 창고 지도가 돼요. 선반 사진 위 칸마다 노란 쪽지가 붙어 있고 찾은 칸에 빨간 테두리">
@@ -103,57 +103,57 @@
             --accent-text: var(--accent);  /* 텍스트로 쓰는 강조색 — 어두운 카드 위에서 --accent 자체가 흐리게 읽히는 테마만 덮어씀 */
         }
 
-        /* 🩶 슬레이트 테마 (기본, 저장값은 'mono'): 흰 머리글·푸른 기 도는 회색 버튼, 강조도 회색 단계로만.
+        /* 💜 인디고 테마 (기본, 저장값은 'mono'): 흰 머리글·남보라(인디고) 버튼. 노랑의 반대색이라 사진 위 노란 쪽지가 가장 또렷하다.
            앱 안에서 색이 있는 건 노란 쪽지와 찾은 칸 빨강뿐이라, 사진 위 쪽지가 가장 먼저 눈에 들어온다 */
         :root[data-theme="mono"] {
-            --bg: #eef1f4;
+            --bg: #f3f2f9;
             --card: #ffffff;
-            --border: #d8dee6;
-            --accent: #475569;
-            --accent2: #7b8798;
-            --text: #1f2937;
-            --text2: #5b6675;
-            --text3: #9aa4b2;
-            --search-hl: #dfe5ec;
-            --zone-border: rgba(71,85,105,0.85);
+            --border: #dedbec;
+            --accent: #3b3577;
+            --accent2: #7c76b3;
+            --text: #1c1a33;
+            --text2: #5d5a74;
+            --text3: #a29fb8;
+            --search-hl: #e4e1f2;
+            --zone-border: rgba(59,53,119,0.85);
             --ivory-bg: rgba(255,255,255,0.92);
-            --ivory-border: #d8dee6;
-            --charcoal: #475569;
+            --ivory-border: #dedbec;
+            --charcoal: #3b3577;
             --ivory-text: #ffffff;
-            --charcoal-mute: #5b6675;
-            --shadow-focus: 0 0 0 4px rgba(71,85,105,0.2);
+            --charcoal-mute: #5d5a74;
+            --shadow-focus: 0 0 0 4px rgba(59,53,119,0.2);
 
-            --accent-hover: #334155;
-            --accent-soft: #e3e8ef;
-            --accent-rgb: 71, 85, 105;
-            --accent-dark-rgb: 71, 85, 105;
+            --accent-hover: #2e2960;
+            --accent-soft: #e8e6f4;
+            --accent-rgb: 59, 53, 119;
+            --accent-dark-rgb: 59, 53, 119;
             --on-accent2: #ffffff;
             --on-accent: #ffffff;
             --header-bg: rgba(255,255,255,0.94);
-            --header-text: #1f2937;
-            --badge-bg: #475569;
+            --header-text: #1c1a33;
+            --badge-bg: #3b3577;
             --badge-text: #ffffff;
-            --active-zone-bg: #e9edf2;
-            --active-zone-bar: #475569;
-            --zone-stroke: #475569;
-            --zone-fill-rgb: 71, 85, 105;
-            --hero-bg: #334155;
+            --active-zone-bg: #ebe9f5;
+            --active-zone-bar: #3b3577;
+            --zone-stroke: #3b3577;
+            --zone-fill-rgb: 59, 53, 119;
+            --hero-bg: #2e2960;
             --hero-text: #ffffff;
             --hero-text2: rgba(255,255,255,0.7);
             --hero-chip-bg: rgba(255,255,255,0.08);
             --hero-chip-border: rgba(255,255,255,0.22);
-            --notice-bg: #edf1f5;
-            --notice-border: #d8dee6;
-            --notice-text: #334155;
+            --notice-bg: #efeef8;
+            --notice-border: #dedbec;
+            --notice-text: #2e2960;
             --danger-soft: #f7e4e4;
-            --accent-text: #334155;
+            --accent-text: #2e2960;
             /* 편집 중 띠: 흰 머리글과 확실히 다르게 검정 띠 + 흰 [완료] */
-            --editbar-bg: #334155;
+            --editbar-bg: #2e2960;
             --editbar-text: #ffffff;
-            --editbar-line: #334155;
+            --editbar-line: #2e2960;
             --editbar-done-bg: #ffffff;
-            --editbar-done-text: #334155;
-            --edit-frame: #475569;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
+            --editbar-done-text: #2e2960;
+            --edit-frame: #3b3577;  /* 편집 중 사진 테두리 (다른 테마는 주황) */
         }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
@@ -1432,8 +1432,8 @@
     <div class="settings-group">
         <div class="settings-label">화면 테마</div>
         <div class="theme-options" role="radiogroup" aria-label="화면 테마">
-            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="모노 (기본)">
-                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#475569"></i></span><span>기본</span>
+            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
+                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
             </button>
             <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
                 <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
