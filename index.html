@@ -1360,7 +1360,7 @@
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 14px; font-size: 1.2em;">내 데이터는 어디에 있나요?</h2>
     <table class="data-table">
         <tr><th>이 폰</th><td>사진, 구역, 물건, 메모 전부</td><td>항상</td></tr>
-        <tr><th>Roboflow<br><small style="font-weight: 400; color: var(--text3);">미국</small></th><td>사진 1장 (분석에만 쓰고 저장하지 않도록 설정)</td><td>[AI로 구역 찾기]를 누를 때만</td></tr>
+        <tr><th>Roboflow<br><small style="font-weight: 400; color: var(--text3);">미국</small></th><td>사진 1장 (Google 중계 서버를 거쳐 전달, 어디에도 저장하지 않도록 설정)</td><td>[AI로 구역 찾기]를 누를 때만</td></tr>
         <tr><th>Google 폼</th><td>직접 적은 의견</td><td>[의견 보내기]를 쓸 때만</td></tr>
     </table>
     <p style="font-size: 12.5px; color: var(--text3); margin: 10px 0 14px; word-break: keep-all;">회원가입이 없어서 우리 서버에는 아무것도 저장하지 않아요. 폰을 바꾸기 전에는 설정에서 백업 파일을 받아 두세요.</p>
@@ -1880,26 +1880,16 @@
         }
     };
 
-    class RoboflowDetector {
-        constructor(projectId, version, apiKey) { this.projectId = projectId; this.version = version; this.apiKey = apiKey; }
-        async detect(base64Data) {
-            const url = `https://detect.roboflow.com/${this.projectId}/${this.version}?api_key=${this.apiKey}`;
-            const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: base64Data });
-            if (!response.ok) throw new Error(`API 오류: ${response.status}`);
-            const result = await response.json();
-            return result.predictions || [];
-        }
-    }
-
-    let _cachedApiKey = null; // 세션 중 API 키는 바뀌지 않으므로 최초 1회만 앱스크립트를 왕복하고 재사용
-    async function getApiKey() {
-        if (_cachedApiKey) return _cachedApiKey;
-        try {
-            const res = await fetch("https://script.google.com/macros/s/AKfycbw7W1pUIvnPWDEosL6ZmIhfEbS8rgUVvaU_hfECUB2faBLR5Hte96f_-fDTE_fo-Rhv/exec");
-            const data = await res.json();
-            _cachedApiKey = data.value;
-            return _cachedApiKey;
-        } catch (e) { return null; }
+    // AI 구역 찾기: 사진만 Apps Script 중계(server/ai-proxy.gs)로 보내고 결과만 받는다.
+    // Roboflow 키는 중계 서버의 스크립트 속성에만 있다 (예전엔 키를 받아 와 브라우저가 Roboflow를 직접 불러서 키가 드러났다)
+    const AI_PROXY_URL = "https://script.google.com/macros/s/AKfycbw7W1pUIvnPWDEosL6ZmIhfEbS8rgUVvaU_hfECUB2faBLR5Hte96f_-fDTE_fo-Rhv/exec";
+    async function detectZones(base64Data) {
+        // text/plain으로 보내야 브라우저가 사전 확인(CORS preflight) 없이 바로 보낸다 (Apps Script는 사전 확인에 응답하지 못함)
+        const res = await fetch(AI_PROXY_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: base64Data });
+        if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+        const result = await res.json();
+        if (result.status !== 'success') throw new Error(result.message || 'AI 서버 오류');
+        return result.predictions || [];
     }
 
     // ─── 마우스 드래그 가로 스크롤 ────────────────────────────────────────────
@@ -2198,12 +2188,8 @@
         let found = -1;
 
         try {
-            const apiKey = await getApiKey();
-            if (!apiKey) throw new Error("API 키를 불러올 수 없습니다.");
-
-            const detector = new RoboflowDetector("find-cabinet", "1", apiKey);
             const base64 = data.imgData.split(',')[1];
-            const predictions = await detector.detect(base64);
+            const predictions = await detectZones(base64);
 
             if (predictions.length === 0) { found = 0; return; } // finally에서 안내
 
