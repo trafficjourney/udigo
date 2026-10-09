@@ -713,13 +713,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
-            font-size: 24px;
+            color: #fff;
+            font-size: 20px;
             font-weight: bold;
             z-index: 10001; /* dimm(10000)보다 위에 배치 */
             pointer-events: none;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             text-align: center; white-space: nowrap;
+            /* 글자만 띄우면 뒤 화면(밝은 카드·글자)과 겹쳐 안 읽혔다 → 어두운 카드 위에 */
+            background: rgba(20, 20, 18, 0.88); padding: 18px 26px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
         /* 멈춰있지 않게 하는 애니메이션 */
@@ -1797,7 +1798,7 @@
 </div>
 <div id="aiLoadingMsg" style="display: none;">
     칸 찾는 중<span class="loading-dots"></span>
-    <small style="display: block; margin-top: 6px; font-size: 13px; font-weight: 500;">사진을 AI 서버(Roboflow)로 보냈어요</small>
+    <small style="display: block; margin-top: 6px; font-size: 13px; font-weight: 500; opacity: 0.85;">사진을 AI 서버(Roboflow)로 보냈어요</small>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
