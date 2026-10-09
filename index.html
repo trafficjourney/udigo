@@ -510,8 +510,18 @@
         .first-zone.is-edit .first-zone-manual { display: none; }
         .first-zone.is-edit .first-zone-hint { display: flex; }
         /* 고치는 중엔 AI 버튼·구분선 아래에 붙으므로 작게 (움직이는 그림은 빼서 사진 높이 안에 들어오게) */
-        .first-zone.is-edit .first-zone-hint { padding: 6px 14px; font-size: 13px; border-radius: 12px; }
-        .first-zone.is-edit .first-zone-demo { display: none; }
+        .first-zone.is-edit .first-zone-hint { flex-direction: row; gap: 10px; padding: 7px 14px 7px 10px; font-size: 13px; border-radius: 12px; text-align: left; }
+        /* 손가락 그림은 작게 줄여 글자 왼쪽에 (세로로 쌓으면 사진 높이를 넘는다) */
+        .first-zone.is-edit .first-zone-demo { flex: none; width: 44px; height: 28px; }
+        .first-zone.is-edit .first-zone-demo::before { border-width: 2px; animation-name: fz-draw-s; }
+        .first-zone.is-edit .first-zone-demo::after { width: 14px; height: 14px; margin: -7px 0 0 -7px; animation-name: fz-finger-s; }
+        @keyframes fz-draw-s { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 44px; height: 28px; opacity: 1; } 100% { width: 44px; height: 28px; opacity: 0; } }
+        @keyframes fz-finger-s { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 44px; top: 28px; opacity: 1; } 100% { left: 44px; top: 28px; opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .first-zone.is-edit .first-zone-demo::before { width: 44px; height: 28px; } .first-zone.is-edit .first-zone-demo::after { left: 44px; top: 28px; } }
+        /* 사진 위를 끌기 시작하면 안내 전체를 감춰 그리는 자리가 보이게 (구역이 안 생기면 다시 보임) */
+        .first-zone { transition: opacity 0.15s; }
+        .first-zone.is-drawing { opacity: 0; }
+        .first-zone.is-drawing .first-zone-pick { pointer-events: none; }
         .first-zone-demo { position: relative; width: 84px; height: 52px; }
         .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
         .first-zone-demo::after { content: ''; position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(255,210,0,0.85); border: 2px solid #fff; animation: fz-finger 2s ease-in-out infinite; }
@@ -2850,6 +2860,7 @@
             if (clickedZone) { activeZone = clickedZone; activeData = data; isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
 
             isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data);
+            if (data.firstZone) data.firstZone.classList.add('is-drawing');
         });
 
         canvas.addEventListener('pointermove', (e) => {
@@ -2870,14 +2881,14 @@
 
         canvas.addEventListener('pointercancel', () => {
             if (isEditMode && (isMovingZone || isResizingZone) && pendingHistoryState) { saveHistory(pendingHistoryState); if (data.id !== "dummy_root") saveData(); }
-            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; render(data);
+            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; if (data.firstZone) data.firstZone.classList.remove('is-drawing'); render(data);
         });
         canvas.addEventListener('pointerup', (e) => {
             try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
             if (isDrawingNewZone) {
-                isDrawingNewZone = false; const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
+                isDrawingNewZone = false; if (data.firstZone) data.firstZone.classList.remove('is-drawing'); const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
                 if (w > 25 && h > 25) {
                     if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; }
 
