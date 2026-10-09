@@ -467,6 +467,9 @@
             font-size: 16px; flex-shrink: 0; transition: background 0.2s var(--ease), color 0.2s var(--ease);
         }
         @media (hover: hover) { .icon-btn:hover { background: var(--accent-soft); color: var(--accent-text); } }
+        /* 상단 검색 마이크: 창고에서 장갑 낀 손으로도 누르기 쉽게 크고 눈에 띄게 */
+        #micBtn { width: 40px; height: 40px; font-size: 20px; background: var(--accent-soft); color: var(--accent-text); }
+        #micBtn.is-listening { background: var(--danger); color: #fff; }
 
         .image-section { background: var(--card); padding: 20px; margin-bottom: 24px; border-radius: var(--radius-lg); border: 1px solid rgba(224,219,208,0.6); box-shadow: var(--shadow-sm); position: relative; }
         /* 사진이 여러 장이면 한 번에 한 장만 보여주고, 위 썸네일 줄로 바꿔 본다 */
@@ -1311,7 +1314,7 @@
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
             <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
-            <li><i class="ti ti-search"></i><div><b>물건 찾기</b><span>위쪽 검색창에 이름이나 초성(ㅅㄹ)을 치거나, 마이크를 눌러 말로 찾아요.</span></div></li>
+            <li><i class="ti ti-search"></i><div><b>물건 찾기</b><span>위쪽 검색창에 이름이나 초성(ㅅㄹ)을 치거나, <b>마이크</b>를 눌러 말로 찾아요. 물건을 넣을 땐 구역 창의 마이크로 "빨대, 냅킨, 원두"처럼 여러 개를 한 번에 말해 추가할 수 있어요.</span></div></li>
             <li><i class="ti ti-printer"></i><div><b>벽에 붙이기</b><span>아래 인쇄 버튼으로 A4를 뽑아 선반 옆에 붙여 두면, 폰 없이도 꺼낼 때·다시 넣을 때 자리를 찾아요.</span></div></li>
         </ol>
     </div>
@@ -1339,7 +1342,7 @@
     <div class="hero-beta"><span class="beta-pill"><i class="ti ti-flask"></i> 무료 베타</span></div>
     <div class="hero-summary" id="heroSummary"></div>
     <div class="search-input-wrap">
-        <input type="text" id="searchBox" placeholder="물건 이름으로 검색" oninput="integratedSearch(false)" onfocus="this.select()">
+        <input type="text" id="searchBox" placeholder="물건 이름 · 초성 · 🎤 말로 검색" oninput="integratedSearch(false)" onfocus="this.select()">
         <span class="voice-bars" aria-hidden="true"><span></span><span></span><span></span></span>
         <i class="ti ti-search"></i>
         <button id="micBtn" class="icon-btn" onclick="startVoiceRecognition()" title="말로 검색" aria-label="말로 검색">
