@@ -1147,6 +1147,9 @@
         .zm-item-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
         .zm-item-text small { font-size: 12px; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .zm-tag { flex-shrink: 0; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
+        /* 사진 이름이 아직 #1 같은 기본값일 때만 보이는 이름 붙이기 안내 */
+        .title-hint { display: inline-flex; align-items: center; gap: 4px; margin: 4px 5px 0; padding: 0; border: 0; background: none; color: var(--text3); font: inherit; font-size: 12px; cursor: pointer; }
+        .title-hint[hidden] { display: none; }
         .zm-tag.is-new { background: var(--notice-bg); color: var(--notice-text); border-color: var(--notice-border); }
 
         .zm-foot {
@@ -2691,7 +2694,9 @@
                 <div style="display: flex; gap: 6px; flex-shrink: 0;">
                     <button type="button" class="photo-more-btn" onclick="openPhotoMenu(event, '${data.id}')" title="사진 메뉴" aria-label="사진 메뉴" aria-haspopup="menu"><i class="ti ti-dots"></i></button>
                 </div>
-            </div><hr style="border: 0; border-top: 1px solid var(--border); margin-top: 8px;">`;
+            </div>
+            <button type="button" id="title-hint-${data.id}" class="title-hint" onclick="renameImage('${data.id}')" ${/^#\d+$/.test(data.title) ? '' : 'hidden'}><i class="ti ti-pencil"></i> 이름을 붙여 두세요 (예: 창고 A, 냉장고 안)</button>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-top: 8px;">`;
 
         const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = (data.img && data.img.width) ? (data.img.height * (800 / data.img.width)) : 450;
         const ctx = canvas.getContext('2d'); data.canvas = canvas; data.ctx = ctx;
@@ -4494,7 +4499,7 @@
     document.addEventListener('click', (e) => { const searchBox = document.getElementById('searchBox'), display = document.getElementById('searchResultDisplay'); if (searchBox && display && e.target.isConnected && !e.target.closest('.search-bar')) { display.style.display = 'none'; } });
     const searchBoxEl = document.getElementById('searchBox'); if (searchBoxEl) { searchBoxEl.addEventListener('focus', () => { activateHeroSearch(true); if (searchBoxEl.value.trim() !== "") { document.getElementById('searchResultDisplay').style.display = 'block'; } else { renderSearchSuggestions(); } }); }
 
-    function renameImage(dataId) { const data = imageList.find(d => d.id == dataId); const newName = prompt("사진 이름을 입력하세요:", data.title); if (newName) { data.title = newName; const titleEl = document.getElementById(`title-${data.id}`); if (titleEl) titleEl.innerHTML = `${newName}`; syncPhotoView(); saveData(); } }
+    function renameImage(dataId) { const data = imageList.find(d => d.id == dataId); const newName = prompt("사진 이름을 입력하세요 (예: 창고 A, 냉장고 안):", data.title); if (newName) { data.title = newName; const titleEl = document.getElementById(`title-${data.id}`); if (titleEl) titleEl.textContent = newName; const hint = document.getElementById(`title-hint-${data.id}`); if (hint) hint.hidden = !/^#\d+$/.test(newName.trim()); syncPhotoView(); saveData(); } }
     function deleteImage(dataId) { if (confirm("이 사진과 포함된 모든 구역을 삭제하시겠습니까?")) { if (activeData && activeData.id == dataId) { activeData = null; activeZone = null; showSearchArrow = false; } imageList = imageList.filter(d => d.id != dataId); saveData(); document.getElementById('canvasList').innerHTML = ""; if (imageList.length === 0) { document.getElementById('emptyGuide').style.display = 'block'; } else { imageList.forEach(data => createNewCanvasElement(data)); } } }
     // ────────────────────────────────────────────────────────────
     // 🖨 인쇄용 창고 지도: 화면 캡처(html2canvas) 대신 페이지를 캔버스에 직접 그려서 이미지로 넣는다.
