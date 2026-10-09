@@ -518,6 +518,12 @@
         @keyframes fz-draw-s { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 44px; height: 28px; opacity: 1; } 100% { width: 44px; height: 28px; opacity: 0; } }
         @keyframes fz-finger-s { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 44px; top: 28px; opacity: 1; } 100% { left: 44px; top: 28px; opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .first-zone.is-edit .first-zone-demo::before { width: 44px; height: 28px; } .first-zone.is-edit .first-zone-demo::after { left: 44px; top: 28px; } }
+        /* [직접 그리기]를 고른 사진: AI 버튼·구분선 없이 끌기 안내만 가운데에 크게 (작은 가로 배치를 원래 세로 배치로 되돌림) */
+        .first-zone.is-manual .first-zone-pick { display: none; }
+        .first-zone.is-manual .first-zone-hint { flex-direction: column; gap: 10px; padding: 12px 16px; font-size: 15px; border-radius: 14px; text-align: center; }
+        .first-zone.is-manual .first-zone-demo { width: 84px; height: 52px; }
+        .first-zone.is-manual .first-zone-demo::before { border-width: 2.5px; animation-name: fz-draw; }
+        .first-zone.is-manual .first-zone-demo::after { width: 22px; height: 22px; margin: -11px 0 0 -11px; animation-name: fz-finger; }
         /* 사진 위를 끌기 시작하면 안내 전체를 감춰 그리는 자리가 보이게 (구역이 안 생기면 다시 보임) */
         .first-zone { transition: opacity 0.15s; }
         .first-zone.is-drawing { opacity: 0; }
@@ -2795,7 +2801,7 @@
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
         firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 끌어서<br>직접 그려요</b></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
-        firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
+        firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; data.manualPicked = true; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
         stage.append(canvas, noteLayer, firstZone); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl);
         data.firstZone = firstZone;
@@ -3346,7 +3352,9 @@
     function syncFirstZone(data) {
         const fz = data && data.firstZone; if (!fz) return;
         const empty = data.id !== 'dummy_root' && !data.zones.length;
+        if (!isEditMode) data.manualPicked = false; // 고치기를 끝내면 다시 AI/직접 그리기 중에 고르게
         fz.hidden = !empty; fz.classList.toggle('is-edit', empty && isEditMode);
+        fz.classList.toggle('is-manual', empty && isEditMode && !!data.manualPicked); // [직접 그리기]를 고른 사진: 끌기 안내만
     }
 
     function render(data, bounce = 0) {
