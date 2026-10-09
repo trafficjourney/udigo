@@ -634,7 +634,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #pendingAdd, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -644,6 +644,8 @@
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
         #dataInfo { z-index: 10001; max-width: 420px; }
+        #pendingAdd { z-index: 10001; max-width: 360px; }
+        #pendingAddBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
         .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--border); }
@@ -1373,6 +1375,15 @@
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
+<div id="pendingAddBackdrop" onclick="closePendingAdd()"></div>
+<div id="pendingAdd" role="alertdialog" aria-modal="true" aria-labelledby="pendingAddTitle" style="line-height: 1.6;">
+    <h2 id="pendingAddTitle" style="text-align: center; color: var(--text); margin-bottom: 6px; font-size: 1.1em; word-break: keep-all;"></h2>
+    <p style="text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 16px;">입력칸에 적은 물건이 아직 목록에 안 들어갔어요</p>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn-base btn-secondary" style="flex: 1;" onclick="answerPendingAdd(false)">추가 안 하고 완료</button>
+        <button type="button" class="btn-base btn-primary" style="flex: 1;" onclick="answerPendingAdd(true)">추가하고 완료</button>
+    </div>
+</div>
 <div id="dataInfoBackdrop" onclick="closeDataInfo()"></div>
 <div id="dataInfo" role="dialog" aria-modal="true" aria-label="내 데이터는 어디에" style="line-height: 1.6;">
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 14px; font-size: 1.2em;">내 데이터는 어디에 있나요?</h2>
@@ -3545,7 +3556,27 @@
         markZoneChecked(activeZone); activeZone.name = name; activeZone.items = items;
         if (activeData.id !== "dummy_root") saveData();
     }
-    function saveZone() { commitZoneModal(true); closeModal(); }
+    // [완료]: 입력칸에 적고 아직 안 넣은 새 물건이 있으면("'○○' 새로 추가" 줄이 떠 있으면) 넣을지 먼저 묻는다
+    // (예전엔 그대로 사라졌다. 이미 있는 이름을 친 경우는 찾기로 보고 묻지 않는다)
+    function saveZone() {
+        const q = document.getElementById('newItemInput').value.trim();
+        if (q && !document.getElementById('zmAddRow').hidden) {
+            document.getElementById('pendingAddTitle').textContent = `'${q}'${josa(q, '을', '를').slice(q.length)} 추가할까요?`;
+            document.getElementById('pendingAddBackdrop').style.display = 'block';
+            document.getElementById('pendingAdd').style.setProperty('display', 'block', 'important');
+            return;
+        }
+        commitZoneModal(true); closeModal();
+    }
+    function closePendingAdd() {
+        document.getElementById('pendingAddBackdrop').style.display = 'none';
+        document.getElementById('pendingAdd').style.display = 'none';
+    }
+    function answerPendingAdd(add) {
+        closePendingAdd();
+        if (add) addNewItem(); else document.getElementById('newItemInput').value = '';
+        commitZoneModal(true); closeModal();
+    }
     // 구역 창을 닫으면 보기 모드에서는 선택(어두운 배경 + 빨간 테두리)도 같이 푼다 — 창을 닫는 건 "다 봤다"는 뜻이라 사진 전체가 다시 보여야 한다.
     // 편집 모드는 닫은 뒤에도 그 구역을 옮기거나 크기를 바꿀 수 있게 선택을 남긴다
     function closeModal() {
