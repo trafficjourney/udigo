@@ -615,7 +615,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #photoTip, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #aiConsent, #dataInfo, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -624,6 +624,17 @@
         #settingsModal { z-index: 1020; max-width: 420px; }
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
+        #aiConsent, #dataInfo { z-index: 10001; max-width: 420px; }
+        #aiConsentBackdrop, #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
+        .info-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text2); line-height: 1.55; }
+        .info-rows li { display: flex; gap: 10px; }
+        .info-rows li > b { flex: none; width: 5.5em; color: var(--text); }
+        .info-rows li.is-no > span { color: var(--text3); }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
+        .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+        .data-table th { color: var(--text); font-weight: 700; white-space: nowrap; }
+        .trust-link { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; white-space: nowrap; }
+        .trust-link .ti { font-size: 15px; color: var(--accent2); }
         #photoTipBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #editIntroBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         /* 🖨 인쇄물 미리보기: 벽에 붙일 A4 지도를 그대로 보여준다 */
@@ -710,6 +721,7 @@
             z-index: 10001; /* dimm(10000)보다 위에 배치 */
             pointer-events: none;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-align: center; white-space: nowrap;
         }
 
         /* 멈춰있지 않게 하는 애니메이션 */
@@ -1343,6 +1355,70 @@
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
+<div id="aiConsentBackdrop" onclick="answerAIConsent(null)"></div>
+<div id="aiConsent" role="dialog" aria-modal="true" aria-label="AI로 구역 찾기 안내" style="line-height: 1.6;">
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 6px; font-size: 1.2em;">AI로 구역을 찾으려면<br>사진을 보내야 해요</h2>
+    <p style="text-align: center; font-size: 12.5px; color: var(--text3); margin-bottom: 14px; word-break: keep-all;">처음 한 번만 물어봐요 · 설정에서 다시 바꿀 수 있어요</p>
+    <div style="background: var(--bg); border: 1px solid var(--border); padding: 14px 16px; border-radius: 8px; margin-bottom: 12px;">
+        <ul class="info-rows">
+            <li><b>어디로</b><span>Roboflow (미국의 이미지 분석 회사)</span></li>
+            <li><b>무엇을</b><span>지금 이 사진 1장 (작게 줄인 사본)</span></li>
+            <li class="is-no"><b>안 보내요</b><span>구역, 물건 이름, 메모, 다른 사진</span></li>
+            <li><b>왜</b><span>선반 칸을 자동으로 찾기 위해서</span></li>
+            <li><b>보관</b><span>분석에만 쓰고 저장하지 않도록 설정해 두었어요</span></li>
+        </ul>
+    </div>
+    <p style="font-size: 12.5px; color: var(--text2); margin-bottom: 14px; word-break: keep-all;"><i class="ti ti-alert-circle" style="color: var(--accent2);"></i> 사람 얼굴, 택배 송장, 서류가 찍혔다면 <b>[직접 그릴게요]</b>를 써 주세요.</p>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="answerAIConsent('manual')" class="btn-base btn-secondary" style="flex: 1;">직접 그릴게요</button>
+        <button type="button" onclick="answerAIConsent('send')" class="btn-base btn-primary" style="flex: 1.3;"><i class="ti ti-sparkles" style="margin-right: 4px;"></i> 보내고 찾기</button>
+    </div>
+</div>
+<div id="dataInfoBackdrop" onclick="closeDataInfo()"></div>
+<div id="dataInfo" role="dialog" aria-modal="true" aria-label="내 데이터는 어디에" style="line-height: 1.6;">
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 14px; font-size: 1.2em;">내 데이터는 어디에 있나요?</h2>
+    <table class="data-table">
+        <tr><th>이 폰</th><td>사진, 구역, 물건, 메모 전부</td><td>항상</td></tr>
+        <tr><th>Roboflow<br><small style="font-weight: 400; color: var(--text3);">미국</small></th><td>사진 1장 (분석에만 쓰고 저장하지 않도록 설정)</td><td>[AI로 구역 찾기]를 누를 때만</td></tr>
+        <tr><th>Google 폼</th><td>직접 적은 의견</td><td>[의견 보내기]를 쓸 때만</td></tr>
+    </table>
+    <p style="font-size: 12.5px; color: var(--text3); margin: 10px 0 14px; word-break: keep-all;">회원가입이 없어서 우리 서버에는 아무것도 저장하지 않아요. 폰을 바꾸기 전에는 설정에서 백업 파일을 받아 두세요.</p>
+    <button type="button" id="aiConsentResetBtn" class="btn-base btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="resetAIConsent()">AI 사진 전송 동의 취소</button>
+    <button type="button" class="btn-base btn-primary" style="width: 100%;" onclick="closeDataInfo()">닫기</button>
+</div>
+<script>
+    // AI 사진 전송 동의: 처음 한 번만 앱 안내창으로 묻는다 ('send' | 'manual' | null)
+    let _aiConsentResolve = null;
+    function askAIConsent() {
+        return new Promise(resolve => {
+            _aiConsentResolve = resolve;
+            document.getElementById('aiConsentBackdrop').style.display = 'block';
+            document.getElementById('aiConsent').style.setProperty('display', 'block', 'important');
+        });
+    }
+    function answerAIConsent(answer) {
+        document.getElementById('aiConsentBackdrop').style.display = 'none';
+        document.getElementById('aiConsent').style.display = 'none';
+        if (_aiConsentResolve) { const r = _aiConsentResolve; _aiConsentResolve = null; r(answer); }
+    }
+    // 설정·첫 화면 "내 폰에 저장"에서 여는 데이터 위치 안내
+    function openDataInfo() {
+        let accepted = false; try { accepted = safeStorage.getItem('aiUploadNoticeAccepted') === '1'; } catch (e) {}
+        document.getElementById('aiConsentResetBtn').hidden = !accepted;
+        document.getElementById('dataInfoBackdrop').style.display = 'block';
+        document.getElementById('dataInfo').style.setProperty('display', 'block', 'important');
+    }
+    function closeDataInfo() {
+        document.getElementById('dataInfoBackdrop').style.display = 'none';
+        document.getElementById('dataInfo').style.display = 'none';
+    }
+    function resetAIConsent() {
+        try { safeStorage.removeItem('aiUploadNoticeAccepted'); } catch (e) {}
+        document.getElementById('aiConsentResetBtn').hidden = true;
+        showToast('취소했어요. 다음에 AI를 쓸 때 다시 물어볼게요');
+    }
+</script>
+
 <div id="photoTipBackdrop" onclick="closePhotoTip()"></div>
 <div id="photoTip" role="dialog" aria-modal="true" aria-label="사진 찍는 방법" style="line-height: 1.6;">
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">사진은 이렇게 찍어주세요</h2>
@@ -1494,7 +1570,7 @@
                 <span class="setup-promo-text"><b>매장에 직접 가서 무료 세팅</b><span>10월 31일까지 · 다산동·구리시 · 선착순 10팀</span></span>
                 <span class="setup-promo-go">신청 <i class="ti ti-chevron-right"></i></span>
             </a>
-            <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><span><i class="ti ti-device-mobile"></i> 내 폰에 저장</span></p>
+            <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><button type="button" class="trust-link" onclick="openDataInfo()"><i class="ti ti-device-mobile"></i> 내 폰에 저장</button></p>
         </div>
         <!-- 첫 화면은 단순하게: 아래에 더 있다는 표시만 두고, 정리 전/후·업종 예시는 한 화면 아래에 -->
         <button type="button" class="welcome-more" onclick="document.getElementById('welcomeShowcase').scrollIntoView({ behavior: 'smooth', block: 'start' })">어떻게 되는지 보기 <i class="ti ti-chevron-down"></i></button>
@@ -1708,6 +1784,7 @@
         <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
         <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
+        <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
     </div>
     <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="importSystemData(this)">
@@ -1759,7 +1836,8 @@
     "></div>
 </div>
 <div id="aiLoadingMsg" style="display: none;">
-    분석중<span class="loading-dots"></span>
+    칸 찾는 중<span class="loading-dots"></span>
+    <small style="display: block; margin-top: 6px; font-size: 13px; font-weight: 500;">사진을 AI 서버(Roboflow)로 보냈어요</small>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2149,7 +2227,9 @@
 
         // 사진이 외부 AI 서버로 나간다는 사실은 처음 한 번만 알리고 동의를 받는다 (이후엔 묻지 않음)
         if (safeStorage.getItem('aiUploadNoticeAccepted') !== '1') {
-            if (!confirm("AI 분석을 하려면 이 사진을 외부 AI 분석 서버(Roboflow)로 보내야 해요.\n구역·물건 정보는 보내지 않고, 이 기기에만 저장됩니다.\n\n계속할까요?")) return;
+            const answer = await askAIConsent();
+            if (answer === 'manual') { activeData = data; if (!isEditMode) toggleEditMode(); if (data.firstZone) syncFirstZone(data); return; }
+            if (answer !== 'send') return;
             safeStorage.setItem('aiUploadNoticeAccepted', '1');
         }
 
