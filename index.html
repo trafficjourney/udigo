@@ -498,6 +498,7 @@
         .first-zone-pick { display: flex; flex-direction: column; align-items: stretch; gap: 8px; pointer-events: auto; }
         .first-zone-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 50px; padding: 0 22px; border: 0; border-radius: 25px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 16px; font-weight: 800; box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: pointer; }
         .first-zone-btn.first-zone-manual { min-height: 42px; background: rgba(255,255,255,0.94); color: var(--text); font-size: 14px; font-weight: 700; }
+        .first-zone-note { align-self: center; margin: -2px 0 2px; padding: 3px 10px; border: 0; border-radius: 12px; background: rgba(0,0,0,0.55); color: #fff; font: inherit; font-size: 12px; line-height: 1.5; cursor: pointer; }
         .first-zone-btn:disabled { opacity: 0.8; cursor: default; }
         .first-zone-btn .ti { font-size: 20px; }
         .first-zone-hint { display: none; position: relative; flex-direction: column; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,0.62); color: #fff; text-align: center; font-size: 15px; line-height: 1.4; }
@@ -616,7 +617,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #photoTip, #aiConsent, #dataInfo, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -625,9 +626,8 @@
         #settingsModal { z-index: 1020; max-width: 420px; }
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
-        #aiConsent, #dataInfo { z-index: 10001; max-width: 420px; }
-        #dataInfo { z-index: 10003; } #dataInfoBackdrop { z-index: 10002 !important; } /* 동의창의 [자세히]에서 열면 그 위에 */
-        #aiConsentBackdrop, #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
+        #dataInfo { z-index: 10001; max-width: 420px; }
+        #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
         .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--border); }
         .data-table th { color: var(--text); font-weight: 700; white-space: nowrap; }
@@ -1353,15 +1353,6 @@
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
-<div id="aiConsentBackdrop" onclick="answerAIConsent(null)"></div>
-<div id="aiConsent" role="dialog" aria-modal="true" aria-label="AI로 구역 찾기 안내" style="line-height: 1.6;">
-    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 10px; font-size: 1.2em;">AI로 칸을 찾으려면<br>이 사진을 보내요</h2>
-    <p style="font-size: 13.5px; color: var(--text2); margin-bottom: 16px; word-break: keep-all; text-align: center;">사진 1장만 Roboflow(미국) 분석 서버로 보내요. 저장하지 않도록 설정해 두었고, 구역·물건 정보는 보내지 않아요. <button type="button" class="trust-link" style="color: var(--accent-text);" onclick="openDataInfo()">자세히</button></p>
-    <div style="display: flex; gap: 8px;">
-        <button type="button" onclick="answerAIConsent('manual')" class="btn-base btn-secondary" style="flex: 1;">직접 그릴게요</button>
-        <button type="button" onclick="answerAIConsent('send')" class="btn-base btn-primary" style="flex: 1.3;"><i class="ti ti-sparkles" style="margin-right: 4px;"></i> 보내고 찾기</button>
-    </div>
-</div>
 <div id="dataInfoBackdrop" onclick="closeDataInfo()"></div>
 <div id="dataInfo" role="dialog" aria-modal="true" aria-label="내 데이터는 어디에" style="line-height: 1.6;">
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 14px; font-size: 1.2em;">내 데이터는 어디에 있나요?</h2>
@@ -1371,39 +1362,17 @@
         <tr><th>Google 폼</th><td>직접 적은 의견</td><td>[의견 보내기]를 쓸 때만</td></tr>
     </table>
     <p style="font-size: 12.5px; color: var(--text3); margin: 10px 0 14px; word-break: keep-all;">회원가입이 없어서 우리 서버에는 아무것도 저장하지 않아요. 폰을 바꾸기 전에는 설정에서 백업 파일을 받아 두세요.</p>
-    <button type="button" id="aiConsentResetBtn" class="btn-base btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="resetAIConsent()">AI 사진 전송 동의 취소</button>
     <button type="button" class="btn-base btn-primary" style="width: 100%;" onclick="closeDataInfo()">닫기</button>
 </div>
 <script>
-    // AI 사진 전송 동의: 처음 한 번만 앱 안내창으로 묻는다 ('send' | 'manual' | null)
-    let _aiConsentResolve = null;
-    function askAIConsent() {
-        return new Promise(resolve => {
-            _aiConsentResolve = resolve;
-            document.getElementById('aiConsentBackdrop').style.display = 'block';
-            document.getElementById('aiConsent').style.setProperty('display', 'block', 'important');
-        });
-    }
-    function answerAIConsent(answer) {
-        document.getElementById('aiConsentBackdrop').style.display = 'none';
-        document.getElementById('aiConsent').style.display = 'none';
-        if (_aiConsentResolve) { const r = _aiConsentResolve; _aiConsentResolve = null; r(answer); }
-    }
     // 설정·첫 화면 "내 폰에 저장"에서 여는 데이터 위치 안내
     function openDataInfo() {
-        let accepted = false; try { accepted = safeStorage.getItem('aiUploadNoticeAccepted') === '1'; } catch (e) {}
-        document.getElementById('aiConsentResetBtn').hidden = !accepted;
         document.getElementById('dataInfoBackdrop').style.display = 'block';
         document.getElementById('dataInfo').style.setProperty('display', 'block', 'important');
     }
     function closeDataInfo() {
         document.getElementById('dataInfoBackdrop').style.display = 'none';
         document.getElementById('dataInfo').style.display = 'none';
-    }
-    function resetAIConsent() {
-        try { safeStorage.removeItem('aiUploadNoticeAccepted'); } catch (e) {}
-        document.getElementById('aiConsentResetBtn').hidden = true;
-        showToast('취소했어요. 다음에 AI를 쓸 때 다시 물어볼게요');
     }
 </script>
 
@@ -2213,13 +2182,7 @@
         // 이미 그린 구역이 있으면 바꿀지 먼저 묻는다 (예전엔 말없이 덮어써서 적어 둔 물건까지 사라졌다)
         if (data.zones.length && !confirm(`지금 있는 구역 ${data.zones.length}개를 AI가 찾은 구역으로 바꿀까요?\n구역에 적어 둔 물건도 함께 지워져요. (되돌리기로 되살릴 수 있어요)`)) return;
 
-        // 사진이 외부 AI 서버로 나간다는 사실은 처음 한 번만 알리고 동의를 받는다 (이후엔 묻지 않음)
-        if (safeStorage.getItem('aiUploadNoticeAccepted') !== '1') {
-            const answer = await askAIConsent();
-            if (answer === 'manual') { activeData = data; if (!isEditMode) toggleEditMode(); if (data.firstZone) syncFirstZone(data); return; }
-            if (answer !== 'send') return;
-            safeStorage.setItem('aiUploadNoticeAccepted', '1');
-        }
+        // 사진이 외부 AI 서버로 나간다는 건 따로 묻지 않고, AI 버튼 바로 아래 한 줄(first-zone-note)로 미리 보여 준다 (처음 쓰는 기능 앞에 창을 띄우면 멈칫한다)
 
         // 💡 1. 시작: dimm 및 안내 문구 표시
         document.getElementById('editOverlay').style.display = 'block';
@@ -2803,7 +2766,7 @@
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
         // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
-        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>구역을 그려요</b></div>`;
+        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>구역을 그려요</b></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
         firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
