@@ -493,7 +493,7 @@
         .zoom-stage canvas { width: 100%; height: auto; max-width: none; margin: 0; }
         .note-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
         /* 구역이 없는 사진: 가운데 [+ 첫 구역 만들기] → 고치는 중이면 "끌어서 그려요" 안내 (손가락 입력은 아래 캔버스가 받는다) */
-        .first-zone { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .first-zone { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; }
         .first-zone[hidden] { display: none; }
         .first-zone-pick { display: flex; flex-direction: column; align-items: stretch; gap: 8px; pointer-events: auto; }
         .first-zone-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 50px; padding: 0 22px; border: 0; border-radius: 25px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 16px; font-weight: 800; box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: pointer; }
@@ -501,7 +501,8 @@
         .first-zone-btn:disabled { opacity: 0.8; cursor: default; }
         .first-zone-btn .ti { font-size: 20px; }
         .first-zone-hint { display: none; position: relative; flex-direction: column; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,0.62); color: #fff; text-align: center; font-size: 15px; line-height: 1.4; }
-        .first-zone.is-edit .first-zone-pick { display: none; }
+        /* 구역 고치는 중에 사진을 추가해도 AI 버튼은 남긴다 (예전엔 끌기 안내만 떠서 새로고침해야 AI 버튼이 보였다). 직접 그리기는 이미 고치는 중이라 숨김 */
+        .first-zone.is-edit .first-zone-manual { display: none; }
         .first-zone.is-edit .first-zone-hint { display: flex; }
         .first-zone-demo { position: relative; width: 84px; height: 52px; }
         .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
