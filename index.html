@@ -544,6 +544,13 @@
         .is-empty .zone-num { position: static; background: rgba(43,39,22,0.62); color: #fff; }
         .zone-note.is-focus .zone-num, .is-empty.is-focus .zone-num { background: #c44444; color: #fff; }
         .zoom-ctl { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; z-index: 2; }
+        /* ✏️ 구역 그리기 도구: 고치기 모드에서 사진 왼쪽 아래 (확대 버튼과 반대편). 눌러 켠 동안만 끌기 = 그리기, 아니면 끌기 = 스크롤 */
+        .draw-tool { position: absolute; left: 8px; bottom: 8px; z-index: 2; display: none; align-items: center; gap: 4px; height: 40px; padding: 0 14px 0 11px; border: 1.5px solid rgba(255,255,255,0.8); border-radius: 20px; background: rgba(26,26,24,0.72); color: #fff; font: inherit; font-size: 14px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,0.3); cursor: pointer; }
+        .draw-tool .ti { font-size: 18px; }
+        body.editing .draw-tool { display: inline-flex; }
+        .draw-tool.is-on { background: var(--accent); border-color: #fff; }
+        .zoom-box.draw-armed canvas { outline: 3px solid var(--accent); outline-offset: -3px; }
+        .zoom-box.is-fs .draw-tool { bottom: calc(env(safe-area-inset-bottom, 0px) + 66px); left: 14px; }
         .zoom-ctl button { display: none; align-items: center; justify-content: center; gap: 4px; min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 17px; background: rgba(255,255,255,0.94); color: #1a1a18; font: 600 12px sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer; }
         .zoom-ctl button i { font-size: 16px; }
         .zoom-ctl .zoom-full { padding: 0; width: 46px; height: 46px; border-radius: 23px; background: rgba(26,26,24,0.72); border: 1.5px solid rgba(255,255,255,0.75); color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.3); } /* 크게 보기: 자주 쓸 기능이라 크게 */
@@ -1345,7 +1352,7 @@
 <!-- 편집 중 띠: 지금 편집 모드라는 것과 끝내는 방법(완료)을 화면 위에 계속 보여준다 -->
 <div id="editBar" class="edit-bar" hidden>
     <i class="ti ti-pencil edit-bar-icon" aria-hidden="true"></i>
-    <div class="edit-bar-text"><b>구역 고치는 중</b><span>끌어서 만들기 · 한 번 더 누르면 물건 관리</span></div>
+    <div class="edit-bar-text"><b>구역 고치는 중</b><span>구역 그리기로 만들기 · 한 번 더 누르면 물건 관리</span></div>
     <button type="button" class="edit-bar-done" onclick="toggleEditMode()"><i class="ti ti-check"></i> 완료</button>
 </div>
 
@@ -1447,7 +1454,7 @@
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">구역 고치기, 이렇게 해요</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
-            <li><i class="ti ti-hand-move"></i><div><b>끌어서 구역 만들기·옮기기</b><span>사진 위를 손가락으로 끌면 새 구역이 그려져요. 이미 있는 구역은 끌어서 옮겨요. 구역을 한 번 누르면 모서리로 크기를 바꿀 수 있고, 한 번 더 누르면 물건 관리 창이 떠요.</span></div></li>
+            <li><i class="ti ti-hand-move"></i><div><b>구역 만들기·옮기기</b><span>사진 왼쪽 아래 <b>[구역 그리기]</b>를 누르고 사진 위를 끌면 새 구역이 생겨요. 구역을 한 번 누르면 골라져서 끌어 옮기거나 모서리로 크기를 바꿀 수 있고, 한 번 더 누르면 물건 관리 창이 떠요.</span><small>그 밖에 사진 위를 끌면 화면이 움직여요.</small></div></li>
             <li><i class="ti ti-arrows-move"></i><div><b>물건을 다른 구역으로 옮기기</b><span>사진 위 구역의 말풍선에서 <b>물건 이름을 꾹 누른 채 다른 구역으로 끌어다 놓으세요.</b> 구역 밖에 놓으면 삭제할지 물어봐요. 말풍선이 안 보이면 오른쪽 아래 <i class="ti ti-message-circle"></i> 버튼을 눌러 켜세요.</span><small>사진 아래 구역 목록에서 물건 이름을 눌러 구역을 고르는 방법도 있어요.</small></div></li>
             <li><i class="ti ti-check"></i><div><b>다 고쳤으면 [완료]</b><span>위쪽 띠의 노란 <b>[완료]</b> 버튼을 누르면 끝나요.</span></div></li>
         </ol>
@@ -2305,6 +2312,7 @@
     // 모바일 초기값(22)은 유지하고 PC 초기값만 더 작게 잡는다.
     let bubbleFontSize = isMobileDevice() ? 22 : 16, isDrawingNewZone = false, drawStart = { x: 0, y: 0 }, currentDrawPos = { x: 0, y: 0 };
     let holdingItem = null, mousePos = { x: 0, y: 0 }, isMovingZone = false, isResizingZone = false, resizeHandle = '';
+    let editScroll = null, editScrollFling = 0; // 고치기 중 사진 위 끌기 = 화면 스크롤 (사진은 그리기 때문에 브라우저 스크롤을 꺼 두어 직접 옮긴다)
     let zoneDragOffset = { x: 0, y: 0 }, pressedSelectedZone = false, hasDragged = false, startPointerPos = { x: 0, y: 0 }, startClientPos = { x: 0, y: 0 }, showSearchArrow = false;
     const HANDLE_SIZE = 15;
     // 모서리 손잡이 크기는 화면 픽셀 기준: 마우스는 작게, 손가락은 넓게 (캔버스는 800px 기준이라 화면 배율로 환산)
@@ -2321,7 +2329,8 @@
             if (near(z.x, z.y) || near(z.x + z.w, z.y + z.h)) return 'nwse-resize';
             if (near(z.x + z.w, z.y) || near(z.x, z.y + z.h)) return 'nesw-resize';
         }
-        return inZone ? 'move' : 'crosshair';
+        if (data.drawArmed) return 'crosshair';
+        return z && x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h ? 'move' : (inZone ? 'pointer' : 'default');
     }
     function handleDrawHalf(canvas) { return lastPointerFine ? 5 * canvasScale(canvas) : 10; }
 
@@ -2793,9 +2802,12 @@
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
         firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
-        firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; data.manualPicked = true; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
+        firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; data.manualPicked = true; if (!isEditMode) toggleEditMode(); setDrawArmed(data, true); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
-        stage.append(canvas, noteLayer, firstZone); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl);
+        const drawTool = document.createElement('button'); drawTool.type = 'button'; drawTool.className = 'draw-tool';
+        drawTool.onclick = () => setDrawArmed(data, !data.drawArmed);
+        stage.append(canvas, noteLayer, firstZone); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl, drawTool);
+        data.drawTool = drawTool;
         data.firstZone = firstZone;
         data.drawStrip = headerContainer.querySelector('.draw-strip');
         data.drawStrip.querySelector('.draw-strip-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
@@ -2876,11 +2888,16 @@
                 const corners = { tl: { x: z.x, y: z.y }, tr: { x: z.x + z.w, y: z.y }, bl: { x: z.x, y: z.y + z.h }, br: { x: z.x + z.w, y: z.y + z.h } };
                 for (let handle in corners) { const pt = corners[handle]; if (Math.abs(x - pt.x) <= hit && Math.abs(y - pt.y) <= hit) { isResizingZone = true; resizeHandle = handle; render(data); return; } }
             }
+            // [구역 그리기]를 켠 사진만 끌기 = 새 구역 (예전엔 고치기 중 사진을 끌면 늘 구역이 생겨 스크롤하다 실수로 만들어졌다)
+            if (data.drawArmed) { isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data); return; }
             const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
             pressedSelectedZone = !!clickedZone && clickedZone === activeZone && activeData === data; // 이미 고른 구역을 다시 누른 건지 (손 뗄 때 물건 창을 열지 정함)
-            if (clickedZone) { activeZone = clickedZone; activeData = data; isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
-
-            isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data);
+            // 옮기기는 고른 구역에서만. 그 밖의 끌기는 화면 스크롤 (누르기만 하면 손 뗄 때 구역을 고른다)
+            if (pressedSelectedZone) { isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
+            const fs = fsPhoto && fsPhoto.data === data;
+            cancelAnimationFrame(editScrollFling);
+            editScroll = { fs, wrap: data.zoomWrap, x: e.clientX, y: e.clientY, sx: fs ? data.zoomWrap.scrollLeft : 0, sy: fs ? data.zoomWrap.scrollTop : window.scrollY, ly: e.clientY, lx: e.clientX, t: performance.now(), vx: 0, vy: 0 };
+            pendingHistoryState = null;
         });
 
         canvas.addEventListener('pointermove', (e) => {
@@ -2888,6 +2905,13 @@
             if (Math.abs(e.clientX - startClientPos.x) > 6 || Math.abs(e.clientY - startClientPos.y) > 6) hasDragged = true; // 화면 기준 6px 넘게 움직이면 끌기
             if (e.pointerType === 'mouse' && !isDrawingNewZone && !holdingItem && !isMovingZone && !isResizingZone) canvas.style.cursor = hoverCursor(data, canvas, x, y);
 
+            if (editScroll) {
+                const dx = e.clientX - editScroll.x, dy = e.clientY - editScroll.y, now = performance.now(), dt = Math.max(1, now - editScroll.t);
+                if (editScroll.fs) { editScroll.wrap.scrollLeft = editScroll.sx - dx; editScroll.wrap.scrollTop = editScroll.sy - dy; }
+                else window.scrollTo(0, editScroll.sy - dy);
+                editScroll.vx = (e.clientX - editScroll.lx) / dt; editScroll.vy = (e.clientY - editScroll.ly) / dt; editScroll.t = now; editScroll.lx = e.clientX; editScroll.ly = e.clientY;
+                return;
+            }
             if (isDrawingNewZone) { currentDrawPos = { x, y }; render(data); }
             else if (holdingItem) { mousePos = { x, y }; render(data); }
             else if (isEditMode && isMovingZone && activeZone) { activeZone.x = x - zoneDragOffset.x; activeZone.y = y - zoneDragOffset.y; render(data); }
@@ -2900,12 +2924,23 @@
         });
 
         canvas.addEventListener('pointercancel', () => {
+            editScroll = null;
             if (isEditMode && (isMovingZone || isResizingZone) && pendingHistoryState) { saveHistory(pendingHistoryState); if (data.id !== "dummy_root") saveData(); }
             isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; render(data);
         });
         canvas.addEventListener('pointerup', (e) => {
             try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            // 고치기 중 스크롤: 손을 뗀 속도만큼 조금 더 미끄러지게 (휴대폰 스크롤처럼)
+            if (editScroll) {
+                const es = editScroll; editScroll = null;
+                if (Math.hypot(es.vx, es.vy) > 0.2 && hasDragged) {
+                    let last = performance.now(), vx = es.vx, vy = es.vy;
+                    const step = (now) => { const dt = now - last; last = now; if (es.fs) { es.wrap.scrollLeft -= vx * dt; es.wrap.scrollTop -= vy * dt; } else window.scrollBy(0, -vy * dt); vx *= Math.pow(0.95, dt / 16); vy *= Math.pow(0.95, dt / 16); if (Math.hypot(vx, vy) > 0.02) editScrollFling = requestAnimationFrame(step); };
+                    editScrollFling = requestAnimationFrame(step);
+                }
+            }
 
             if (isDrawingNewZone) {
                 isDrawingNewZone = false; const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
@@ -2923,6 +2958,7 @@
 
                     let newZone = { x: x1, y: y1, w, h, name: newName, items: [], checkedAt: Date.now() };
                     data.zones.push(newZone); activeZone = newZone;
+                    data.drawArmed = false; data.manualPicked = false; syncFirstZone(data); // 한 구역을 그리면 그리기 도구는 꺼진다
                     if (data.id !== "dummy_root") saveData(); render(data); openModal(newZone);
                 } else { render(data); }
                 return;
@@ -3112,12 +3148,12 @@
         wrap.addEventListener('pointerdown', (e) => {
             if (e.pointerType !== 'touch') return;
             touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-            if (touches.size === 1 && isFs() && !isEditMode) startPan(e.pointerId, e.clientX, e.clientY, false); // 편집 중엔 한 손가락이 칸 그리기
+            if (touches.size === 1 && isFs() && !isEditMode) startPan(e.pointerId, e.clientX, e.clientY, false); // 편집 중엔 캔버스가 직접 처리 (그리기·옮기기·스크롤)
             if (touches.size === 2) {
                 pan = null;
                 gesture = true;
                 if (pendingHistoryState && (isMovingZone || isResizingZone)) saveHistory(pendingHistoryState);
-                isDrawingNewZone = false; isMovingZone = false; isResizingZone = false; pendingHistoryState = null; hasDragged = true;
+                isDrawingNewZone = false; isMovingZone = false; isResizingZone = false; pendingHistoryState = null; hasDragged = true; editScroll = null;
                 if (holdingItem) { holdingItem.sourceZone.items.push(holdingItem.item); holdingItem = null; }
                 const p = pair(), rect = wrap.getBoundingClientRect(), z0 = data.zoom || 1, mt = parseFloat(data.noteStage.style.marginTop) || 0;
                 pinch = { d0: p.d || 1, z0, cx: (wrap.scrollLeft + p.x - rect.left) / z0, cy: (wrap.scrollTop + p.y - rect.top - mt) / z0 };
@@ -3342,6 +3378,13 @@
         }
     }
 
+    // 구역 그리기 도구 켜기/끄기 (한 번에 한 사진만, 한 구역을 그리면 저절로 꺼진다)
+    function setDrawArmed(data, on) {
+        imageList.forEach(d => { if (d !== data && d.drawArmed) { d.drawArmed = false; syncFirstZone(d); } });
+        data.drawArmed = !!on && isEditMode;
+        if (data.drawArmed) { activeData = data; activeZone = null; }
+        syncFirstZone(data); render(data);
+    }
     function syncFirstZone(data) {
         const fz = data && data.firstZone; if (!fz) return;
         const empty = data.id !== 'dummy_root' && !data.zones.length;
@@ -3350,7 +3393,17 @@
         // ([직접 그리기]를 고른 사진은 띠에 AI 버튼도 빼서 그 일만 안내)
         fz.hidden = !empty || isEditMode;
         const strip = data.drawStrip;
-        if (strip) { strip.hidden = !(empty && isEditMode); strip.querySelector('.draw-strip-ai').hidden = !!data.manualPicked; }
+        if (strip) {
+            strip.hidden = !(empty && isEditMode);
+            strip.querySelector('.draw-strip-ai').hidden = !!data.manualPicked || !!data.drawArmed;
+            strip.querySelector('.draw-strip-text').textContent = data.drawArmed ? '사진 위를 끌어서 구역을 그려요' : '왼쪽 아래 [구역 그리기]를 누르고 사진 위를 끌어요';
+        }
+        if (!isEditMode && data.drawArmed) data.drawArmed = false;
+        if (data.drawTool) {
+            data.drawTool.classList.toggle('is-on', !!data.drawArmed);
+            data.drawTool.innerHTML = data.drawArmed ? '<i class="ti ti-x"></i> 그리는 중 · 취소' : '<i class="ti ti-plus"></i> 구역 그리기';
+        }
+        if (data.zoomBox) data.zoomBox.classList.toggle('draw-armed', !!data.drawArmed);
     }
 
     function render(data, bounce = 0) {
