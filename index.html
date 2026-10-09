@@ -625,11 +625,8 @@
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
         #aiConsent, #dataInfo { z-index: 10001; max-width: 420px; }
+        #dataInfo { z-index: 10003; } #dataInfoBackdrop { z-index: 10002 !important; } /* 동의창의 [자세히]에서 열면 그 위에 */
         #aiConsentBackdrop, #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
-        .info-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text2); line-height: 1.55; }
-        .info-rows li { display: flex; gap: 10px; }
-        .info-rows li > b { flex: none; width: 5.5em; color: var(--text); }
-        .info-rows li.is-no > span { color: var(--text3); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
         .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--border); }
         .data-table th { color: var(--text); font-weight: 700; white-space: nowrap; }
@@ -1357,18 +1354,8 @@
 
 <div id="aiConsentBackdrop" onclick="answerAIConsent(null)"></div>
 <div id="aiConsent" role="dialog" aria-modal="true" aria-label="AI로 구역 찾기 안내" style="line-height: 1.6;">
-    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 6px; font-size: 1.2em;">AI로 구역을 찾으려면<br>사진을 보내야 해요</h2>
-    <p style="text-align: center; font-size: 12.5px; color: var(--text3); margin-bottom: 14px; word-break: keep-all;">처음 한 번만 물어봐요 · 설정에서 다시 바꿀 수 있어요</p>
-    <div style="background: var(--bg); border: 1px solid var(--border); padding: 14px 16px; border-radius: 8px; margin-bottom: 12px;">
-        <ul class="info-rows">
-            <li><b>어디로</b><span>Roboflow (미국의 이미지 분석 회사)</span></li>
-            <li><b>무엇을</b><span>지금 이 사진 1장 (작게 줄인 사본)</span></li>
-            <li class="is-no"><b>안 보내요</b><span>구역, 물건 이름, 메모, 다른 사진</span></li>
-            <li><b>왜</b><span>선반 칸을 자동으로 찾기 위해서</span></li>
-            <li><b>보관</b><span>분석에만 쓰고 저장하지 않도록 설정해 두었어요</span></li>
-        </ul>
-    </div>
-    <p style="font-size: 12.5px; color: var(--text2); margin-bottom: 14px; word-break: keep-all;"><i class="ti ti-alert-circle" style="color: var(--accent2);"></i> 사람 얼굴, 택배 송장, 서류가 찍혔다면 <b>[직접 그릴게요]</b>를 써 주세요.</p>
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 10px; font-size: 1.2em;">AI로 칸을 찾으려면<br>이 사진을 보내요</h2>
+    <p style="font-size: 13.5px; color: var(--text2); margin-bottom: 16px; word-break: keep-all; text-align: center;">사진 1장만 Roboflow(미국) 분석 서버로 보내요. 저장하지 않도록 설정해 두었고, 구역·물건 정보는 보내지 않아요. <button type="button" class="trust-link" style="color: var(--accent-text);" onclick="openDataInfo()">자세히</button></p>
     <div style="display: flex; gap: 8px;">
         <button type="button" onclick="answerAIConsent('manual')" class="btn-base btn-secondary" style="flex: 1;">직접 그릴게요</button>
         <button type="button" onclick="answerAIConsent('send')" class="btn-base btn-primary" style="flex: 1.3;"><i class="ti ti-sparkles" style="margin-right: 4px;"></i> 보내고 찾기</button>
@@ -1424,7 +1411,7 @@
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">사진은 이렇게 찍어주세요</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
-            <li><i class="ti ti-camera"></i><div><b>랙·선반 한 면씩, 가까이서</b><span>칸이 하나씩 구분돼 보이는 거리에서 정면으로 찍어요. 창고 전체를 멀리서 한 장 찍으면 칸이 너무 작아져서 구역을 나누기 어려워요.</span></div></li>
+            <li><i class="ti ti-camera"></i><div><b>랙·선반 한 면씩, 가까이서</b><span>칸이 하나씩 구분돼 보이는 거리에서 정면으로 찍어요. 창고 전체를 멀리서 한 장 찍으면 칸이 너무 작아져서 구역을 나누기 어려워요.</span><small>사람 얼굴, 택배 송장, 서류는 찍히지 않게 해 주세요.</small></div></li>
             <li><i class="ti ti-photo-plus"></i><div><b>큰 창고는 여러 장으로</b><span>랙마다 한 장씩 올리면 돼요. 사진은 계속 추가할 수 있어요.</span></div></li>
             <li><i class="ti ti-pencil"></i><div><b>사진 이름을 붙여 두세요</b><span>사진 위 <b>[⋯]</b> 메뉴의 <b>[사진 이름 바꾸기]</b>에서 "1번 랙", "냉동 창고"처럼 적어 두면 어느 사진인지 바로 알아봐요.</span></div></li>
         </ol>
