@@ -615,13 +615,16 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
             z-index: 9999; overflow-y: auto; box-sizing: border-box;
         }
         #settingsModal { z-index: 1020; max-width: 420px; }
+        /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
+        #editIntro { z-index: 10001; max-width: 420px; }
+        #editIntroBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         /* 🖨 인쇄물 미리보기: 벽에 붙일 A4 지도를 그대로 보여준다 */
         #printModal { z-index: 1090; max-width: 520px; padding: 20px; }
         #printBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 1085; }
@@ -1330,6 +1333,32 @@
         try { localStorage.setItem('guideSeen', '1'); } catch (e) {}
     }
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
+</script>
+
+<div id="editIntroBackdrop" onclick="closeEditIntro()"></div>
+<div id="editIntro" role="dialog" aria-modal="true" aria-label="구역 고치기 사용법" style="line-height: 1.6;">
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">구역 고치기, 이렇게 해요</h2>
+    <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <ol class="guide-steps">
+            <li><i class="ti ti-hand-move"></i><div><b>끌어서 구역 만들기·옮기기</b><span>사진 위를 손가락으로 끌면 새 구역이 그려져요. 이미 있는 구역은 끌어서 옮기고, 모서리를 끌어서 크기를 바꿔요. 구역을 누르면 물건을 적을 수 있어요.</span></div></li>
+            <li><i class="ti ti-arrows-move"></i><div><b>물건을 다른 구역으로 옮기기</b><span>사진 위 구역의 말풍선에서 <b>물건 이름을 꾹 누른 채 다른 구역으로 끌어다 놓으세요.</b> 구역 밖에 놓으면 삭제할지 물어봐요. 말풍선이 안 보이면 오른쪽 아래 <i class="ti ti-message-circle"></i> 버튼을 눌러 켜세요.</span><small>사진 아래 구역 목록에서 물건 이름을 눌러 구역을 고르는 방법도 있어요.</small></div></li>
+            <li><i class="ti ti-check"></i><div><b>다 고쳤으면 [완료]</b><span>위쪽 띠의 노란 <b>[완료]</b> 버튼을 누르면 끝나요.</span></div></li>
+        </ol>
+    </div>
+    <button onclick="closeEditIntro();" class="btn-base btn-primary" style="width: 100%;">알겠어요</button>
+</div>
+<script>
+    // 구역 고치기를 처음 누르면 한 번만 보여 주는 안내 (사용법 모달과 별개: 끌기·물건 옮기기만 짧게)
+    function maybeShowEditIntro() {
+        try { if (localStorage.getItem('editIntroSeen')) return; } catch (e) {}
+        document.getElementById('editIntroBackdrop').style.display = 'block';
+        document.getElementById('editIntro').style.setProperty('display', 'block', 'important');
+    }
+    function closeEditIntro() {
+        document.getElementById('editIntroBackdrop').style.display = 'none';
+        document.getElementById('editIntro').style.display = 'none';
+        try { localStorage.setItem('editIntroSeen', '1'); } catch (e) {}
+    }
 </script>
 
 <div class="search-bar">
@@ -2316,7 +2345,7 @@
         document.getElementById('editBar').hidden = !isEditMode;
         if (isEditMode) document.documentElement.style.setProperty('--edit-bar-h', document.getElementById('editBar').offsetHeight + 'px'); // 크게 보기 중이면 띠 아래로 사진을 내린다
         document.body.classList.toggle('editing', isEditMode);
-        if (isEditMode) navPush('edit');
+        if (isEditMode) { navPush('edit'); maybeShowEditIntro(); }
         else if (fromHistory !== true) navClose('edit');
         // 편집을 끝내면 고르던 칸 선택을 푼다 (남겨두면 보기 화면에서 그 칸만 밝고 나머지 쪽지가 어둡게 가려졌다)
         if (!isEditMode) { activeZone = null; showSearchArrow = false; }
