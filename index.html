@@ -4105,6 +4105,9 @@
 
     function deactivateHeroSearch() {
         document.body.classList.remove('hero-search-active', 'hero-search-focused');
+        // 검색 카드를 내리면 결과 창도 같이 닫는다 ([창고 지도 보기]는 검색 카드 안 버튼이라 바깥 누르기로 닫히지 않아 결과 창이 남았다)
+        const display = document.getElementById('searchResultDisplay'); if (display) display.style.display = 'none';
+        const box = document.getElementById('searchBox'); if (box && document.activeElement === box) box.blur();
     }
 
     let resizeRenderTimer = null;
