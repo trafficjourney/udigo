@@ -637,14 +637,17 @@
         #settingsModal { z-index: 1020; max-width: 420px; }
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
-        #dataInfo { z-index: 10001; max-width: 420px; }
+        #dataInfo { z-index: 10001; max-width: 460px; }
+        @media (max-width: 600px) { #dataInfo { width: calc(100% - 24px); padding: 20px 16px; } }
         #pendingAdd, #backupChoice { z-index: 10001; max-width: 360px; }
         #backupChoiceBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #pendingAddBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
-        .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--border); }
-        .data-table th { color: var(--text); font-weight: 700; white-space: nowrap; }
+        /* 두 칸(어디 | 무엇·언제)으로: 세 칸이면 폰에서 글자가 단어 중간에서 끊겼다 */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text2); line-height: 1.5; word-break: keep-all; overflow-wrap: break-word; }
+        .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 10px 6px; border-bottom: 1px solid var(--border); }
+        .data-table th { color: var(--text); font-weight: 700; white-space: nowrap; padding-right: 12px; }
+        .data-table td small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--text3); }
         .trust-link { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; white-space: nowrap; }
         .trust-link .ti { font-size: 15px; color: var(--accent2); }
         #photoTipBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
@@ -1390,9 +1393,9 @@
 <div id="dataInfo" role="dialog" aria-modal="true" aria-label="내 데이터는 어디에" style="line-height: 1.6;">
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 14px; font-size: 1.2em;">내 데이터는 어디에 있나요?</h2>
     <table class="data-table">
-        <tr><th>이 폰</th><td>사진, 구역, 물건, 메모 전부</td><td>항상</td></tr>
-        <tr><th>Roboflow<br><small style="font-weight: 400; color: var(--text3);">미국</small></th><td>사진 1장 (Google 중계 서버를 거쳐 전달, 어디에도 저장하지 않도록 설정)</td><td>[AI로 구역 찾기]를 누를 때만</td></tr>
-        <tr><th>Google 폼</th><td>직접 적은 의견</td><td>[의견 보내기]를 쓸 때만</td></tr>
+        <tr><th>이 폰</th><td>사진, 구역, 물건, 메모 전부<small>항상</small></td></tr>
+        <tr><th>Roboflow<br><small style="font-weight: 400; color: var(--text3);">미국</small></th><td>사진 1장 (저장하지 않도록 설정)<small>[AI로 구역 찾기]를 누를 때만 · Google 중계 서버를 거쳐 전달</small></td></tr>
+        <tr><th>Google 폼</th><td>직접 적은 의견<small>[의견 보내기]를 쓸 때만</small></td></tr>
     </table>
     <p style="font-size: 12.5px; color: var(--text3); margin: 10px 0 14px; word-break: keep-all;">회원가입이 없어서 우리 서버에는 아무것도 저장하지 않아요. 폰을 바꾸기 전에는 설정에서 백업 파일을 받아 두세요.</p>
     <button type="button" class="btn-base btn-primary" style="width: 100%;" onclick="closeDataInfo()">닫기</button>
