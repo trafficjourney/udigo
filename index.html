@@ -500,12 +500,18 @@
         .first-zone-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 50px; padding: 0 22px; border: 0; border-radius: 25px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 16px; font-weight: 800; box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: pointer; }
         .first-zone-btn.first-zone-manual { min-height: 42px; background: rgba(255,255,255,0.94); color: var(--text); font-size: 14px; font-weight: 700; }
         .first-zone-note { align-self: center; margin: -2px 0 2px; padding: 3px 10px; border: 0; border-radius: 12px; background: rgba(0,0,0,0.55); color: #fff; font: inherit; font-size: 12px; line-height: 1.5; cursor: pointer; }
+        /* AI와 직접 그리기 사이 구분선: ──── 또는 ──── */
+        .first-zone-or { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+        .first-zone-or::before, .first-zone-or::after { content: ''; flex: 1; height: 1.5px; background: rgba(255,255,255,0.85); box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
         .first-zone-btn:disabled { opacity: 0.8; cursor: default; }
         .first-zone-btn .ti { font-size: 20px; }
         .first-zone-hint { display: none; position: relative; flex-direction: column; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,0.62); color: #fff; text-align: center; font-size: 15px; line-height: 1.4; }
         /* 구역 고치는 중에 사진을 추가해도 AI 버튼은 남긴다 (예전엔 끌기 안내만 떠서 새로고침해야 AI 버튼이 보였다). 직접 그리기는 이미 고치는 중이라 숨김 */
         .first-zone.is-edit .first-zone-manual { display: none; }
         .first-zone.is-edit .first-zone-hint { display: flex; }
+        /* 고치는 중엔 AI 버튼·구분선 아래에 붙으므로 작게 (움직이는 그림은 빼서 사진 높이 안에 들어오게) */
+        .first-zone.is-edit .first-zone-hint { padding: 6px 14px; font-size: 13px; border-radius: 12px; }
+        .first-zone.is-edit .first-zone-demo { display: none; }
         .first-zone-demo { position: relative; width: 84px; height: 52px; }
         .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
         .first-zone-demo::after { content: ''; position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(255,210,0,0.85); border: 2px solid #fff; animation: fz-finger 2s ease-in-out infinite; }
@@ -2757,7 +2763,7 @@
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
         // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
-        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>또는 사진 위를 손가락으로<br>끌어서 직접 그려요</b></div>`;
+        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>직접 그려요</b></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
         firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
