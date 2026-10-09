@@ -493,7 +493,7 @@
         .zoom-stage { position: relative; width: 100%; }
         .zoom-stage canvas { width: 100%; height: auto; max-width: none; margin: 0; }
         .note-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        /* 구역이 없는 사진: 가운데 [+ 첫 구역 만들기] → 고치는 중이면 "끌어서 그려요" 안내 (손가락 입력은 아래 캔버스가 받는다) */
+        /* 구역이 없는 사진 (보기 모드): 가운데에서 [AI로 구역 찾기] / 또는 / [직접 그리기] 고르기. 고치는 중엔 숨기고 사진 위쪽 띠(.draw-strip)로 안내 */
         .first-zone { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; }
         .first-zone[hidden] { display: none; }
         .first-zone-pick { display: flex; flex-direction: column; align-items: stretch; gap: 8px; pointer-events: auto; }
@@ -505,29 +505,20 @@
         .first-zone-or::before, .first-zone-or::after { content: ''; flex: 1; height: 1.5px; background: rgba(255,255,255,0.85); box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
         .first-zone-btn:disabled { opacity: 0.8; cursor: default; }
         .first-zone-btn .ti { font-size: 20px; }
-        .first-zone-hint { display: none; position: relative; flex-direction: column; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,0.62); color: #fff; text-align: center; font-size: 15px; line-height: 1.4; }
-        /* 구역 고치는 중에 사진을 추가해도 AI 버튼은 남긴다 (예전엔 끌기 안내만 떠서 새로고침해야 AI 버튼이 보였다). 직접 그리기는 이미 고치는 중이라 숨김 */
-        .first-zone.is-edit .first-zone-manual { display: none; }
-        .first-zone.is-edit .first-zone-hint { display: flex; }
-        /* 고치는 중엔 AI 버튼·구분선 아래에 붙으므로 작게 (움직이는 그림은 빼서 사진 높이 안에 들어오게) */
-        .first-zone.is-edit .first-zone-hint { flex-direction: row; gap: 10px; padding: 7px 14px 7px 10px; font-size: 13px; border-radius: 12px; text-align: left; }
-        /* 손가락 그림은 작게 줄여 글자 왼쪽에 (세로로 쌓으면 사진 높이를 넘는다) */
-        .first-zone.is-edit .first-zone-demo { flex: none; width: 44px; height: 28px; }
-        .first-zone.is-edit .first-zone-demo::before { border-width: 2px; animation-name: fz-draw-s; }
-        .first-zone.is-edit .first-zone-demo::after { width: 14px; height: 14px; margin: -7px 0 0 -7px; animation-name: fz-finger-s; }
-        @keyframes fz-draw-s { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 44px; height: 28px; opacity: 1; } 100% { width: 44px; height: 28px; opacity: 0; } }
-        @keyframes fz-finger-s { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 44px; top: 28px; opacity: 1; } 100% { left: 44px; top: 28px; opacity: 0; } }
-        @media (prefers-reduced-motion: reduce) { .first-zone.is-edit .first-zone-demo::before { width: 44px; height: 28px; } .first-zone.is-edit .first-zone-demo::after { left: 44px; top: 28px; } }
-        /* 사진 위를 끌기 시작하면 안내 전체를 감춰 그리는 자리가 보이게 (구역이 안 생기면 다시 보임) */
-        .first-zone { transition: opacity 0.15s; }
-        .first-zone.is-drawing { opacity: 0; }
-        .first-zone.is-drawing .first-zone-pick { pointer-events: none; }
-        .first-zone-demo { position: relative; width: 84px; height: 52px; }
-        .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
-        .first-zone-demo::after { content: ''; position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(255,210,0,0.85); border: 2px solid #fff; animation: fz-finger 2s ease-in-out infinite; }
-        @keyframes fz-draw { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 84px; height: 52px; opacity: 1; } 100% { width: 84px; height: 52px; opacity: 0; } }
-        @keyframes fz-finger { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 84px; top: 52px; opacity: 1; } 100% { left: 84px; top: 52px; opacity: 0; } }
-        @media (prefers-reduced-motion: reduce) { .first-zone-demo::before { animation: none; width: 84px; height: 52px; } .first-zone-demo::after { animation: none; left: 84px; top: 52px; } }
+        /* 고치는 중인 빈 사진: 안내는 사진 위가 아니라 사진 바로 위의 얇은 띠로 (사진 가운데를 덮으면 그릴 자리가 안 보였다) */
+        .draw-strip { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 8px 10px 8px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); font-size: 13.5px; font-weight: 700; line-height: 1.35; }
+        .draw-strip[hidden] { display: none; }
+        .draw-strip-text { flex: 1; min-width: 0; word-break: keep-all; }
+        .draw-strip-ai { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .draw-strip-ai[hidden] { display: none; }
+        .draw-strip-ai:disabled { opacity: 0.8; cursor: default; }
+        /* 손가락으로 끄는 작은 그림 */
+        .draw-demo { position: relative; flex: none; width: 34px; height: 22px; }
+        .draw-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2px dashed currentColor; border-radius: 3px; animation: dd-draw 2s ease-in-out infinite; }
+        .draw-demo::after { content: ''; position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #ffd200; border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); animation: dd-finger 2s ease-in-out infinite; }
+        @keyframes dd-draw { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 34px; height: 22px; opacity: 1; } 100% { width: 34px; height: 22px; opacity: 0; } }
+        @keyframes dd-finger { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 34px; top: 22px; opacity: 1; } 100% { left: 34px; top: 22px; opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .draw-demo::before { animation: none; width: 34px; height: 22px; } .draw-demo::after { animation: none; left: 34px; top: 22px; } }
         .zone-note-slot { position: absolute; display: flex; align-items: flex-start; padding: var(--slot-pad, 5px) 3px 2px var(--slot-pad, 5px); transition: opacity 0.2s; }
         .zone-note-slot.is-tiny { align-items: center; padding-top: 0; padding-bottom: 0; }
         .zone-note { position: relative; max-width: 100%; min-width: 0; padding: 3px 6px 3px var(--note-padl, 6px); background: #fff3a3; color: #2b2716; font-weight: 600; font-size: var(--note-fs, 12.5px); line-height: var(--note-lh, 17px); border-radius: 2px 2px 7px 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.14); transition: opacity 0.2s; }
@@ -2218,10 +2209,11 @@
         document.getElementById('editOverlay').style.display = 'block';
         document.getElementById('aiLoadingMsg').style.display = 'block';
 
-        const aiBtn = document.getElementById(`aiBtn-${dataId}`), fzAi = data.firstZone && data.firstZone.querySelector('.first-zone-ai');
+        const aiBtn = document.getElementById(`aiBtn-${dataId}`), fzAi = data.firstZone && data.firstZone.querySelector('.first-zone-ai'), stripAi = data.drawStrip && data.drawStrip.querySelector('.draw-strip-ai');
         const busy = '<i class="ti ti-loader-2" style="animation: spin 0.8s linear infinite;"></i> 찾는 중...';
         if (aiBtn) { aiBtn.innerHTML = busy; aiBtn.disabled = true; }
         if (fzAi) { fzAi.innerHTML = busy; fzAi.disabled = true; }
+        if (stripAi) { stripAi.innerHTML = busy; stripAi.disabled = true; }
         let found = -1;
 
         try {
@@ -2276,6 +2268,7 @@
             document.getElementById('aiLoadingMsg').style.display = 'none';
             if (aiBtn) { aiBtn.innerHTML = '<i class="ti ti-sparkles"></i> AI 분석'; aiBtn.disabled = false; }
             if (fzAi) { fzAi.innerHTML = '<i class="ti ti-sparkles"></i> AI로 구역 찾기'; fzAi.disabled = false; }
+            if (stripAi) { stripAi.innerHTML = '<i class="ti ti-sparkles"></i> AI로 찾기'; stripAi.disabled = false; }
             // 찾았든 못 찾았든 바로 손볼 수 있게 구역 고치기로 들어간다
             if (found >= 0) {
                 activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data);
@@ -2762,7 +2755,8 @@
                 </div>
             </div>
             <button type="button" id="title-hint-${data.id}" class="title-hint" onclick="renameImage('${data.id}')" ${/^#\d+$/.test(data.title) ? '' : 'hidden'}><i class="ti ti-pencil"></i> 이름을 붙여 두세요 (예: 창고 A, 냉장고 안)</button>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin-top: 8px;">`;
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-top: 8px;">
+            <div id="draw-strip-${data.id}" class="draw-strip" hidden><span class="draw-demo" aria-hidden="true"></span><span class="draw-strip-text">사진 위를 끌어서 구역을 그려요</span><button type="button" class="draw-strip-ai"><i class="ti ti-sparkles"></i> AI로 찾기</button></div>`;
 
         const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = (data.img && data.img.width) ? (data.img.height * (800 / data.img.width)) : 450;
         const ctx = canvas.getContext('2d'); data.canvas = canvas; data.ctx = ctx;
@@ -2791,14 +2785,16 @@
         const fsBar = document.createElement('div'); fsBar.className = 'fs-bar';
         fsBar.innerHTML = `<div class="fs-text"><b class="fs-title"></b><span>두 손가락으로 벌리면 더 크게 · 구역을 누르면 물건 목록</span><span class="fs-rotate"><i class="ti ti-device-mobile-rotated"></i> 폰을 가로로 돌리면 사진이 더 크게 보여요</span></div><button type="button" class="fs-close" aria-label="크게 보기 닫기"><i class="ti ti-x"></i></button>`;
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
-        // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
+        // 구역이 하나도 없는 사진: 보기 모드엔 가운데 고르기 화면, 고치는 중엔 사진 위쪽 띠(syncFirstZone)
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
-        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 끌어서<br>직접 그려요</b></div>`;
+        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
-        firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
+        firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; data.manualPicked = true; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
         stage.append(canvas, noteLayer, firstZone); zoomWrap.appendChild(stage); zoomBox.append(fsBar, zoomWrap, zoomCtl);
         data.firstZone = firstZone;
+        data.drawStrip = headerContainer.querySelector('.draw-strip');
+        data.drawStrip.querySelector('.draw-strip-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
         data.zoomBox = zoomBox; data.zoomWrap = zoomWrap; data.noteStage = stage; data.noteLayer = noteLayer; data.zoom = 1;
         canvas.style.touchAction = isEditMode ? 'none' : 'pan-x pan-y';
         section.appendChild(headerContainer); section.appendChild(zoomBox); section.appendChild(listWrapper);
@@ -2881,7 +2877,6 @@
             if (clickedZone) { activeZone = clickedZone; activeData = data; isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
 
             isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data);
-            if (data.firstZone) data.firstZone.classList.add('is-drawing');
         });
 
         canvas.addEventListener('pointermove', (e) => {
@@ -2902,14 +2897,14 @@
 
         canvas.addEventListener('pointercancel', () => {
             if (isEditMode && (isMovingZone || isResizingZone) && pendingHistoryState) { saveHistory(pendingHistoryState); if (data.id !== "dummy_root") saveData(); }
-            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; if (data.firstZone) data.firstZone.classList.remove('is-drawing'); render(data);
+            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; render(data);
         });
         canvas.addEventListener('pointerup', (e) => {
             try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
             if (isDrawingNewZone) {
-                isDrawingNewZone = false; if (data.firstZone) data.firstZone.classList.remove('is-drawing'); const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
+                isDrawingNewZone = false; const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
                 if (w > 25 && h > 25) {
                     if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; }
 
@@ -3346,7 +3341,12 @@
     function syncFirstZone(data) {
         const fz = data && data.firstZone; if (!fz) return;
         const empty = data.id !== 'dummy_root' && !data.zones.length;
-        fz.hidden = !empty; fz.classList.toggle('is-edit', empty && isEditMode);
+        if (!isEditMode) data.manualPicked = false; // 고치기를 끝내면 다시 AI/직접 그리기 중에 고르게
+        // 보기 모드: 사진 가운데에서 AI/직접 그리기 고르기. 고치는 중: 사진은 비워 두고 사진 위쪽 띠로 안내
+        // ([직접 그리기]를 고른 사진은 띠에 AI 버튼도 빼서 그 일만 안내)
+        fz.hidden = !empty || isEditMode;
+        const strip = data.drawStrip;
+        if (strip) { strip.hidden = !(empty && isEditMode); strip.querySelector('.draw-strip-ai').hidden = !!data.manualPicked; }
     }
 
     function render(data, bounce = 0) {
