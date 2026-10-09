@@ -810,7 +810,8 @@
             display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; width: 100%;
             background: var(--card); border: 0; border-top: 1px solid var(--border); font: inherit; font-size: 14px; color: var(--text); text-align: left; cursor: pointer;
         }
-        .settings-row:first-child, .settings-row[hidden] + .settings-row { border-top: 0; }
+        .settings-row:first-child, .settings-row[hidden]:first-child + .settings-row { border-top: 0; } /* 맨 위 줄만 선 없음 (가운데 줄이 숨겨져도 그 아래 선은 남긴다) */
+        .settings-footer { margin: 14px 0 0; text-align: center; font-size: 12px; color: var(--text3); line-height: 1.7; word-break: keep-all; }
         .settings-row[hidden] { display: none; }
         .settings-row i { font-size: 18px; color: var(--text2); }
         @media (hover: hover) { .settings-row:hover { background: var(--bg); } }
@@ -1787,8 +1788,11 @@
         <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
         <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
+        <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
+        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> 창고지기 알려주기 (링크 공유)</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
     </div>
+    <p id="settingsFooter" class="settings-footer"></p>
     <input type="file" id="backupFileInput" style="display:none" onchange="importSystemData(this)">
 </div>
 
@@ -2588,6 +2592,7 @@
         document.getElementById('installAppRow').hidden = isInstalledApp();
         syncLastBackupText();
         document.getElementById('shareBackupRow').hidden = !canShareBackup();
+        syncSettingsFooter();
         document.getElementById('settingsModal').style.display = 'block';
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -3884,6 +3889,31 @@
     }
     // 백업 파일: version·exportedAt은 나중에 서버 저장으로 옮길 때 옛 파일을 구분해 읽기 위한 표시 (없는 옛 파일은 version 0으로 본다)
     const BACKUP_VERSION = 1;
+    // 🔗 앱 알려주기: 카톡·문자 등으로 창고지기 주소를 보낸다 (공유 창이 없는 PC에서는 주소 복사)
+    const APP_URL = 'https://trafficjourney.github.io/udigo/';
+    async function shareApp() {
+        const text = '사진 한 장이 창고 지도가 돼요. 물건 이름만 대면 어느 칸인지 나와요. (무료 · 가입 없음)';
+        if (navigator.share) {
+            try { await navigator.share({ title: '창고지기', text, url: APP_URL }); return; }
+            catch (err) { if (err && err.name === 'AbortError') return; }
+        }
+        try { await navigator.clipboard.writeText(`${text}\n${APP_URL}`); showToast('주소를 복사했어요. 카톡이나 문자에 붙여 넣으세요', 3500); }
+        catch (e) { prompt('아래 주소를 복사해 보내 주세요', APP_URL); }
+    }
+    // ⚙ 설정 맨 아래: 버전 + 내 데이터 요약 (백업이 필요한 양인지, 폰 저장 공간을 얼마나 쓰는지)
+    // 버전은 배포할 때 올린다 (YYYY.MM.DD, 같은 날 여러 번이면 뒤에 .2)
+    const APP_VERSION = '베타 2026.10.09';
+    async function syncSettingsFooter() {
+        const el = document.getElementById('settingsFooter'); if (!el) return;
+        const photos = imageList.filter(d => d.id !== 'dummy_root'), zones = photos.reduce((n, d) => n + d.zones.length, 0), items = photos.reduce((n, d) => n + d.zones.reduce((m, z) => m + z.items.length, 0), 0);
+        const sample = isSamplePreview || safeStorage.getItem('isSampleData') === '1';
+        let line = photos.length ? `${sample ? '예시 ' : ''}사진 ${photos.length}장 · 구역 ${zones}개 · 물건 ${items}개` : '아직 올린 사진이 없어요';
+        el.innerHTML = `${escapeHtml(line)}<br>창고지기 ${escapeHtml(APP_VERSION)}`;
+        try {
+            const est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
+            if (est && est.usage != null && photos.length) { line += ` · 저장 공간 ${(est.usage / 1048576).toFixed(1)}MB`; el.innerHTML = `${escapeHtml(line)}<br>창고지기 ${escapeHtml(APP_VERSION)}`; }
+        } catch (e) {}
+    }
     function backupJson() {
         return JSON.stringify({ app: 'changgojigi', version: BACKUP_VERSION, exportedAt: new Date().toISOString(), note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") });
     }
