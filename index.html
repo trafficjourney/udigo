@@ -2833,7 +2833,7 @@
                 const targetZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
                 if (targetZone) {
                     if (targetZone === holdingItem.sourceZone) { holdingItem.sourceZone.items.push(holdingItem.item); }
-                    else if (!targetZone.items.some(i => i.name === holdingItem.item.name)) { targetZone.items.push(holdingItem.item); markZoneChecked(targetZone); markZoneChecked(holdingItem.sourceZone); }
+                    else if (!targetZone.items.some(i => i.name === holdingItem.item.name)) { targetZone.items.push(holdingItem.item); markZoneChecked(targetZone); markZoneChecked(holdingItem.sourceZone); if ((holdingItem.item.comment || '').trim()) showToast('메모도 같이 옮겼어요. 새 위치에 맞는지 확인해 주세요', 4000); }
                     else { holdingItem.sourceZone.items.push(holdingItem.item); alert("이미 존재하는 품목입니다."); }
                 } else { if (!confirm(`'${holdingItem.item.name}' 품목을 삭제하시겠습니까?`)) holdingItem.sourceZone.items.push(holdingItem.item); }
                 holdingItem = null; render(data); if (data.id !== "dummy_root") saveData(); isMovingZone = false; isResizingZone = false; pendingHistoryState = null; return;
@@ -4266,14 +4266,15 @@
     function moveItemBetweenZones(fromZone, toData, toZone, itemName) {
         saveHistory();
         const idx = fromZone.items.findIndex(i => i.name === itemName);
-        const hadMemo = idx >= 0 && !!(fromZone.items[idx].comment || '').trim();
+        const memo = idx >= 0 ? (fromZone.items[idx].comment || '') : '';
+        const hadMemo = !!memo.trim();
         if (idx >= 0) fromZone.items.splice(idx, 1);
-        // 메모는 "세부 칸 위치"라서 새 구역에선 맞지 않으므로 옮기지 않는다
-        if (!toZone.items.some(i => i.name === itemName)) toZone.items.push({ name: itemName, comment: '' });
+        // 메모는 사람이 적은 정보라 지우지 않고 같이 옮긴다 (세부 위치 메모라면 새 구역에 맞게 고치도록 토스트로 알린다)
+        if (!toZone.items.some(i => i.name === itemName)) toZone.items.push({ name: itemName, comment: memo });
         markZoneChecked(fromZone); markZoneChecked(toZone);
         refreshAfterDataChange();
         selectZone(toData.id, toData.zones.indexOf(toZone));
-        showToast(`${itemName} 위치를 ${josa(toZone.name || '새 구역', '으로', '로')} 바꿨어요` + (hadMemo ? ' · 세부 위치 메모는 새 구역에서 다시 적어주세요' : ''), hadMemo ? 4000 : 2200);
+        showToast(`${itemName} 위치를 ${josa(toZone.name || '새 구역', '으로', '로')} 바꿨어요` + (hadMemo ? ' · 메모도 같이 옮겼어요. 새 위치에 맞는지 확인해 주세요' : ''), hadMemo ? 4000 : 2200);
     }
 
     function startMoveItem(dataId, index, itemName) {
