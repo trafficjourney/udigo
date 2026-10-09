@@ -1061,7 +1061,10 @@
         }
         /* 휴대폰: 아래에서 올라오는 시트로 (위쪽에 사진이 보여 어느 칸인지 알 수 있게) */
         @media (max-width: 600px) {
-            #modal { top: auto; bottom: 0; left: 0; transform: none; width: 100%; max-width: none; max-height: 78vh; max-height: 78dvh; border-radius: 22px 22px 0 0; border-bottom: 0; }
+            #modal { top: auto; bottom: var(--kb-h, 0px); left: 0; transform: none; width: 100%; max-width: none; max-height: 78vh; max-height: 78dvh; border-radius: 22px 22px 0 0; border-bottom: var(--kb-h, 0px); }
+            /* 키보드가 올라오면 시트를 키보드 위로 올리고, 보이는 높이 안에 들어오게 줄인다 (fitModalToKeyboard) */
+            body.zone-modal-open #modal { max-height: min(78vh, calc(var(--vv-h, 100vh) - 12px)); max-height: min(78dvh, calc(var(--vv-h, 100dvh) - 12px)); }
+            body.zone-modal-open #modal .zm-foot { padding-bottom: calc(12px + var(--foot-safe, env(safe-area-inset-bottom, 0px))); }
         }
         body.zone-modal-open::before { content: ''; position: fixed; inset: 0; background: rgba(26,26,24,0.4); z-index: 9998; }
         .zm-head { display: flex; align-items: flex-start; gap: 8px; padding: 18px 12px 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -2516,11 +2519,36 @@
         document.getElementById('modal').style.display = 'flex';
         if (!document.body.classList.contains('zone-modal-open')) { document.body.classList.add('zone-modal-open'); lockPageScroll(); }
     }
+    // 키보드(소프트 키보드)가 올라오면 구역 창이 키보드 뒤에 깔려 물건 목록이 가려진다.
+    // 안드로이드 크롬은 키보드가 화면 크기를 줄이지 않고 위에 덮기만 하고, 아이폰도 고정 위치 창은 그대로 둔다.
+    // 그래서 "실제로 보이는 영역"(visualViewport)을 재서 창을 키보드 위로 올리고 그 안에 들어오도록 높이를 줄인다.
+    function fitModalToKeyboard() {
+        const root = document.documentElement.style;
+        const vv = window.visualViewport;
+        const open = document.getElementById('modal').style.display === 'flex';
+        const kb = vv && open ? Math.round(window.innerHeight - vv.offsetTop - vv.height) : 0;
+        if (kb < 100) { // 주소창이 접히고 펴지는 정도의 변화는 키보드로 보지 않는다
+            root.removeProperty('--kb-h'); root.removeProperty('--vv-h'); root.removeProperty('--foot-safe');
+            return;
+        }
+        root.setProperty('--kb-h', kb + 'px');
+        root.setProperty('--vv-h', Math.round(vv.height) + 'px');
+        root.setProperty('--foot-safe', '0px'); // 키보드 위에서는 아래 안전 여백이 필요 없다
+        const a = document.activeElement;
+        if (a && a.tagName === 'INPUT' && document.getElementById('modal').contains(a)) requestAnimationFrame(() => a.scrollIntoView({ block: 'nearest' }));
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', fitModalToKeyboard);
+        window.visualViewport.addEventListener('scroll', fitModalToKeyboard);
+    }
+    ['focusin', 'focusout'].forEach(t => document.getElementById('modal').addEventListener(t, () => setTimeout(fitModalToKeyboard, 350))); // 일부 기기는 키보드 크기 이벤트가 늦거나 빠진다
+
     function hideZoneModal() {
         closeImportReview();
         if (activeVoice && activeVoice.btn.id === 'voiceItemBtn') activeVoice.stop();
         document.getElementById('modal').style.display = 'none';
         if (document.body.classList.contains('zone-modal-open')) { document.body.classList.remove('zone-modal-open'); unlockPageScroll(); }
+        fitModalToKeyboard();
     }
 
     function openModal(z) {
