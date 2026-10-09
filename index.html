@@ -1056,6 +1056,8 @@
         .found-bar-info { display: flex; flex-direction: column; min-width: 0; }
         .found-bar-info b { font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .found-bar-info span { font-size: 12px; color: var(--text2); }
+        .found-bar-info .found-bar-why { color: var(--accent-text); font-weight: 600; }
+        .found-bar-why[hidden] { display: none; }
         .found-bar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .found-bar-actions .btn-base { min-height: 44px; }
         .found-bar-close {
@@ -1334,7 +1336,7 @@
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
             <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
-            <li><i class="ti ti-search"></i><div><b>물건 찾기</b><span>위쪽 검색창에 이름이나 초성(ㅅㄹ)을 치거나, <b>마이크</b>를 눌러 말로 찾아요. 물건을 넣을 땐 구역 창의 마이크로 "빨대, 냅킨, 원두"처럼 여러 개를 한 번에 말해 추가할 수 있어요.</span></div></li>
+            <li><i class="ti ti-search"></i><div><b>물건 찾기</b><span>위쪽 검색창에 이름이나 초성(ㅅㄹ)을 치거나, <b>마이크</b>를 눌러 말로 찾아요. 찾은 뒤 아래에 뜨는 <b>[네, 여기 있어요]</b>를 누르면 그 구역에 확인한 날짜가 남고, 30일 넘게 확인 안 한 구역은 따로 표시돼요. 물건을 넣을 땐 구역 창의 마이크로 "빨대, 냅킨, 원두"처럼 여러 개를 한 번에 말해 추가할 수 있어요.</span></div></li>
             <li><i class="ti ti-zoom-in"></i><div><b>작은 칸은 크게 보기</b><span>사진 위에서 <b>두 손가락을 벌리면</b> 사진이 크게 열려요. 사진 위 <b>[+]</b>, <b>[크게 보기]</b> 버튼으로도 키울 수 있어요.</span></div></li>
             <li><i class="ti ti-printer"></i><div><b>벽에 붙이기</b><span>아래 인쇄 버튼으로 A4를 뽑아 선반 옆에 붙여 두면, 폰 없이도 꺼낼 때·다시 넣을 때 자리를 찾아요.</span></div></li>
         </ol>
@@ -1587,6 +1589,7 @@
     <div class="found-bar-info">
         <b id="foundBarItem"></b>
         <span id="foundBarMeta"></span>
+        <span id="foundBarWhy" class="found-bar-why" hidden>답해 주시면 지도가 계속 정확해져요</span>
     </div>
     <div class="found-bar-actions">
         <button class="btn-base btn-secondary" onclick="confirmFound()"><i class="ti ti-check"></i> 네, 여기 있어요</button>
@@ -4331,6 +4334,10 @@
         if (!foundCtx) return;
         clearTimeout(foundFallbackTimer);
         foundCtx.stage = 'bar';
+        // 왜 묻는지 처음 3번만 한 줄로 알려 준다 (익숙해지면 안 보이게)
+        let seen = 0; try { seen = parseInt(safeStorage.getItem('foundWhySeen') || '0', 10); } catch (e) {}
+        document.getElementById('foundBarWhy').hidden = seen >= 3;
+        if (seen < 3) { try { safeStorage.setItem('foundWhySeen', String(seen + 1)); } catch (e) {} }
         document.body.classList.remove('found-pill-open');
         document.body.classList.add('found-bar-open');
     }
@@ -4355,7 +4362,7 @@
         if (!foundCtx) return;
         markZoneChecked(foundCtx.zone);
         refreshAfterDataChange();
-        showToast('확인했어요. 오늘 날짜로 기록됐어요');
+        showToast(`확인했어요. ${foundCtx.zone.name || '이 구역'}에 '오늘 확인'으로 표시돼요`);
         hideFoundBar();
     }
 
