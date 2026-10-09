@@ -135,8 +135,9 @@
             --badge-text: #ffffff;
             --active-zone-bg: #ebe9f5;
             --active-zone-bar: #3b3577;
-            --zone-stroke: #3b3577;
-            --zone-fill-rgb: 59, 53, 119;
+            --zone-stroke: #8a84dc;          /* 구역 고치기 테두리: 짙은 인디고는 사진을 칙칙하게 덮어서 밝은 보라로 */
+            --zone-fill-rgb: 138, 132, 220;
+            --zone-fill-alpha: 0.15;
             --hero-bg: #2e2960;
             --hero-text: #ffffff;
             --hero-text2: rgba(255,255,255,0.7);
@@ -2296,7 +2297,7 @@
     let themeColors = {};
     function readThemeColors() {
         const cs = getComputedStyle(document.documentElement), v = (n) => cs.getPropertyValue(n).trim();
-        themeColors = { bg: v('--bg'), onAccent: v('--on-accent'), danger: v('--danger') || '#c44444', accent: v('--accent'), accent2: v('--accent2'), accentRgb: v('--accent-rgb'), zoneStroke: v('--zone-stroke'), zoneFillRgb: v('--zone-fill-rgb') };
+        themeColors = { bg: v('--bg'), onAccent: v('--on-accent'), danger: v('--danger') || '#c44444', accent: v('--accent'), accent2: v('--accent2'), accentRgb: v('--accent-rgb'), zoneStroke: v('--zone-stroke'), zoneFillRgb: v('--zone-fill-rgb'), zoneFillAlpha: parseFloat(v('--zone-fill-alpha')) || 0.25 };
     }
     readThemeColors();
 
@@ -2756,7 +2757,7 @@
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
         // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
-        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>구역을 그려요</b></div>`;
+        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>또는 사진 위를 손가락으로<br>끌어서 직접 그려요</b></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
         firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
@@ -3350,7 +3351,7 @@
             else if (isHovered) { ctx.fillStyle = 'rgba(255, 243, 196, 0.35)'; ctx.strokeStyle = '#c8960a'; ctx.lineWidth = 3; }
             else if (z === activeZone) { ctx.fillStyle = 'rgba(196, 68, 68, 0.16)'; ctx.strokeStyle = '#c44444'; ctx.lineWidth = Math.max(3, 2.5 * displayScale(canvas)); }
             else if (cleanView) { /* 보기 모드 기본: 아래에서 테두리만 그림 */ }
-            else { ctx.fillStyle = `rgba(${themeColors.zoneFillRgb}, 0.25)`; ctx.strokeStyle = themeColors.zoneStroke; ctx.lineWidth = 2; }
+            else { ctx.fillStyle = `rgba(${themeColors.zoneFillRgb}, ${themeColors.zoneFillAlpha})`; ctx.strokeStyle = themeColors.zoneStroke; ctx.lineWidth = 2; }
             if (!hideBox) {
                 if (cleanView && !pickMode && !isHovered && z !== activeZone) {
                     // 어떤 사진에서도(흰 수납장이든 어두운 창고든) 보이도록 같은 자리에 굵은 검정 테두리 → 얇은 흰 테두리를
