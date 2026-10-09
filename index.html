@@ -135,8 +135,9 @@
             --badge-text: #ffffff;
             --active-zone-bg: #ebe9f5;
             --active-zone-bar: #3b3577;
-            --zone-stroke: #3b3577;
-            --zone-fill-rgb: 59, 53, 119;
+            --zone-stroke: #8a84dc;          /* 구역 고치기 테두리: 짙은 인디고는 사진을 칙칙하게 덮어서 밝은 보라로 */
+            --zone-fill-rgb: 138, 132, 220;
+            --zone-fill-alpha: 0.15;
             --hero-bg: #2e2960;
             --hero-text: #ffffff;
             --hero-text2: rgba(255,255,255,0.7);
@@ -499,12 +500,18 @@
         .first-zone-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 50px; padding: 0 22px; border: 0; border-radius: 25px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 16px; font-weight: 800; box-shadow: 0 6px 20px rgba(0,0,0,0.3); cursor: pointer; }
         .first-zone-btn.first-zone-manual { min-height: 42px; background: rgba(255,255,255,0.94); color: var(--text); font-size: 14px; font-weight: 700; }
         .first-zone-note { align-self: center; margin: -2px 0 2px; padding: 3px 10px; border: 0; border-radius: 12px; background: rgba(0,0,0,0.55); color: #fff; font: inherit; font-size: 12px; line-height: 1.5; cursor: pointer; }
+        /* AI와 직접 그리기 사이 구분선: ──── 또는 ──── */
+        .first-zone-or { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+        .first-zone-or::before, .first-zone-or::after { content: ''; flex: 1; height: 1.5px; background: rgba(255,255,255,0.85); box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
         .first-zone-btn:disabled { opacity: 0.8; cursor: default; }
         .first-zone-btn .ti { font-size: 20px; }
         .first-zone-hint { display: none; position: relative; flex-direction: column; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,0.62); color: #fff; text-align: center; font-size: 15px; line-height: 1.4; }
         /* 구역 고치는 중에 사진을 추가해도 AI 버튼은 남긴다 (예전엔 끌기 안내만 떠서 새로고침해야 AI 버튼이 보였다). 직접 그리기는 이미 고치는 중이라 숨김 */
         .first-zone.is-edit .first-zone-manual { display: none; }
         .first-zone.is-edit .first-zone-hint { display: flex; }
+        /* 고치는 중엔 AI 버튼·구분선 아래에 붙으므로 작게 (움직이는 그림은 빼서 사진 높이 안에 들어오게) */
+        .first-zone.is-edit .first-zone-hint { padding: 6px 14px; font-size: 13px; border-radius: 12px; }
+        .first-zone.is-edit .first-zone-demo { display: none; }
         .first-zone-demo { position: relative; width: 84px; height: 52px; }
         .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
         .first-zone-demo::after { content: ''; position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(255,210,0,0.85); border: 2px solid #fff; animation: fz-finger 2s ease-in-out infinite; }
@@ -713,13 +720,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
-            font-size: 24px;
+            color: #fff;
+            font-size: 20px;
             font-weight: bold;
             z-index: 10001; /* dimm(10000)보다 위에 배치 */
             pointer-events: none;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             text-align: center; white-space: nowrap;
+            /* 글자만 띄우면 뒤 화면(밝은 카드·글자)과 겹쳐 안 읽혔다 → 어두운 카드 위에 */
+            background: rgba(20, 20, 18, 0.88); padding: 18px 26px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
         /* 멈춰있지 않게 하는 애니메이션 */
@@ -1327,7 +1335,7 @@
 <!-- 편집 중 띠: 지금 편집 모드라는 것과 끝내는 방법(완료)을 화면 위에 계속 보여준다 -->
 <div id="editBar" class="edit-bar" hidden>
     <i class="ti ti-pencil edit-bar-icon" aria-hidden="true"></i>
-    <div class="edit-bar-text"><b>구역 고치는 중</b><span>끌어서 구역 만들기 · 구역 눌러 물건 적기</span></div>
+    <div class="edit-bar-text"><b>구역 고치는 중</b><span>끌어서 만들기 · 한 번 더 누르면 물건 적기</span></div>
     <button type="button" class="edit-bar-done" onclick="toggleEditMode()"><i class="ti ti-check"></i> 완료</button>
 </div>
 
@@ -1413,7 +1421,7 @@
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">구역 고치기, 이렇게 해요</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
-            <li><i class="ti ti-hand-move"></i><div><b>끌어서 구역 만들기·옮기기</b><span>사진 위를 손가락으로 끌면 새 구역이 그려져요. 이미 있는 구역은 끌어서 옮기고, 모서리를 끌어서 크기를 바꿔요. 구역을 누르면 물건을 적을 수 있어요.</span></div></li>
+            <li><i class="ti ti-hand-move"></i><div><b>끌어서 구역 만들기·옮기기</b><span>사진 위를 손가락으로 끌면 새 구역이 그려져요. 이미 있는 구역은 끌어서 옮겨요. 구역을 한 번 누르면 골라져서 모서리로 크기를 바꿀 수 있고, 한 번 더 누르면 물건을 적을 수 있어요.</span></div></li>
             <li><i class="ti ti-arrows-move"></i><div><b>물건을 다른 구역으로 옮기기</b><span>사진 위 구역의 말풍선에서 <b>물건 이름을 꾹 누른 채 다른 구역으로 끌어다 놓으세요.</b> 구역 밖에 놓으면 삭제할지 물어봐요. 말풍선이 안 보이면 오른쪽 아래 <i class="ti ti-message-circle"></i> 버튼을 눌러 켜세요.</span><small>사진 아래 구역 목록에서 물건 이름을 눌러 구역을 고르는 방법도 있어요.</small></div></li>
             <li><i class="ti ti-check"></i><div><b>다 고쳤으면 [완료]</b><span>위쪽 띠의 노란 <b>[완료]</b> 버튼을 누르면 끝나요.</span></div></li>
         </ol>
@@ -1797,7 +1805,7 @@
 </div>
 <div id="aiLoadingMsg" style="display: none;">
     칸 찾는 중<span class="loading-dots"></span>
-    <small style="display: block; margin-top: 6px; font-size: 13px; font-weight: 500;">사진을 AI 서버(Roboflow)로 보냈어요</small>
+    <small style="display: block; margin-top: 6px; font-size: 13px; font-weight: 500; opacity: 0.85;">사진을 AI 서버(Roboflow)로 보냈어요</small>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2271,7 +2279,7 @@
     // 모바일 초기값(22)은 유지하고 PC 초기값만 더 작게 잡는다.
     let bubbleFontSize = isMobileDevice() ? 22 : 16, isDrawingNewZone = false, drawStart = { x: 0, y: 0 }, currentDrawPos = { x: 0, y: 0 };
     let holdingItem = null, mousePos = { x: 0, y: 0 }, isMovingZone = false, isResizingZone = false, resizeHandle = '';
-    let zoneDragOffset = { x: 0, y: 0 }, hasDragged = false, startPointerPos = { x: 0, y: 0 }, startClientPos = { x: 0, y: 0 }, showSearchArrow = false;
+    let zoneDragOffset = { x: 0, y: 0 }, pressedSelectedZone = false, hasDragged = false, startPointerPos = { x: 0, y: 0 }, startClientPos = { x: 0, y: 0 }, showSearchArrow = false;
     const HANDLE_SIZE = 15;
     // 모서리 손잡이 크기는 화면 픽셀 기준: 마우스는 작게, 손가락은 넓게 (캔버스는 800px 기준이라 화면 배율로 환산)
     let lastPointerFine = window.matchMedia('(pointer: fine)').matches;
@@ -2295,7 +2303,7 @@
     let themeColors = {};
     function readThemeColors() {
         const cs = getComputedStyle(document.documentElement), v = (n) => cs.getPropertyValue(n).trim();
-        themeColors = { bg: v('--bg'), onAccent: v('--on-accent'), danger: v('--danger') || '#c44444', accent: v('--accent'), accent2: v('--accent2'), accentRgb: v('--accent-rgb'), zoneStroke: v('--zone-stroke'), zoneFillRgb: v('--zone-fill-rgb') };
+        themeColors = { bg: v('--bg'), onAccent: v('--on-accent'), danger: v('--danger') || '#c44444', accent: v('--accent'), accent2: v('--accent2'), accentRgb: v('--accent-rgb'), zoneStroke: v('--zone-stroke'), zoneFillRgb: v('--zone-fill-rgb'), zoneFillAlpha: parseFloat(v('--zone-fill-alpha')) || 0.25 };
     }
     readThemeColors();
 
@@ -2755,7 +2763,7 @@
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
         // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
-        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>구역을 그려요</b></div>`;
+        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>직접 그려요</b></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
         firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
@@ -2839,6 +2847,7 @@
                 for (let handle in corners) { const pt = corners[handle]; if (Math.abs(x - pt.x) <= hit && Math.abs(y - pt.y) <= hit) { isResizingZone = true; resizeHandle = handle; render(data); return; } }
             }
             const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
+            pressedSelectedZone = !!clickedZone && clickedZone === activeZone && activeData === data; // 이미 고른 구역을 다시 누른 건지 (손 뗄 때 물건 창을 열지 정함)
             if (clickedZone) { activeZone = clickedZone; activeData = data; isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
 
             isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data);
@@ -2909,7 +2918,10 @@
 
             if (!wasDragged && !wasEditingShape && !clickedInsideBubble) {
                 const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
-                if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; if (!isEditMode) recordFind(); openModal(clickedZone); render(data); }
+                // 고치는 중: 처음 누르면 고르기만 (모서리 손잡이가 나와 바로 크기 조절), 고른 구역을 한 번 더 누르면 물건 창
+                // (예전엔 누르자마자 창이 떠서 모서리만 잡으려 해도 창을 닫아야 했다)
+                if (clickedZone && isEditMode && !pressedSelectedZone) { activeZone = clickedZone; activeData = data; render(data); hintTapAgain(); }
+                else if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; if (!isEditMode) recordFind(); openModal(clickedZone); render(data); }
                 else if (!isEditMode && !pickMode) clearZoneFocus(); // 사진의 빈 곳을 누르면 선택(스포트라이트)을 푼다
             }
             if (isEditMode && (isMovingZone || isResizingZone)) { if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; } if (data.id !== "dummy_root") saveData(); render(data); }
@@ -3349,7 +3361,7 @@
             else if (isHovered) { ctx.fillStyle = 'rgba(255, 243, 196, 0.35)'; ctx.strokeStyle = '#c8960a'; ctx.lineWidth = 3; }
             else if (z === activeZone) { ctx.fillStyle = 'rgba(196, 68, 68, 0.16)'; ctx.strokeStyle = '#c44444'; ctx.lineWidth = Math.max(3, 2.5 * displayScale(canvas)); }
             else if (cleanView) { /* 보기 모드 기본: 아래에서 테두리만 그림 */ }
-            else { ctx.fillStyle = `rgba(${themeColors.zoneFillRgb}, 0.25)`; ctx.strokeStyle = themeColors.zoneStroke; ctx.lineWidth = 2; }
+            else { ctx.fillStyle = `rgba(${themeColors.zoneFillRgb}, ${themeColors.zoneFillAlpha})`; ctx.strokeStyle = themeColors.zoneStroke; ctx.lineWidth = 2; }
             if (!hideBox) {
                 if (cleanView && !pickMode && !isHovered && z !== activeZone) {
                     // 어떤 사진에서도(흰 수납장이든 어두운 창고든) 보이도록 같은 자리에 굵은 검정 테두리 → 얇은 흰 테두리를
@@ -4261,6 +4273,13 @@
     // 🗓 데이터 신선도: 구역마다 "마지막 확인" 시각을 남기고, 검색 후 바로 확인/수정하게 한다
     // ────────────────────────────────────────────────────────────
     const STALE_DAYS = 30;
+    // 구역을 고르기만 했을 때, 처음 몇 번만 "한 번 더 누르면 물건 창"이라고 알려 준다
+    function hintTapAgain() {
+        let n = 0; try { n = parseInt(safeStorage.getItem('tapAgainHint') || '0', 10); } catch (e) {}
+        if (n >= 3) return;
+        try { safeStorage.setItem('tapAgainHint', String(n + 1)); } catch (e) {}
+        showToast('골랐어요. 모서리를 끌어 크기를 바꾸고, 한 번 더 누르면 물건을 적어요', 3500);
+    }
     function markZoneChecked(z) { if (z) z.checkedAt = Date.now(); }
     function isZoneStale(z) { return !!z.checkedAt && Date.now() - z.checkedAt > STALE_DAYS * 86400000; }
     function formatCheckedAgo(ts) {
