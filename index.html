@@ -135,7 +135,7 @@
             --badge-text: #ffffff;
             --active-zone-bg: #ebe9f5;
             --active-zone-bar: #3b3577;
-            --zone-stroke: #8a84dc;          /* 구역 고치기 테두리: 짙은 인디고는 사진을 칙칙하게 덮어서 밝은 보라로 */
+            --zone-stroke: #b4aeff;          /* 구역 고치기 테두리: 어두운 테두리 위에 밝은 보라 선 (어떤 사진에서도 보이게) */
             --zone-fill-rgb: 138, 132, 220;
             --zone-fill-alpha: 0.15;
             --hero-bg: #2e2960;
@@ -3390,6 +3390,12 @@
                     const k = displayScale(canvas);
                     ctx.lineWidth = Math.max(5, 3 * k); ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(z.x, z.y, z.w, z.h);
                     ctx.lineWidth = Math.max(2, 1.3 * k); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(z.x, z.y, z.w, z.h);
+                } else if (isEditMode && !pickMode && !isHovered && z !== activeZone) {
+                    // 고치기 기본 구역: 2px 고정이면 폰에서 1px도 안 돼 사진에 묻혔다 → 화면 배율만큼 굵게 + 어두운 테두리 위에 색 선
+                    const k = displayScale(canvas);
+                    ctx.fillRect(z.x, z.y, z.w, z.h);
+                    ctx.lineWidth = Math.max(5, 3.2 * k); ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.strokeRect(z.x, z.y, z.w, z.h);
+                    ctx.lineWidth = Math.max(2.5, 1.7 * k); ctx.strokeStyle = themeColors.zoneStroke; ctx.strokeRect(z.x, z.y, z.w, z.h);
                 } else { ctx.fillRect(z.x, z.y, z.w, z.h); ctx.strokeRect(z.x, z.y, z.w, z.h); }
             }
             if (!cleanView) drawEditZoneInfo(ctx, z, z === activeZone);
