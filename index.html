@@ -1329,7 +1329,7 @@
 <!-- 편집 중 띠: 지금 편집 모드라는 것과 끝내는 방법(완료)을 화면 위에 계속 보여준다 -->
 <div id="editBar" class="edit-bar" hidden>
     <i class="ti ti-pencil edit-bar-icon" aria-hidden="true"></i>
-    <div class="edit-bar-text"><b>구역 고치는 중</b><span>끌어서 구역 만들기 · 구역 눌러 물건 적기</span></div>
+    <div class="edit-bar-text"><b>구역 고치는 중</b><span>끌어서 만들기 · 한 번 더 누르면 물건 적기</span></div>
     <button type="button" class="edit-bar-done" onclick="toggleEditMode()"><i class="ti ti-check"></i> 완료</button>
 </div>
 
@@ -1415,7 +1415,7 @@
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">구역 고치기, 이렇게 해요</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
-            <li><i class="ti ti-hand-move"></i><div><b>끌어서 구역 만들기·옮기기</b><span>사진 위를 손가락으로 끌면 새 구역이 그려져요. 이미 있는 구역은 끌어서 옮기고, 모서리를 끌어서 크기를 바꿔요. 구역을 누르면 물건을 적을 수 있어요.</span></div></li>
+            <li><i class="ti ti-hand-move"></i><div><b>끌어서 구역 만들기·옮기기</b><span>사진 위를 손가락으로 끌면 새 구역이 그려져요. 이미 있는 구역은 끌어서 옮겨요. 구역을 한 번 누르면 골라져서 모서리로 크기를 바꿀 수 있고, 한 번 더 누르면 물건을 적을 수 있어요.</span></div></li>
             <li><i class="ti ti-arrows-move"></i><div><b>물건을 다른 구역으로 옮기기</b><span>사진 위 구역의 말풍선에서 <b>물건 이름을 꾹 누른 채 다른 구역으로 끌어다 놓으세요.</b> 구역 밖에 놓으면 삭제할지 물어봐요. 말풍선이 안 보이면 오른쪽 아래 <i class="ti ti-message-circle"></i> 버튼을 눌러 켜세요.</span><small>사진 아래 구역 목록에서 물건 이름을 눌러 구역을 고르는 방법도 있어요.</small></div></li>
             <li><i class="ti ti-check"></i><div><b>다 고쳤으면 [완료]</b><span>위쪽 띠의 노란 <b>[완료]</b> 버튼을 누르면 끝나요.</span></div></li>
         </ol>
@@ -2273,7 +2273,7 @@
     // 모바일 초기값(22)은 유지하고 PC 초기값만 더 작게 잡는다.
     let bubbleFontSize = isMobileDevice() ? 22 : 16, isDrawingNewZone = false, drawStart = { x: 0, y: 0 }, currentDrawPos = { x: 0, y: 0 };
     let holdingItem = null, mousePos = { x: 0, y: 0 }, isMovingZone = false, isResizingZone = false, resizeHandle = '';
-    let zoneDragOffset = { x: 0, y: 0 }, hasDragged = false, startPointerPos = { x: 0, y: 0 }, startClientPos = { x: 0, y: 0 }, showSearchArrow = false;
+    let zoneDragOffset = { x: 0, y: 0 }, pressedSelectedZone = false, hasDragged = false, startPointerPos = { x: 0, y: 0 }, startClientPos = { x: 0, y: 0 }, showSearchArrow = false;
     const HANDLE_SIZE = 15;
     // 모서리 손잡이 크기는 화면 픽셀 기준: 마우스는 작게, 손가락은 넓게 (캔버스는 800px 기준이라 화면 배율로 환산)
     let lastPointerFine = window.matchMedia('(pointer: fine)').matches;
@@ -2841,6 +2841,7 @@
                 for (let handle in corners) { const pt = corners[handle]; if (Math.abs(x - pt.x) <= hit && Math.abs(y - pt.y) <= hit) { isResizingZone = true; resizeHandle = handle; render(data); return; } }
             }
             const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
+            pressedSelectedZone = !!clickedZone && clickedZone === activeZone && activeData === data; // 이미 고른 구역을 다시 누른 건지 (손 뗄 때 물건 창을 열지 정함)
             if (clickedZone) { activeZone = clickedZone; activeData = data; isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
 
             isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data);
@@ -2911,7 +2912,10 @@
 
             if (!wasDragged && !wasEditingShape && !clickedInsideBubble) {
                 const clickedZone = data.zones.find(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h);
-                if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; if (!isEditMode) recordFind(); openModal(clickedZone); render(data); }
+                // 고치는 중: 처음 누르면 고르기만 (모서리 손잡이가 나와 바로 크기 조절), 고른 구역을 한 번 더 누르면 물건 창
+                // (예전엔 누르자마자 창이 떠서 모서리만 잡으려 해도 창을 닫아야 했다)
+                if (clickedZone && isEditMode && !pressedSelectedZone) { activeZone = clickedZone; activeData = data; render(data); hintTapAgain(); }
+                else if (clickedZone) { activeZone = clickedZone; activeData = data; showSearchArrow = true; if (!isEditMode) recordFind(); openModal(clickedZone); render(data); }
                 else if (!isEditMode && !pickMode) clearZoneFocus(); // 사진의 빈 곳을 누르면 선택(스포트라이트)을 푼다
             }
             if (isEditMode && (isMovingZone || isResizingZone)) { if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; } if (data.id !== "dummy_root") saveData(); render(data); }
@@ -4263,6 +4267,13 @@
     // 🗓 데이터 신선도: 구역마다 "마지막 확인" 시각을 남기고, 검색 후 바로 확인/수정하게 한다
     // ────────────────────────────────────────────────────────────
     const STALE_DAYS = 30;
+    // 구역을 고르기만 했을 때, 처음 몇 번만 "한 번 더 누르면 물건 창"이라고 알려 준다
+    function hintTapAgain() {
+        let n = 0; try { n = parseInt(safeStorage.getItem('tapAgainHint') || '0', 10); } catch (e) {}
+        if (n >= 3) return;
+        try { safeStorage.setItem('tapAgainHint', String(n + 1)); } catch (e) {}
+        showToast('골랐어요. 모서리를 끌어 크기를 바꾸고, 한 번 더 누르면 물건을 적어요', 3500);
+    }
     function markZoneChecked(z) { if (z) z.checkedAt = Date.now(); }
     function isZoneStale(z) { return !!z.checkedAt && Date.now() - z.checkedAt > STALE_DAYS * 86400000; }
     function formatCheckedAgo(ts) {
