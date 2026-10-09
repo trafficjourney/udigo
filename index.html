@@ -615,7 +615,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -623,7 +623,8 @@
         }
         #settingsModal { z-index: 1020; max-width: 420px; }
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
-        #editIntro { z-index: 10001; max-width: 420px; }
+        #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
+        #photoTipBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #editIntroBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         /* 🖨 인쇄물 미리보기: 벽에 붙일 A4 지도를 그대로 보여준다 */
         #printModal { z-index: 1090; max-width: 520px; padding: 20px; }
@@ -1321,6 +1322,7 @@
         <ol class="guide-steps">
             <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
             <li><i class="ti ti-search"></i><div><b>물건 찾기</b><span>위쪽 검색창에 이름이나 초성(ㅅㄹ)을 치거나, <b>마이크</b>를 눌러 말로 찾아요. 물건을 넣을 땐 구역 창의 마이크로 "빨대, 냅킨, 원두"처럼 여러 개를 한 번에 말해 추가할 수 있어요.</span></div></li>
+            <li><i class="ti ti-zoom-in"></i><div><b>작은 칸은 크게 보기</b><span>사진 위에서 <b>두 손가락을 벌리면</b> 사진이 크게 열려요. 사진 위 <b>[+]</b>, <b>[크게 보기]</b> 버튼으로도 키울 수 있어요.</span></div></li>
             <li><i class="ti ti-printer"></i><div><b>벽에 붙이기</b><span>아래 인쇄 버튼으로 A4를 뽑아 선반 옆에 붙여 두면, 폰 없이도 꺼낼 때·다시 넣을 때 자리를 찾아요.</span></div></li>
         </ol>
     </div>
@@ -1336,6 +1338,36 @@
         try { localStorage.setItem('guideSeen', '1'); } catch (e) {}
     }
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
+</script>
+
+<div id="photoTipBackdrop" onclick="closePhotoTip()"></div>
+<div id="photoTip" role="dialog" aria-modal="true" aria-label="사진 찍는 방법" style="line-height: 1.6;">
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">사진은 이렇게 찍어주세요</h2>
+    <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <ol class="guide-steps">
+            <li><i class="ti ti-camera"></i><div><b>랙·선반 한 면씩, 가까이서</b><span>칸이 하나씩 구분돼 보이는 거리에서 정면으로 찍어요. 창고 전체를 멀리서 한 장 찍으면 칸이 너무 작아져서 구역을 나누기 어려워요.</span></div></li>
+            <li><i class="ti ti-photo-plus"></i><div><b>큰 창고는 여러 장으로</b><span>랙마다 한 장씩 올리면 돼요. 사진은 계속 추가할 수 있어요.</span></div></li>
+            <li><i class="ti ti-pencil"></i><div><b>사진 이름을 붙여 두세요</b><span>사진 위 <b>[⋯]</b> 메뉴의 <b>[사진 이름 바꾸기]</b>에서 "1번 랙", "냉동 창고"처럼 적어 두면 어느 사진인지 바로 알아봐요.</span></div></li>
+        </ol>
+    </div>
+    <button onclick="closePhotoTip(true);" class="btn-base btn-primary" style="width: 100%;"><i class="ti ti-camera" style="margin-right: 4px;"></i> 사진 고르기</button>
+</div>
+<script>
+    // 사진을 처음 올리기 직전에 한 번만 촬영 요령을 보여 준다. 그 뒤로는 바로 사진 선택창을 연다
+    function pickPhoto() {
+        let seen = false;
+        try { seen = !!localStorage.getItem('photoTipSeen'); } catch (e) {}
+        const hasPhoto = imageList.some(d => d.id !== 'dummy_root');
+        if (seen || hasPhoto) { document.getElementById('fileInput').click(); return; }
+        document.getElementById('photoTipBackdrop').style.display = 'block';
+        document.getElementById('photoTip').style.setProperty('display', 'block', 'important');
+    }
+    function closePhotoTip(openPicker) {
+        document.getElementById('photoTipBackdrop').style.display = 'none';
+        document.getElementById('photoTip').style.display = 'none';
+        try { localStorage.setItem('photoTipSeen', '1'); } catch (e) {}
+        if (openPicker === true) document.getElementById('fileInput').click();
+    }
 </script>
 
 <div id="editIntroBackdrop" onclick="closeEditIntro()"></div>
@@ -1445,7 +1477,7 @@
         <p class="welcome-sub">물건 이름만 대면 어느 구역인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
-            <button class="btn-base btn-secondary btn-lg" onclick="document.getElementById('fileInput').click()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
+            <button class="btn-base btn-secondary btn-lg" onclick="pickPhoto()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
             <p class="revisit-only welcome-revisit-note">지금 쓰던 지도는 그대로 있어요. 예시는 저장하지 않고 미리보기로 열려요.</p>
             <a class="setup-promo" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden>
                 <i class="ti ti-gift setup-promo-ic" aria-hidden="true"></i>
@@ -1473,7 +1505,7 @@
     <div id="photoStrip" class="photo-strip" role="tablist" aria-label="사진 고르기" hidden></div>
     <div id="canvasList"></div>
     <div id="bottomActions" style="display: flex; gap: 10px; margin-top: 16px; align-items: stretch;">
-        <button onclick="document.getElementById('fileInput').click()" class="btn-base btn-primary btn-lg" style="flex: 1;"><i class="ti ti-camera"></i> 새로운 매장 사진 등록하기</button>
+        <button onclick="pickPhoto()" class="btn-base btn-primary btn-lg" style="flex: 1;"><i class="ti ti-camera"></i> 새로운 매장 사진 등록하기</button>
         <button onclick="openSettingsModal()" class="btn-base btn-secondary btn-lg" style="width: 52px; padding: 0; font-size: 18px;" title="설정" aria-label="설정"><i class="ti ti-settings"></i></button>
     </div>
     <button id="sampleDataBtn" onclick="loadSampleData()" class="btn-base btn-secondary btn-lg" style="display:none; width: 100%; margin-top: 10px; border-style: dashed;">
