@@ -635,7 +635,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #pendingAdd, #backupChoice, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #pendingAdd, #backupChoice, #resetAsk, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -646,7 +646,8 @@
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
         #dataInfo { z-index: 10001; max-width: 460px; }
         @media (max-width: 600px) { #dataInfo { width: calc(100% - 24px); padding: 20px 16px; } }
-        #pendingAdd, #backupChoice { z-index: 10001; max-width: 360px; }
+        #pendingAdd, #backupChoice, #resetAsk { z-index: 10001; max-width: 360px; }
+        #resetAskBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #backupChoiceBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #pendingAddBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
@@ -811,6 +812,10 @@
             background: var(--card); border: 0; border-top: 1px solid var(--border); font: inherit; font-size: 14px; color: var(--text); text-align: left; cursor: pointer;
         }
         .settings-row:first-child, .settings-row[hidden]:first-child + .settings-row { border-top: 0; } /* 맨 위 줄만 선 없음 (가운데 줄이 숨겨져도 그 아래 선은 남긴다) */
+        .font-seg { display: flex; gap: 6px; }
+        .font-seg button { flex: 1; min-width: 0; min-height: 44px; border: 1.5px solid var(--border); border-radius: var(--radius-md); background: var(--card); color: var(--text2); font: inherit; font-weight: 700; cursor: pointer; }
+        .font-seg button[aria-pressed="true"] { border-color: var(--accent-text); background: var(--accent-soft); color: var(--accent-text); }
+        .settings-row.is-danger { color: var(--danger, #c44444); }
         .settings-footer { margin: 14px 0 0; text-align: center; font-size: 12px; color: var(--text3); line-height: 1.7; word-break: keep-all; }
         .settings-row[hidden] { display: none; }
         .settings-row i { font-size: 18px; color: var(--text2); }
@@ -1381,6 +1386,14 @@
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
+<div id="resetAskBackdrop" onclick="closeResetAsk()"></div>
+<div id="resetAsk" role="alertdialog" aria-modal="true" aria-labelledby="resetAskTitle" style="line-height: 1.6;">
+    <h2 id="resetAskTitle" style="text-align: center; color: var(--text); margin-bottom: 6px; font-size: 1.1em;">모든 데이터를 지울까요?</h2>
+    <p style="text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 16px; word-break: keep-all;">사진·구역·물건·메모가 이 폰에서 모두 지워지고 <b style="color: var(--danger, #c44444);">되돌릴 수 없어요.</b> 지우기 전에 백업을 받아 두는 걸 권해요.</p>
+    <button type="button" class="btn-base btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="resetAll(true)"><i class="ti ti-download" style="margin-right: 4px;"></i> 백업 받고 지우기</button>
+    <button type="button" class="btn-base btn-secondary" style="width: 100%; margin-bottom: 8px; color: var(--danger, #c44444); border-color: var(--danger, #c44444);" onclick="resetAll(false)">백업 없이 지우기</button>
+    <button type="button" class="btn-base btn-quiet" style="width: 100%;" onclick="closeResetAsk()">취소</button>
+</div>
 <div id="backupChoiceBackdrop" onclick="closeBackupChoice()"></div>
 <div id="backupChoice" role="dialog" aria-modal="true" aria-label="백업 방법 고르기" style="line-height: 1.6;">
     <h2 style="text-align: center; color: var(--text); margin-bottom: 6px; font-size: 1.1em;">백업 파일을 어디에 둘까요?</h2>
@@ -1782,6 +1795,15 @@
             <button class="btn-base btn-secondary" onclick="applyIndustryTemplate()">적용</button>
         </div>
     </div>
+    <div class="settings-group">
+        <div class="settings-label">사진 위 글자 크기</div>
+        <div class="font-seg" id="fontSeg" role="group" aria-label="사진 위 글자 크기">
+            <button type="button" data-step="-4" onclick="setFontDelta(-4)" style="font-size: 13px;">작게</button>
+            <button type="button" data-step="0" onclick="setFontDelta(0)" style="font-size: 15px;">보통</button>
+            <button type="button" data-step="4" onclick="setFontDelta(4)" style="font-size: 17px;">크게</button>
+            <button type="button" data-step="8" onclick="setFontDelta(8)" style="font-size: 19px;">아주 크게</button>
+        </div>
+    </div>
     <div class="settings-list">
         <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
         <button id="shareBackupRow" class="settings-row" onclick="shareBackup()" hidden><i class="ti ti-send"></i> 백업 보내기 (카톡·메일)</button>
@@ -1791,6 +1813,8 @@
         <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
         <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> 창고지기 알려주기 (링크 공유)</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
+        <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+        <button id="resetRow" class="settings-row is-danger" onclick="openResetAsk()"><i class="ti ti-trash"></i> 모든 데이터 지우기</button>
     </div>
     <p id="settingsFooter" class="settings-footer"></p>
     <input type="file" id="backupFileInput" style="display:none" onchange="importSystemData(this)">
@@ -2592,7 +2616,10 @@
         document.getElementById('installAppRow').hidden = isInstalledApp();
         syncLastBackupText();
         document.getElementById('shareBackupRow').hidden = !canShareBackup();
-        syncSettingsFooter();
+        syncSettingsFooter(); syncFontSeg();
+        document.getElementById('resetRow').hidden = isSamplePreview || !hasSavedData();
+        document.getElementById('contactRow').hidden = !CONTACT.url;
+        document.getElementById('contactText').textContent = CONTACT.label || '';
         document.getElementById('settingsModal').style.display = 'block';
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -2828,7 +2855,16 @@
         if (document.body.classList.contains('hero-search-active')) renderHeroHome();
     }
 
-    function changeFontSize(delta) { bubbleFontSize = Math.max(10, bubbleFontSize + delta); imageList.forEach(data => render(data)); }
+    // 사진 위 글자 크기: 기본값(폰 22 · PC 16)에서 얼마나 키웠는지를 저장해 다음에 열어도 유지 (가−/가+와 설정이 같은 값을 쓴다)
+    const FONT_BASE = bubbleFontSize;
+    function setFontDelta(d) {
+        bubbleFontSize = Math.max(10, FONT_BASE + d);
+        try { safeStorage.setItem('fontDelta', String(bubbleFontSize - FONT_BASE)); } catch (e) {}
+        syncFontSeg(); imageList.forEach(data => render(data));
+    }
+    function syncFontSeg() { const d = bubbleFontSize - FONT_BASE; document.querySelectorAll('#fontSeg button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === d))); }
+    function changeFontSize(delta) { setFontDelta(bubbleFontSize - FONT_BASE + delta); }
+    try { const d = parseInt(safeStorage.getItem('fontDelta') || '0', 10); if (d) bubbleFontSize = Math.max(10, FONT_BASE + d); } catch (e) {}
     function addImage(input) {
         if (!input.files[0]) return; document.getElementById('emptyGuide').style.display = 'none';
         if(imageList.length === 1 && imageList[0].id === "dummy_root") { document.getElementById('canvasList').innerHTML = ""; imageList = []; }
@@ -3913,6 +3949,38 @@
             const est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
             if (est && est.usage != null && photos.length) { line += ` · 저장 공간 ${(est.usage / 1048576).toFixed(1)}MB`; el.innerHTML = `${escapeHtml(line)}<br>창고지기 ${escapeHtml(APP_VERSION)}`; }
         } catch (e) {}
+    }
+    // 📞 문의: 채널·연락처가 정해지면 여기만 채운다 (비어 있으면 설정에서 숨김)
+    const CONTACT = { url: '', label: '' };
+    function openContact() { if (CONTACT.url) window.open(CONTACT.url, '_blank', 'noopener'); }
+    // 🗑 모든 데이터 지우기: 사진·구역·물건과 그에 딸린 기록만 지운다 (테마·글자 크기·안내를 본 기록은 남김)
+    function openResetAsk() {
+        closeSettingsModal();
+        document.getElementById('resetAskBackdrop').style.display = 'block';
+        document.getElementById('resetAsk').style.setProperty('display', 'block', 'important');
+    }
+    function closeResetAsk() {
+        document.getElementById('resetAskBackdrop').style.display = 'none';
+        document.getElementById('resetAsk').style.display = 'none';
+    }
+    function resetAll(withBackup) {
+        closeResetAsk();
+        if (withBackup) {
+            exportSystemData();
+            // 파일이 실제로 저장됐는지 본 뒤에 지운다 (내려받기가 막히면 데이터만 사라지는 일이 없게)
+            setTimeout(() => {
+                if (!confirm("백업 파일이 저장됐는지 확인해 주세요.\n확인을 누르면 이 폰의 데이터를 모두 지워요.")) return;
+                wipeAllData();
+            }, 800);
+            return;
+        }
+        if (!confirm("정말 지울까요? 백업이 없으면 되살릴 수 없어요.")) return;
+        wipeAllData();
+    }
+    function wipeAllData() {
+        ['savedSystemData', 'baseItems', 'isSampleData', 'industry', 'industryAsked', 'lastBackupAt', 'dataChangedAt', 'backupBannerHiddenUntil', USAGE_KEY, SEARCH_HISTORY_KEY, SEARCH_PICKS_KEY]
+            .forEach(k => { try { safeStorage.removeItem(k); } catch (e) {} });
+        reloadAfterSave();
     }
     function backupJson() {
         return JSON.stringify({ app: 'changgojigi', version: BACKUP_VERSION, exportedAt: new Date().toISOString(), note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") });
