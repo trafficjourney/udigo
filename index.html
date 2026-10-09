@@ -634,7 +634,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #pendingAdd, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #pendingAdd, #backupChoice, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -644,7 +644,8 @@
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
         #dataInfo { z-index: 10001; max-width: 420px; }
-        #pendingAdd { z-index: 10001; max-width: 360px; }
+        #pendingAdd, #backupChoice { z-index: 10001; max-width: 360px; }
+        #backupChoiceBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #pendingAddBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
@@ -1375,6 +1376,13 @@
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
+<div id="backupChoiceBackdrop" onclick="closeBackupChoice()"></div>
+<div id="backupChoice" role="dialog" aria-modal="true" aria-label="백업 방법 고르기" style="line-height: 1.6;">
+    <h2 style="text-align: center; color: var(--text); margin-bottom: 6px; font-size: 1.1em;">백업 파일을 어디에 둘까요?</h2>
+    <p style="text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 16px; word-break: keep-all;">카톡 '나와의 채팅'에 보내 두면 폰을 바꿀 때 편해요</p>
+    <button type="button" class="btn-base btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="shareBackup()"><i class="ti ti-send" style="margin-right: 4px;"></i> 카톡 등으로 보내기</button>
+    <button type="button" class="btn-base btn-secondary" style="width: 100%;" onclick="closeBackupChoice(); exportSystemData();"><i class="ti ti-download" style="margin-right: 4px;"></i> 이 폰에 저장</button>
+</div>
 <div id="pendingAddBackdrop" onclick="closePendingAdd()"></div>
 <div id="pendingAdd" role="alertdialog" aria-modal="true" aria-labelledby="pendingAddTitle" style="line-height: 1.6;">
     <h2 id="pendingAddTitle" style="text-align: center; color: var(--text); margin-bottom: 6px; font-size: 1.1em; word-break: keep-all;"></h2>
@@ -1503,7 +1511,7 @@
     <div id="backupBanner" class="sample-banner install-banner" style="display: none;">
         <span><i class="ti ti-device-floppy"></i> 데이터는 이 폰에만 있어요. 백업 파일을 받아 두세요 <button type="button" class="trust-link" onclick="openDataInfo()">자세히</button></span>
         <span class="install-banner-actions">
-            <button type="button" class="btn-xs is-accent" onclick="exportSystemData()">백업 받기</button>
+            <button type="button" class="btn-xs is-accent" onclick="startBackup()">백업 받기</button>
             <button type="button" class="btn-xs is-icon" onclick="dismissBackupBanner()" title="나중에" aria-label="나중에"><i class="ti ti-x"></i></button>
         </span>
     </div>
@@ -1771,6 +1779,7 @@
     </div>
     <div class="settings-list">
         <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
+        <button id="shareBackupRow" class="settings-row" onclick="shareBackup()" hidden><i class="ti ti-send"></i> 백업 보내기 (카톡·메일)</button>
         <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
         <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
@@ -2572,6 +2581,7 @@
         syncIndustryUI();
         document.getElementById('installAppRow').hidden = isInstalledApp();
         syncLastBackupText();
+        document.getElementById('shareBackupRow').hidden = !canShareBackup();
         document.getElementById('settingsModal').style.display = 'block';
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -3817,15 +3827,48 @@
     }
     // 백업 파일: version·exportedAt은 나중에 서버 저장으로 옮길 때 옛 파일을 구분해 읽기 위한 표시 (없는 옛 파일은 version 0으로 본다)
     const BACKUP_VERSION = 1;
+    function backupJson() {
+        return JSON.stringify({ app: 'changgojigi', version: BACKUP_VERSION, exportedAt: new Date().toISOString(), note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") });
+    }
+    function markBackedUp() {
+        if (!isSamplePreview) { try { safeStorage.setItem('lastBackupAt', String(Date.now())); } catch (e) {} }
+        hideBackupBanner(); syncLastBackupText();
+    }
     function exportSystemData() {
-        const packageData = { app: 'changgojigi', version: BACKUP_VERSION, exportedAt: new Date().toISOString(), note: "백업", savedSystemData: JSON.parse(safeStorage.getItem('savedSystemData') || "[]"), baseItems: JSON.parse(safeStorage.getItem('baseItems') || "[]") };
         // data: 주소에 통째로 넣으면 사진이 많을 때(수 MB) 파일이 잘릴 수 있어 Blob으로 만든다
-        const url = URL.createObjectURL(new Blob([JSON.stringify(packageData)], { type: 'application/json' }));
+        const url = URL.createObjectURL(new Blob([backupJson()], { type: 'application/json' }));
         const downloadLink = document.createElement('a'); downloadLink.href = url; downloadLink.download = `창고지기_백업_${fileDateTime()}.json`;
         document.body.appendChild(downloadLink); downloadLink.click(); downloadLink.remove();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
-        if (!isSamplePreview) { try { safeStorage.setItem('lastBackupAt', String(Date.now())); } catch (e) {} }
-        hideBackupBanner(); syncLastBackupText();
+        markBackedUp();
+    }
+    // 📤 백업 보내기: 폰의 공유 창(카톡·메일·드라이브 등)으로 백업 파일을 넘긴다.
+    // 크롬은 공유할 수 있는 파일 종류가 정해져 있어 .json은 거절된다 → 내용은 같고 이름만 .txt (불러오기는 확장자를 가리지 않음)
+    function canShareBackup() {
+        try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'a.txt', { type: 'text/plain' })] })); } catch (e) { return false; }
+    }
+    async function shareBackup() {
+        closeBackupChoice();
+        const file = new File([backupJson()], `창고지기_백업_${fileDateTime()}.txt`, { type: 'text/plain' });
+        try {
+            await navigator.share({ files: [file], title: '창고지기 백업' });
+            markBackedUp();
+            showToast('보냈어요. 받은 파일은 폰에도 저장해 두세요', 4000);
+        } catch (err) {
+            if (err && err.name === 'AbortError') return; // 공유 창을 닫음 → 백업한 걸로 치지 않는다
+            showToast('보내기가 안 돼서 이 폰에 저장했어요', 3500);
+            exportSystemData();
+        }
+    }
+    // 백업 안내 띠의 [백업 받기]: 보내기가 되는 폰이면 보내기/저장 중 고르게, 아니면 바로 저장
+    function startBackup() {
+        if (!canShareBackup()) { exportSystemData(); return; }
+        document.getElementById('backupChoiceBackdrop').style.display = 'block';
+        document.getElementById('backupChoice').style.setProperty('display', 'block', 'important');
+    }
+    function closeBackupChoice() {
+        document.getElementById('backupChoiceBackdrop').style.display = 'none';
+        document.getElementById('backupChoice').style.display = 'none';
     }
     function importSystemData(input) {
         const file = input.files[0]; if (!file) return;
