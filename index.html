@@ -1525,7 +1525,7 @@
     <div class="pick-banner-title"><i class="ti ti-hand-finger"></i><span id="pickBannerTitle"></span></div>
     <div class="pick-banner-actions">
         <button type="button" class="btn-base btn-quiet pick-list-btn" onclick="openZonePicker()"><i class="ti ti-list"></i> 목록에서 고르기</button>
-        <button type="button" class="btn-base btn-quiet pick-remove-btn" onclick="pickModeRemove()"><i class="ti ti-trash"></i> 없어졌어요</button>
+        <button type="button" class="btn-base btn-quiet pick-remove-btn" onclick="pickModeRemove()"><i class="ti ti-trash"></i> 찾을 수 없어요</button>
         <button type="button" class="btn-base btn-quiet" onclick="exitPickMode()">취소</button>
     </div>
 </div>
@@ -4256,7 +4256,7 @@
         const { zone: fromZone, itemName } = foundCtx;
         hideFoundBar();
         enterPickMode({
-            title: `${josa(itemName, '을', '를')} 옮긴 곳을 사진에서 눌러주세요`,
+            title: `${itemName}, 지금 어디 있어요? 실제로 있는 곳을 사진에서 눌러주세요`,
             excludeZone: fromZone,
             onRemove: () => removeItemFromZone(fromZone, itemName),
             onPick: (toData, toZone) => moveItemBetweenZones(fromZone, toData, toZone, itemName)
@@ -4266,13 +4266,14 @@
     function moveItemBetweenZones(fromZone, toData, toZone, itemName) {
         saveHistory();
         const idx = fromZone.items.findIndex(i => i.name === itemName);
+        const hadMemo = idx >= 0 && !!(fromZone.items[idx].comment || '').trim();
         if (idx >= 0) fromZone.items.splice(idx, 1);
         // 메모는 "세부 칸 위치"라서 새 구역에선 맞지 않으므로 옮기지 않는다
         if (!toZone.items.some(i => i.name === itemName)) toZone.items.push({ name: itemName, comment: '' });
         markZoneChecked(fromZone); markZoneChecked(toZone);
         refreshAfterDataChange();
         selectZone(toData.id, toData.zones.indexOf(toZone));
-        showToast(`${itemName} 위치를 ${josa(toZone.name || '새 구역', '으로', '로')} 바꿨어요`);
+        showToast(`${itemName} 위치를 ${josa(toZone.name || '새 구역', '으로', '로')} 바꿨어요` + (hadMemo ? ' · 세부 위치 메모는 새 구역에서 다시 적어주세요' : ''), hadMemo ? 4000 : 2200);
     }
 
     function startMoveItem(dataId, index, itemName) {
@@ -4287,7 +4288,7 @@
     }
 
     function removeItemFromZone(zone, itemName) {
-        if (!confirm(`${josa(itemName, '을', '를')} ${zone.name || '이 구역'} 목록에서 뺄까요?`)) return;
+        if (!confirm(`${josa(itemName, '을', '를')} ${zone.name || '이 구역'} 목록에서만 뺄까요?\n다른 구역의 목록은 그대로예요.`)) return;
         exitPickMode();
         saveHistory();
         zone.items = zone.items.filter(i => i.name !== itemName);
@@ -4369,7 +4370,7 @@
         document.getElementById('zonePickerExtra').innerHTML = pickMode.onRemove
             ? `<button type="button" class="sheet-row sheet-row-danger" onclick="pickModeRemove()">
                     <span class="sheet-row-icon"><i class="ti ti-trash"></i></span>
-                    <span class="sheet-row-text"><b>창고에서 없어졌어요</b><small>이 구역 목록에서 빼기</small></span>
+                    <span class="sheet-row-text"><b>찾을 수 없어요</b><small>이 구역 목록에서만 빼요 (다른 곳은 그대로)</small></span>
                </button>` : '';
 
         const rows = [];
