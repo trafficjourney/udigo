@@ -5023,7 +5023,18 @@
         const nameLineH = printPx(5.6), memoLineH = printPx(4.2), rowGap = printPx(1.2), badgeR = printPx(2.5);
         const headH = printPx(12) + printPx(7), footH = printPx(10), secH = printPx(9);
 
-        const photoH = data.canvas ? data.canvas.height * (contentW / data.canvas.width) : 0;
+        // 사진 배치: 종이 폭에 맞춘 사진이 쓸 수 있는 높이의 60%를 넘으면 (세로·정사각 사진) 목록이 2쪽으로 밀려나므로
+        //  · 세로 사진: 사진 왼쪽(폭 60%) + 목록 오른쪽 한 단 → 한 장에 들어가게
+        //  · 정사각에 가까운 사진: 사진 높이를 60%로 줄여 가운데, 아래에 2단 목록
+        const usableH = pageH - margin * 2 - headH - footH;
+        const ratio = data.canvas ? data.canvas.height / data.canvas.width : 0;
+        let layout = 'stack', photoW = contentW, photoH = contentW * ratio, photoX = margin;
+        if (data.canvas && photoH > usableH * 0.6) {
+            if (ratio >= 1.15) { layout = 'side'; photoW = contentW * 0.6; photoH = photoW * ratio; if (photoH > usableH) { photoH = usableH; photoW = photoH / ratio; } }
+            else { photoH = usableH * 0.6; photoW = photoH / ratio; photoX = margin + (contentW - photoW) / 2; }
+        }
+        const sideX = margin + photoW + colGap, sideW = contentW - photoW - colGap;
+        const rowW = layout === 'side' ? Math.min(sideW, colW) : colW; // 줄 바꿈은 가장 좁은 단 기준으로 (다음 쪽 2단에서도 그대로 쓴다)
         // 찾아보기 줄: 왼쪽 여백에 첫소리(ㄱ·ㄴ…, 바뀔 때만), 물건 이름 ······ 칸 번호들, 메모가 있으면 아래 줄
         // (첫소리를 따로 한 줄씩 두면 자리를 많이 먹어 한두 줄만 다음 쪽으로 넘어갔다)
         const gutter = printPx(6), groupGap = printPx(2.2);
@@ -5032,9 +5043,9 @@
         entries.forEach(e => {
             const init = indexInitial(e.name), first = init !== lastInit; lastInit = init;
             const badgesW = e.at.length > 0 ? [...new Set(e.at.map(a => a.num))].length * (badgeR * 2 + printPx(1)) : 0;
-            meas.font = nameFont; const nameLines = wrapCanvasText(meas, e.name, colW - gutter - badgesW - printPx(6));
+            meas.font = nameFont; const nameLines = wrapCanvasText(meas, e.name, rowW - gutter - badgesW - printPx(6));
             meas.font = memoFont;
-            const memos = e.at.filter(a => a.comment).flatMap(a => wrapCanvasText(meas, (e.at.length > 1 ? `${a.num}번: ` : '') + a.comment, colW - gutter - printPx(4)));
+            const memos = e.at.filter(a => a.comment).flatMap(a => wrapCanvasText(meas, (e.at.length > 1 ? `${a.num}번: ` : '') + a.comment, rowW - gutter - printPx(4)));
             rows.push({ type: 'item', e, init: first ? init : null, nameLines, memos, nums: [...new Set(e.at.map(a => a.num))], h: (first && rows.length ? groupGap : 0) + nameLines.length * nameLineH + memos.length * memoLineH + rowGap });
         });
         if (!rows.length) rows.push({ type: 'empty', h: nameLineH });
@@ -5042,12 +5053,13 @@
         // 쪽 나누기: 첫 쪽은 사진 아래부터, 왼쪽 단을 채운 뒤 오른쪽 단, 그래도 넘치면 다음 쪽 (머리글이 단 맨 끝에 혼자 남지 않게)
         const pages = [];
         let page = { photo: true, cols: [[], []] }, col = 0;
-        const top0 = () => margin + headH + (page.photo ? photoH + printPx(8) : 0) + secH;
+        const sideNow = () => page.photo && layout === 'side'; // 사진 옆 한 단만 쓰는 쪽
+        const top0 = () => margin + headH + (page.photo && !sideNow() ? photoH + printPx(8) : 0) + secH;
         let y = top0();
         const limitY = pageH - margin - footH;
         rows.forEach((row) => {
             if (y + row.h > limitY) {
-                if (col === 0) { col = 1; y = top0(); }
+                if (col === 0 && !sideNow()) { col = 1; y = top0(); }
                 else { pages.push(page); page = { photo: false, cols: [[], []] }; col = 0; y = top0(); }
             }
             page.cols[col].push(row); y += row.h;
@@ -5070,18 +5082,21 @@
             ctx.moveTo(margin, cy); ctx.lineTo(pageW - margin, cy); ctx.stroke();
             cy += printPx(7);
 
-            if (pg.photo && data.canvas) { cy += drawPrintPhoto(ctx, data, margin, cy, contentW) + printPx(8); }
+            const side = pg.photo && layout === 'side' && data.canvas;
+            if (pg.photo && data.canvas) { drawPrintPhoto(ctx, data, photoX, cy, photoW); if (!side) cy += photoH + printPx(8); }
+            const listX = side ? sideX : margin;
 
-            // 찾아보기 제목
+            // 찾아보기 제목 (사진 옆 좁은 단이면 설명을 짧게)
             ctx.font = secFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-            ctx.fillText('물건 찾아보기', margin, cy + printPx(5));
+            ctx.fillText('물건 찾아보기', listX, cy + printPx(5));
             const secW = ctx.measureText('물건 찾아보기').width;
             ctx.font = dateFont; ctx.fillStyle = PRINT.sub;
-            ctx.fillText('가나다순 · 오른쪽 숫자 = 사진 속 구역 번호', margin + secW + printPx(3), cy + printPx(5));
+            ctx.fillText(side ? '숫자 = 사진 속 번호' : '가나다순 · 오른쪽 숫자 = 사진 속 구역 번호', listX + secW + printPx(3), cy + printPx(5));
             cy += secH;
 
+            const cw = side ? sideW : colW;
             pg.cols.forEach((list, ci) => {
-                const x0 = margin + ci * (colW + colGap);
+                const x0 = listX + ci * (colW + colGap);
                 let ry = cy;
                 list.forEach(row => {
                     if (row.type === 'empty') {
@@ -5092,7 +5107,7 @@
                     // 단이 바뀌어 같은 첫소리가 이어지면 단 맨 위에 첫소리를 한 번 더 적는다
                     const ini = row.init || (ry === cy ? indexInitial(row.e.name) : null);
                     if (ini) {
-                        if (row.init && ry > cy) { ry += groupGap; ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.25); ctx.beginPath(); ctx.moveTo(x0, ry - groupGap / 2); ctx.lineTo(x0 + colW, ry - groupGap / 2); ctx.stroke(); }
+                        if (row.init && ry > cy) { ry += groupGap; ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.25); ctx.beginPath(); ctx.moveTo(x0, ry - groupGap / 2); ctx.lineTo(x0 + cw, ry - groupGap / 2); ctx.stroke(); }
                         ctx.font = initFont; ctx.fillStyle = '#a08a2a'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
                         ctx.fillText(ini, x0, ry + nameLineH - printPx(1.6));
                     }
@@ -5102,7 +5117,7 @@
                     row.nameLines.forEach((line, li) => ctx.fillText(line, nx0, ry + nameLineH * (li + 1) - printPx(1.4)));
                     const lastW = ctx.measureText(row.nameLines[row.nameLines.length - 1]).width;
                     const by = ry + nameLineH * (row.nameLines.length - 0.5);
-                    let bx = x0 + colW - badgeR;
+                    let bx = x0 + cw - badgeR;
                     [...row.nums].reverse().forEach(nm => { drawPrintBadge(ctx, bx, by, badgeR, String(nm)); bx -= badgeR * 2 + printPx(1); });
                     const dotFrom = nx0 + lastW + printPx(2), dotTo = bx + badgeR - printPx(1);
                     if (dotTo - dotFrom > printPx(3)) {
