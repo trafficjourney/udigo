@@ -510,8 +510,18 @@
         .first-zone.is-edit .first-zone-manual { display: none; }
         .first-zone.is-edit .first-zone-hint { display: flex; }
         /* 고치는 중엔 AI 버튼·구분선 아래에 붙으므로 작게 (움직이는 그림은 빼서 사진 높이 안에 들어오게) */
-        .first-zone.is-edit .first-zone-hint { padding: 6px 14px; font-size: 13px; border-radius: 12px; }
-        .first-zone.is-edit .first-zone-demo { display: none; }
+        .first-zone.is-edit .first-zone-hint { flex-direction: row; gap: 10px; padding: 7px 14px 7px 10px; font-size: 13px; border-radius: 12px; text-align: left; }
+        /* 손가락 그림은 작게 줄여 글자 왼쪽에 (세로로 쌓으면 사진 높이를 넘는다) */
+        .first-zone.is-edit .first-zone-demo { flex: none; width: 44px; height: 28px; }
+        .first-zone.is-edit .first-zone-demo::before { border-width: 2px; animation-name: fz-draw-s; }
+        .first-zone.is-edit .first-zone-demo::after { width: 14px; height: 14px; margin: -7px 0 0 -7px; animation-name: fz-finger-s; }
+        @keyframes fz-draw-s { 0% { width: 0; height: 0; opacity: 1; } 70% { width: 44px; height: 28px; opacity: 1; } 100% { width: 44px; height: 28px; opacity: 0; } }
+        @keyframes fz-finger-s { 0% { left: 0; top: 0; opacity: 1; } 70% { left: 44px; top: 28px; opacity: 1; } 100% { left: 44px; top: 28px; opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .first-zone.is-edit .first-zone-demo::before { width: 44px; height: 28px; } .first-zone.is-edit .first-zone-demo::after { left: 44px; top: 28px; } }
+        /* 사진 위를 끌기 시작하면 안내 전체를 감춰 그리는 자리가 보이게 (구역이 안 생기면 다시 보임) */
+        .first-zone { transition: opacity 0.15s; }
+        .first-zone.is-drawing { opacity: 0; }
+        .first-zone.is-drawing .first-zone-pick { pointer-events: none; }
         .first-zone-demo { position: relative; width: 84px; height: 52px; }
         .first-zone-demo::before { content: ''; position: absolute; left: 0; top: 0; border: 2.5px dashed #fff; border-radius: 4px; animation: fz-draw 2s ease-in-out infinite; }
         .first-zone-demo::after { content: ''; position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(255,210,0,0.85); border: 2px solid #fff; animation: fz-finger 2s ease-in-out infinite; }
@@ -624,7 +634,7 @@
         body.editing #printFab { display: none; }
         #undoBtn { background: var(--bg); color: var(--text3); border-color: var(--ivory-border); cursor: not-allowed; box-shadow: none; }
 
-        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #settingsModal, #printModal {
+        #modal, #guideModal, #editIntro, #photoTip, #dataInfo, #pendingAdd, #settingsModal, #printModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 92%; max-width: 480px; max-height: 85vh; background: var(--card); padding: 24px;
             border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -634,6 +644,8 @@
         /* 구역 고치기 첫 안내: 편집 띠(1068)·완료 버튼 위에 뜨게 */
         #editIntro, #photoTip { z-index: 10001; max-width: 420px; }
         #dataInfo { z-index: 10001; max-width: 420px; }
+        #pendingAdd { z-index: 10001; max-width: 360px; }
+        #pendingAddBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #dataInfoBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text2); line-height: 1.5; }
         .data-table th, .data-table td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--border); }
@@ -1363,6 +1375,15 @@
     // (자동으로 띄우지 않는다: 예시를 보려고 눌렀는데 글부터 읽으라고 막았다. 첫 화면·[첫 구역 만들기]가 대신 안내한다)
 </script>
 
+<div id="pendingAddBackdrop" onclick="closePendingAdd()"></div>
+<div id="pendingAdd" role="alertdialog" aria-modal="true" aria-labelledby="pendingAddTitle" style="line-height: 1.6;">
+    <h2 id="pendingAddTitle" style="text-align: center; color: var(--text); margin-bottom: 6px; font-size: 1.1em; word-break: keep-all;"></h2>
+    <p style="text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 16px;">입력칸에 적은 물건이 아직 목록에 안 들어갔어요</p>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn-base btn-secondary" style="flex: 1;" onclick="answerPendingAdd(false)">추가 안 하고 완료</button>
+        <button type="button" class="btn-base btn-primary" style="flex: 1;" onclick="answerPendingAdd(true)">추가하고 완료</button>
+    </div>
+</div>
 <div id="dataInfoBackdrop" onclick="closeDataInfo()"></div>
 <div id="dataInfo" role="dialog" aria-modal="true" aria-label="내 데이터는 어디에" style="line-height: 1.6;">
     <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 14px; font-size: 1.2em;">내 데이터는 어디에 있나요?</h2>
@@ -2762,7 +2783,7 @@
         fsBar.querySelector('.fs-close').onclick = () => closePhotoFullscreen();
         // 구역이 하나도 없는 사진: 가운데 [+ 첫 구역 만들기] (누르면 구역 고치기로 들어감). 고치는 중엔 "끌어서 그려요" 안내로 바뀐다
         const firstZone = document.createElement('div'); firstZone.className = 'first-zone'; firstZone.hidden = true;
-        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 손가락으로 끌어서<br>직접 그려요</b></div>`;
+        firstZone.innerHTML = `<div class="first-zone-pick"><button type="button" class="first-zone-btn first-zone-ai"><i class="ti ti-sparkles"></i> AI로 구역 찾기</button><button type="button" class="first-zone-note" onclick="openDataInfo()">사진은 분석 서버로 보내져요 · <u>자세히</u></button><div class="first-zone-or" aria-hidden="true"><span>또는</span></div><button type="button" class="first-zone-btn first-zone-manual"><i class="ti ti-plus"></i> 직접 그리기</button></div><div class="first-zone-hint" aria-live="polite"><span class="first-zone-demo" aria-hidden="true"></span><b>사진 위를 끌어서<br>직접 그려요</b></div>`;
         const hideToast = () => { const t = document.getElementById('toast'); if (t) t.classList.remove('show'); };
         firstZone.querySelector('.first-zone-manual').onclick = () => { hideToast(); activeData = data; if (!isEditMode) toggleEditMode(); syncFirstZone(data); };
         firstZone.querySelector('.first-zone-ai').onclick = () => { hideToast(); runAIAnalysis(data.id); };
@@ -2850,6 +2871,7 @@
             if (clickedZone) { activeZone = clickedZone; activeData = data; isMovingZone = true; zoneDragOffset = { x: x - clickedZone.x, y: y - clickedZone.y }; render(data); return; }
 
             isDrawingNewZone = true; activeData = data; drawStart = { x, y }; currentDrawPos = { x, y }; activeZone = null; render(data);
+            if (data.firstZone) data.firstZone.classList.add('is-drawing');
         });
 
         canvas.addEventListener('pointermove', (e) => {
@@ -2870,14 +2892,14 @@
 
         canvas.addEventListener('pointercancel', () => {
             if (isEditMode && (isMovingZone || isResizingZone) && pendingHistoryState) { saveHistory(pendingHistoryState); if (data.id !== "dummy_root") saveData(); }
-            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; render(data);
+            isMovingZone = false; isResizingZone = false; isDrawingNewZone = false; pendingHistoryState = null; if (data.firstZone) data.firstZone.classList.remove('is-drawing'); render(data);
         });
         canvas.addEventListener('pointerup', (e) => {
             try { canvas.releasePointerCapture(e.pointerId); } catch(err) {}
             const rect = canvas.getBoundingClientRect(); const x = (e.clientX - rect.left) * (canvas.width / rect.width); const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
             if (isDrawingNewZone) {
-                isDrawingNewZone = false; const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
+                isDrawingNewZone = false; if (data.firstZone) data.firstZone.classList.remove('is-drawing'); const x1 = Math.min(drawStart.x, x), y1 = Math.min(drawStart.y, y), w = Math.abs(x - drawStart.x), h = Math.abs(y - drawStart.y);
                 if (w > 25 && h > 25) {
                     if (pendingHistoryState) { saveHistory(pendingHistoryState); pendingHistoryState = null; }
 
@@ -3534,7 +3556,27 @@
         markZoneChecked(activeZone); activeZone.name = name; activeZone.items = items;
         if (activeData.id !== "dummy_root") saveData();
     }
-    function saveZone() { commitZoneModal(true); closeModal(); }
+    // [완료]: 입력칸에 적고 아직 안 넣은 새 물건이 있으면("'○○' 새로 추가" 줄이 떠 있으면) 넣을지 먼저 묻는다
+    // (예전엔 그대로 사라졌다. 이미 있는 이름을 친 경우는 찾기로 보고 묻지 않는다)
+    function saveZone() {
+        const q = document.getElementById('newItemInput').value.trim();
+        if (q && !document.getElementById('zmAddRow').hidden) {
+            document.getElementById('pendingAddTitle').textContent = `'${q}'${josa(q, '을', '를').slice(q.length)} 추가할까요?`;
+            document.getElementById('pendingAddBackdrop').style.display = 'block';
+            document.getElementById('pendingAdd').style.setProperty('display', 'block', 'important');
+            return;
+        }
+        commitZoneModal(true); closeModal();
+    }
+    function closePendingAdd() {
+        document.getElementById('pendingAddBackdrop').style.display = 'none';
+        document.getElementById('pendingAdd').style.display = 'none';
+    }
+    function answerPendingAdd(add) {
+        closePendingAdd();
+        if (add) addNewItem(); else document.getElementById('newItemInput').value = '';
+        commitZoneModal(true); closeModal();
+    }
     // 구역 창을 닫으면 보기 모드에서는 선택(어두운 배경 + 빨간 테두리)도 같이 푼다 — 창을 닫는 건 "다 봤다"는 뜻이라 사진 전체가 다시 보여야 한다.
     // 편집 모드는 닫은 뒤에도 그 구역을 옮기거나 크기를 바꿀 수 있게 선택을 남긴다
     function closeModal() {
