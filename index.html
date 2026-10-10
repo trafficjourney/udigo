@@ -9,13 +9,14 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=7">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="창고지기">
+    <meta name="apple-mobile-web-app-title" content="창고여지도">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
         // ✏ 서비스 이름: 앱 화면 글자·공유·백업/인쇄 파일 이름·인쇄물은 모두 이 한 곳을 쓴다.
         //   이름을 바꿀 땐 python3 tools/rename_app.py 새이름 → 이 줄과 아래 <head>의 제목·공유 미리보기 글, manifest까지 한 번에 바뀐다.
         //   (검색·카톡 미리보기는 스크립트를 실행하지 않고 <head> 글자를 그대로 읽어서, 그쪽은 글자로 따로 적혀 있어야 한다)
-        const APP_NAME = '창고지기';
+        const APP_NAME = '창고여지도';
+        const APP_NAME_EN = 'Backroom Atlas'; // 영문 표기: backroom(매장 뒤 창고) + atlas(지도책) = 창고여지도
         // 이름 뒤 조사: 받침 있으면 '으로/이/은/을', 없으면 '로/가/는/를' (ㄹ 받침 + 로)
         function josa(word, withBatchim, without) {
             const c = word.charCodeAt(word.length - 1) - 0xAC00;
@@ -35,18 +36,18 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"></noscript>
-    <title>창고지기 - 사진 한 장으로 만드는 창고 지도</title>
+    <title>창고여지도 - 사진으로 만드는 매장 물품 지도</title>
     <!-- 카톡·SNS 링크 미리보기 (이미지 주소는 반드시 전체 주소여야 카톡이 읽는다) -->
     <meta name="description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요. A4로 뽑아 벽에 붙일 수도 있어요.">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="창고지기">
-    <meta property="og:title" content="창고지기 - 사진 한 장이 창고 지도가 돼요">
+    <meta property="og:site_name" content="창고여지도">
+    <meta property="og:title" content="창고여지도 - 사진으로 만드는 매장 물품 지도">
     <meta property="og:description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요.">
     <meta property="og:url" content="https://trafficjourney.github.io/udigo/">
-    <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=8">
+    <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=13">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="창고지기: 사진 한 장이 창고 지도가 돼요. 남색 앱 아이콘 속 선반에서 찾는 상자에 노란 쪽지와 위치 핀, 아래에 '빨대 → 아래 칸 가운데' 검색 결과">
+    <meta property="og:image:alt" content="창고여지도: 사진 한 장이 창고 지도가 돼요. 남색 앱 아이콘 속 선반에서 찾는 상자에 노란 쪽지와 위치 핀, 아래에 '빨대 → 아래 칸 가운데' 검색 결과">
     <meta property="og:locale" content="ko_KR">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -997,6 +998,16 @@
         @media (max-width: 600px) { .search-bar .beta-badge { display: none; } }
         .beta-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 12px; font-weight: 700; }
         .welcome-beta { text-align: center; margin-bottom: 8px; }
+        /* 첫 화면 이름 줄 + 대동여지도 느낌 선(방안·산줄기·물길)을 아주 옅게 깔아서, 옛 이름은 살짝만 비치고 화면은 모던하게 */
+        .welcome-brand { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0 0 12px; }
+        .welcome-brand-name { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .welcome-brand b { font-size: 22px; font-weight: 900; color: var(--accent-text); letter-spacing: -0.6px; }
+        .welcome-brand .welcome-en { font-size: 12px; font-weight: 700; color: var(--text3); letter-spacing: 0.4px; }
+        .welcome-brand span { font-size: 13px; font-weight: 600; color: var(--text2); }
+        .welcome-top { position: relative; }
+        .welcome-top > * { position: relative; }
+        .welcome-top::before { content: ""; position: absolute; left: -20px; right: -20px; top: 0; height: 300px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 420' width='600' height='420'%3E%3Cg stroke='%233b3577' stroke-width='1' opacity='0.05'%3E%3Cline x1='0' y1='0' x2='0' y2='420'/%3E%3Cline x1='60' y1='0' x2='60' y2='420'/%3E%3Cline x1='120' y1='0' x2='120' y2='420'/%3E%3Cline x1='180' y1='0' x2='180' y2='420'/%3E%3Cline x1='240' y1='0' x2='240' y2='420'/%3E%3Cline x1='300' y1='0' x2='300' y2='420'/%3E%3Cline x1='360' y1='0' x2='360' y2='420'/%3E%3Cline x1='420' y1='0' x2='420' y2='420'/%3E%3Cline x1='480' y1='0' x2='480' y2='420'/%3E%3Cline x1='540' y1='0' x2='540' y2='420'/%3E%3Cline x1='600' y1='0' x2='600' y2='420'/%3E%3Cline x1='0' y1='0' x2='600' y2='0'/%3E%3Cline x1='0' y1='60' x2='600' y2='60'/%3E%3Cline x1='0' y1='120' x2='600' y2='120'/%3E%3Cline x1='0' y1='180' x2='600' y2='180'/%3E%3Cline x1='0' y1='240' x2='600' y2='240'/%3E%3Cline x1='0' y1='300' x2='600' y2='300'/%3E%3Cline x1='0' y1='360' x2='600' y2='360'/%3E%3Cline x1='0' y1='420' x2='600' y2='420'/%3E%3C/g%3E%3Cg fill='none' stroke='%233b3577' stroke-width='1.2' opacity='0.14'%3E%3Cpath d='M-20.0 134.4 L-15.2 138.4 L-10.3 142.4 L-5.5 146.3 L-0.7 150.1 L4.2 153.7 L9.0 157.2 L13.8 160.4 L18.7 163.4 L23.5 166.2 L28.3 168.6 L33.2 170.8 L38.0 172.6 L42.8 174.1 L47.7 175.3 L52.5 176.1 L57.3 176.6 L62.2 176.8 L67.0 176.6 L71.8 176.2 L76.7 175.5 L81.5 174.6 L86.3 173.4 L91.2 172.1 L96.0 170.6 L100.8 168.9 L105.7 167.2 L110.5 165.4 L115.3 163.7 L120.2 161.9 L125.0 160.2 L129.8 158.6 L134.7 157.2 L139.5 155.9 L144.3 154.8 L149.2 154.0 L154.0 153.4 L158.8 153.2 L163.7 153.2 L168.5 153.5 L173.3 154.1 L178.2 155.1 L183.0 156.4 L187.8 158.1 L192.7 160.1 L197.5 162.3 L202.3 164.9 L207.2 167.8 L212.0 170.9 L216.8 174.3 L221.7 177.8 L226.5 181.5 L231.3 185.4 L236.2 189.3 L241.0 193.3 L245.8 197.3 L250.7 201.3 L255.5 205.3 L260.3 209.1 L265.2 212.9 L270.0 216.4'/%3E%3Cpath d='M-20.0 139.4 L-15.2 143.4 L-10.3 147.4 L-5.5 151.3 L-0.7 155.1 L4.2 158.7 L9.0 162.2 L13.8 165.4 L18.7 168.4 L23.5 171.2 L28.3 173.6 L33.2 175.8 L38.0 177.6 L42.8 179.1 L47.7 180.3 L52.5 181.1 L57.3 181.6 L62.2 181.8 L67.0 181.6 L71.8 181.2 L76.7 180.5 L81.5 179.6 L86.3 178.4 L91.2 177.1 L96.0 175.6 L100.8 173.9 L105.7 172.2 L110.5 170.4 L115.3 168.7 L120.2 166.9 L125.0 165.2 L129.8 163.6 L134.7 162.2 L139.5 160.9 L144.3 159.8 L149.2 159.0 L154.0 158.4 L158.8 158.2 L163.7 158.2 L168.5 158.5 L173.3 159.1 L178.2 160.1 L183.0 161.4 L187.8 163.1 L192.7 165.1 L197.5 167.3 L202.3 169.9 L207.2 172.8 L212.0 175.9 L216.8 179.3 L221.7 182.8 L226.5 186.5 L231.3 190.4 L236.2 194.3 L241.0 198.3 L245.8 202.3 L250.7 206.3 L255.5 210.3 L260.3 214.1 L265.2 217.9 L270.0 221.4'/%3E%3Cpath d='M300.0 399.0 L305.2 395.6 L310.4 392.2 L315.6 388.8 L320.8 385.3 L326.0 381.8 L331.2 378.2 L336.4 374.6 L341.6 370.8 L346.8 366.9 L352.0 362.9 L357.2 358.8 L362.4 354.6 L367.6 350.2 L372.8 345.7 L378.0 341.0 L383.2 336.1 L388.4 331.1 L393.6 325.9 L398.8 320.6 L404.0 315.1 L409.2 309.4 L414.4 303.5 L419.6 297.5 L424.8 291.4 L430.0 285.0 L435.2 278.6 L440.4 272.0 L445.6 265.2 L450.8 258.4 L456.0 251.4 L461.2 244.3 L466.4 237.2 L471.6 230.0 L476.8 222.7 L482.0 215.3 L487.2 208.0 L492.4 200.6 L497.6 193.2 L502.8 185.8 L508.0 178.4 L513.2 171.1 L518.4 163.8 L523.6 156.6 L528.8 149.4 L534.0 142.3 L539.2 135.4 L544.4 128.5 L549.6 121.8 L554.8 115.2 L560.0 108.7 L565.2 102.4 L570.4 96.2 L575.6 90.2 L580.8 84.4 L586.0 78.7 L591.2 73.2 L596.4 67.8 L601.6 62.6 L606.8 57.6 L612.0 52.8'/%3E%3Cpath d='M300.0 404.0 L305.2 400.6 L310.4 397.2 L315.6 393.8 L320.8 390.3 L326.0 386.8 L331.2 383.2 L336.4 379.6 L341.6 375.8 L346.8 371.9 L352.0 367.9 L357.2 363.8 L362.4 359.6 L367.6 355.2 L372.8 350.7 L378.0 346.0 L383.2 341.1 L388.4 336.1 L393.6 330.9 L398.8 325.6 L404.0 320.1 L409.2 314.4 L414.4 308.5 L419.6 302.5 L424.8 296.4 L430.0 290.0 L435.2 283.6 L440.4 277.0 L445.6 270.2 L450.8 263.4 L456.0 256.4 L461.2 249.3 L466.4 242.2 L471.6 235.0 L476.8 227.7 L482.0 220.3 L487.2 213.0 L492.4 205.6 L497.6 198.2 L502.8 190.8 L508.0 183.4 L513.2 176.1 L518.4 168.8 L523.6 161.6 L528.8 154.4 L534.0 147.3 L539.2 140.4 L544.4 133.5 L549.6 126.8 L554.8 120.2 L560.0 113.7 L565.2 107.4 L570.4 101.2 L575.6 95.2 L580.8 89.4 L586.0 83.7 L591.2 78.2 L596.4 72.8 L601.6 67.6 L606.8 62.6 L612.0 57.8'/%3E%3C/g%3E%3Cg fill='none' stroke='%233b3577' stroke-width='1.6' stroke-linejoin='round' opacity='0.14'%3E%3Cpath d='M-40.0 361.2 L-35.4 352.2 L-30.8 361.1 L-26.2 352.1 L-21.5 361.1 L-17.0 352.0 L-12.2 360.9 L-7.9 351.8 L-3.0 360.7 L1.2 351.5 L6.2 360.3 L10.3 351.0 L15.5 359.7 L19.4 350.4 L24.8 359.0 L28.5 349.6 L34.0 358.0 L37.5 348.5 L43.2 356.8 L46.5 347.2 L52.5 355.4 L55.5 345.7 L61.8 353.7 L64.5 343.9 L71.0 351.7 L73.5 341.8 L80.2 349.4 L82.5 339.5 L89.5 346.9 L91.5 336.8 L98.8 344.0 L100.5 333.9 L108.0 340.9 L109.5 330.7 L117.2 337.4 L118.5 327.2 L126.5 333.7 L127.6 323.5 L135.8 329.8 L136.7 319.5 L145.0 325.6 L145.8 315.3 L154.2 321.3 L154.9 310.9 L163.5 316.7 L164.0 306.4 L172.7 312.0 L173.2 301.6 L182.0 307.2 L182.4 296.8 L191.2 302.3 L191.6 291.9 L200.5 297.3 L200.9 286.9 L209.8 292.3 L210.1 281.9 L219.0 287.4 L219.4 276.9 L228.2 282.4 L228.7 272.0 L237.5 277.6 L238.0 267.2 L246.8 272.8 L247.4 262.5 L256.0 268.2 L256.7 257.9 L265.2 263.8 L266.1 253.5 L274.5 259.6 L275.5 249.3 L283.8 255.5 L285.0 245.3 L293.0 251.8 L294.4 241.6 L302.2 248.3 L303.9 238.1 L311.5 245.0 L313.4 235.0 L320.8 242.1 L322.9 232.1 L330.0 239.4'/%3E%3Cpath d='M252.0 -20.0 L263.0 -19.7 L258.9 -9.5 L269.9 -9.3 L265.8 0.9 L276.8 1.0 L272.8 11.2 L283.7 11.2 L279.7 21.4 L290.5 21.2 L286.6 31.3 L297.4 30.9 L293.5 41.0 L304.2 40.4 L300.5 50.4 L311.1 49.5 L307.4 59.5 L317.9 58.3 L314.3 68.3 L324.7 66.7 L321.2 76.6 L331.5 74.8 L328.2 84.6 L338.3 82.4 L335.1 92.3 L345.0 89.7 L342.0 99.5 L351.8 96.6 L348.9 106.4 L358.6 103.2 L355.8 113.0 L365.3 109.4 L362.8 119.2 L372.1 115.4 L369.7 125.2 L378.9 121.1 L376.6 130.9 L385.7 126.7 L383.5 136.4 L392.5 132.0 L390.5 141.8 L399.4 137.4 L397.4 147.2 L406.3 142.6 L404.3 152.4 L413.2 147.9 L411.2 157.7 L420.2 153.3 L418.2 163.1 L427.2 158.8 L425.1 168.6 L434.2 164.4 L432.0 174.2'/%3E%3Cpath d='M372.0 441.0 L375.0 430.5 L383.7 437.1 L386.7 426.6 L395.5 433.1 L398.4 422.6 L407.2 429.1 L410.0 418.5 L418.9 424.9 L421.6 414.3 L430.6 420.5 L433.2 409.8 L442.4 415.9 L444.8 405.2 L454.1 411.0 L456.3 400.2 L465.8 405.9 L467.9 395.0 L477.5 400.4 L479.4 389.5 L489.3 394.6 L491.0 383.6 L501.0 388.5 L502.5 377.4 L512.7 382.0 L514.1 370.8 L524.5 375.2 L525.6 364.0 L536.2 368.1 L537.2 356.8 L547.9 360.6 L548.8 349.3 L559.6 352.9 L560.4 341.5 L571.4 344.9 L572.1 333.4 L583.1 336.7 L583.7 325.2 L594.8 328.3 L595.4 316.7 L606.5 319.7 L607.1 308.2 L618.3 311.1 L618.8 299.5 L630.0 302.4'/%3E%3C/g%3E%3C/svg%3E") center top / 560px auto no-repeat;
+            -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent); pointer-events: none; }
         .hero-beta { display: none; justify-content: center; margin-top: -6px; }
         .hero-beta .beta-pill { background: var(--hero-chip-bg); border: 1px solid var(--hero-chip-border); color: var(--hero-text); }
         .setup-promo { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 360px; margin: 12px auto 0; padding: 10px 12px; border-radius: var(--radius-md); background: #fff6c7; border: 1px solid #f0d36a; color: #3a2f0a; text-decoration: none; text-align: left; }
@@ -1423,7 +1434,7 @@
 </div>
 
 <div id="guideModal" style="display:none; line-height: 1.6;">
-    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;"><span data-app-name>창고지기</span> 사용법</h2>
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;"><span data-app-name>창고여지도</span> 사용법</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
             <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
@@ -1551,7 +1562,7 @@
 
 <div class="search-bar">
     <div class="app-brand" style="display: flex; align-items: center;">
-        <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><i class="ti ti-box" style="margin-right: 6px;"></i><span data-app-name>창고지기</span><span class="beta-badge">베타</span></button>
+        <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><i class="ti ti-box" style="margin-right: 6px;"></i><span data-app-name>창고여지도</span><span class="beta-badge">베타</span></button>
         <button onclick="openVideoGuideModal()" style="background: none; border: none; padding: 0; margin-left: 8px; cursor: pointer; color: #e09b3a; display: flex; align-items: center;" title="사용방법 가이드">
             <i class="ti ti-bulb" style="font-size: 18px; transition: color 0.2s;"></i>
         </button>
@@ -1639,6 +1650,7 @@
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
+        <div class="welcome-brand"><div class="welcome-brand-name"><b data-app-name>창고여지도</b><small class="welcome-en" data-app-name-en>Backroom Atlas</small></div><span>사진으로 만드는 매장 물품 지도</span></div>
         <div class="welcome-beta"><span class="beta-pill"><i class="ti ti-flask"></i> 무료 베타 운영 중</span></div>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
@@ -1951,7 +1963,7 @@
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
         <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
         <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
-        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고지기</span> 알려주기 (링크 공유)</button>
+        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고여지도</span> 알려주기 (링크 공유)</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
         <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
         <button id="resetRow" class="settings-row is-danger" onclick="openResetAsk()"><i class="ti ti-trash"></i> 모든 데이터 지우기</button>
@@ -4067,6 +4079,7 @@
     // 백업 파일: version·exportedAt은 나중에 서버 저장으로 옮길 때 옛 파일을 구분해 읽기 위한 표시 (없는 옛 파일은 version 0으로 본다)
     const BACKUP_VERSION = 1;
     document.querySelectorAll('[data-app-name]').forEach(el => { el.textContent = APP_NAME; }); // 본문에 적힌 서비스 이름도 APP_NAME으로
+    document.querySelectorAll('[data-app-name-en]').forEach(el => { el.textContent = APP_NAME_EN; });
     // 🔗 앱 알려주기: 카톡·문자 등으로 앱 주소를 보낸다 (공유 창이 없는 PC에서는 주소 복사)
     const APP_URL = 'https://trafficjourney.github.io/udigo/';
     async function shareApp() {
