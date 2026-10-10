@@ -231,48 +231,48 @@
         :root[data-theme="champagne"] .zone-item.active .zl-num { background: var(--danger); color: #fff; }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
-        :root[data-theme="pastel"] {
-            --bg: #f6f2fb;
-            --card: #fffdfc;
-            --border: #e8dced;
-            --accent: #7c6a9c;
-            --accent2: #f3b78c;
-            --text: #4a3f57;
-            --text2: #8c8296;
-            --text3: #b7aec2;
-            --danger: #e07a7a;
+        :root[data-theme="pastel"] { /* 파스텔 핑크: 연분홍 바탕 + 장미색 버튼 (버튼 글자는 흰색이 또렷하게 읽히는 진하기) */
+            --bg: #fdf3f6;
+            --card: #fffafb;
+            --border: #f2dbe3;
+            --accent: #b84a72;
+            --accent2: #f6b8c8;
+            --text: #4a2f3a;
+            --text2: #8f7480;
+            --text3: #c2a9b4;
+            --danger: #d9534f;
             --warn: #e3b45c;
-            --search-hl: #fdeaa8;
-            --zone-border: rgba(124,106,156,0.85);
+            --search-hl: #ffe6a8;
+            --zone-border: rgba(184,74,114,0.85);
             --ivory-bg: rgba(255,255,255,0.9);
-            --ivory-border: #e8dced;
-            --charcoal: #7c6a9c;
+            --ivory-border: #f2dbe3;
+            --charcoal: #b84a72;
             --ivory-text: #fff;
-            --charcoal-mute: #8c8296;
-            --shadow-focus: 0 0 0 4px rgba(243,183,140,0.35);
+            --charcoal-mute: #8f7480;
+            --shadow-focus: 0 0 0 4px rgba(246,184,200,0.45);
 
-            --accent-hover: #665579;
-            --accent-soft: #f1e9f7;
-            --accent-rgb: 243, 183, 140;
-            --accent-dark-rgb: 124, 106, 156;
-            --on-accent2: #5a3a28;
+            --accent-hover: #9c3c5f;
+            --accent-soft: #fbe6ee;
+            --accent-rgb: 246, 184, 200;
+            --accent-dark-rgb: 184, 74, 114;
+            --on-accent2: #5e2338;
             --on-accent: #fff;
-            --header-bg: rgba(246,242,251,0.88);
-            --badge-bg: #f3b78c;
-            --badge-text: #5a3a28;
-            --active-zone-bg: #fdf1cf;
-            --active-zone-bar: #cf9f5a;
-            --zone-stroke: #9b7fc7;
-            --zone-fill-rgb: 124, 106, 156;
-            --hero-bg: #7c6a9c;
+            --header-bg: rgba(253,243,246,0.88);
+            --badge-bg: #f6b8c8;
+            --badge-text: #5e2338;
+            --active-zone-bg: #fff0d6;
+            --active-zone-bar: #e0a24f;
+            --zone-stroke: #e07fa0;
+            --zone-fill-rgb: 184, 74, 114;
+            --hero-bg: #c35a7f;
             --hero-text: #ffffff;
-            --hero-text2: rgba(255,255,255,0.78);
-            --hero-chip-bg: rgba(255,255,255,0.16);
-            --hero-chip-border: rgba(255,255,255,0.3);
-            --notice-bg: #fbe4cf;
-            --notice-border: #f0cda0;
-            --notice-text: #8a5a26;
-            --danger-soft: #f9dede;
+            --hero-text2: rgba(255,255,255,0.8);
+            --hero-chip-bg: rgba(255,255,255,0.18);
+            --hero-chip-border: rgba(255,255,255,0.32);
+            --notice-bg: #fde2ea;
+            --notice-border: #f5c3d2;
+            --notice-text: #8a3a55;
+            --danger-soft: #fbe0e0;
         }
 
         /* 🟡🔵 옐로우 & 네이비 테마: 노란 헤더 + 네이비 주요 버튼 + 노란 강조 */
@@ -1941,8 +1941,8 @@
                 <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
                     <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
                 </button>
-                <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔">
-                    <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
+                <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔 핑크">
+                    <span class="theme-swatch"><i style="background:#fdf3f6;box-shadow:inset 0 0 0 1px #f2dbe3"></i><i style="background:#b84a72"></i></span><span>핑크</span>
                 </button>
             </div>
         </div>
@@ -2771,7 +2771,7 @@
     }
 
     // 🎨 화면 테마 전환 (기본 인디고 / 샴페인 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
-    const THEME_META_COLORS = { mono: '#ffffff', champagne: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
+    const THEME_META_COLORS = { mono: '#ffffff', champagne: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#fdf3f6' };
     function setTheme(name) {
         if (name === 'default') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = name;
         try { localStorage.setItem('uiTheme', name); } catch (e) {}
