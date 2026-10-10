@@ -12,6 +12,18 @@
     <meta name="apple-mobile-web-app-title" content="창고지기">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
+        // ✏ 서비스 이름: 앱 화면 글자·공유·백업/인쇄 파일 이름·인쇄물은 모두 이 한 곳을 쓴다.
+        //   이름을 바꿀 땐 python3 tools/rename_app.py 새이름 → 이 줄과 아래 <head>의 제목·공유 미리보기 글, manifest까지 한 번에 바뀐다.
+        //   (검색·카톡 미리보기는 스크립트를 실행하지 않고 <head> 글자를 그대로 읽어서, 그쪽은 글자로 따로 적혀 있어야 한다)
+        const APP_NAME = '창고지기';
+        // 이름 뒤 조사: 받침 있으면 '으로/이/은/을', 없으면 '로/가/는/를' (ㄹ 받침 + 로)
+        function josa(word, withBatchim, without) {
+            const c = word.charCodeAt(word.length - 1) - 0xAC00;
+            if (c < 0 || c > 11171) return word + without;
+            const jong = c % 28;
+            if (withBatchim === '으로') return word + (jong && jong !== 8 ? '으로' : '로');
+            return word + (jong ? withBatchim : without);
+        }
         // 화면 테마: 페인트 전에 적용해서 기본 테마가 잠깐 보였다 바뀌는 깜빡임을 막는다
         // 처음 방문(고른 적 없음)은 모노(흑백)가 기본. 직접 고른 테마는 그대로 유지 (없어진 블랙 테마들은 기본으로)
         let t = 'mono';
@@ -1411,7 +1423,7 @@
 </div>
 
 <div id="guideModal" style="display:none; line-height: 1.6;">
-    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;">창고지기 사용법</h2>
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;"><span data-app-name>창고지기</span> 사용법</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
             <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
@@ -1539,7 +1551,7 @@
 
 <div class="search-bar">
     <div class="app-brand" style="display: flex; align-items: center;">
-        <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><i class="ti ti-box" style="margin-right: 6px;"></i>창고지기<span class="beta-badge">베타</span></button>
+        <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><i class="ti ti-box" style="margin-right: 6px;"></i><span data-app-name>창고지기</span><span class="beta-badge">베타</span></button>
         <button onclick="openVideoGuideModal()" style="background: none; border: none; padding: 0; margin-left: 8px; cursor: pointer; color: #e09b3a; display: flex; align-items: center;" title="사용방법 가이드">
             <i class="ti ti-bulb" style="font-size: 18px; transition: color 0.2s;"></i>
         </button>
@@ -1939,7 +1951,7 @@
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
         <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
         <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
-        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> 창고지기 알려주기 (링크 공유)</button>
+        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고지기</span> 알려주기 (링크 공유)</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
         <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
         <button id="resetRow" class="settings-row is-danger" onclick="openResetAsk()"><i class="ti ti-trash"></i> 모든 데이터 지우기</button>
@@ -4054,12 +4066,13 @@
     }
     // 백업 파일: version·exportedAt은 나중에 서버 저장으로 옮길 때 옛 파일을 구분해 읽기 위한 표시 (없는 옛 파일은 version 0으로 본다)
     const BACKUP_VERSION = 1;
-    // 🔗 앱 알려주기: 카톡·문자 등으로 창고지기 주소를 보낸다 (공유 창이 없는 PC에서는 주소 복사)
+    document.querySelectorAll('[data-app-name]').forEach(el => { el.textContent = APP_NAME; }); // 본문에 적힌 서비스 이름도 APP_NAME으로
+    // 🔗 앱 알려주기: 카톡·문자 등으로 앱 주소를 보낸다 (공유 창이 없는 PC에서는 주소 복사)
     const APP_URL = 'https://trafficjourney.github.io/udigo/';
     async function shareApp() {
         const text = '사진 한 장이 창고 지도가 돼요. 물건 이름만 대면 어느 칸인지 나와요. (무료 · 가입 없음)';
         if (navigator.share) {
-            try { await navigator.share({ title: '창고지기', text, url: APP_URL }); return; }
+            try { await navigator.share({ title: APP_NAME, text, url: APP_URL }); return; }
             catch (err) { if (err && err.name === 'AbortError') return; }
         }
         try { await navigator.clipboard.writeText(`${text}\n${APP_URL}`); showToast('주소를 복사했어요. 카톡이나 문자에 붙여 넣으세요', 3500); }
@@ -4073,10 +4086,10 @@
         const photos = imageList.filter(d => d.id !== 'dummy_root'), zones = photos.reduce((n, d) => n + d.zones.length, 0), items = photos.reduce((n, d) => n + d.zones.reduce((m, z) => m + z.items.length, 0), 0);
         const sample = isSamplePreview || safeStorage.getItem('isSampleData') === '1';
         let line = photos.length ? `${sample ? '예시 ' : ''}사진 ${photos.length}장 · 구역 ${zones}개 · 물건 ${items}개` : '아직 올린 사진이 없어요';
-        el.innerHTML = `${escapeHtml(line)}<br>창고지기 ${escapeHtml(APP_VERSION)}`;
+        el.innerHTML = `${escapeHtml(line)}<br>${escapeHtml(APP_NAME)} ${escapeHtml(APP_VERSION)}`;
         try {
             const est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
-            if (est && est.usage != null && photos.length) { line += ` · 저장 공간 ${(est.usage / 1048576).toFixed(1)}MB`; el.innerHTML = `${escapeHtml(line)}<br>창고지기 ${escapeHtml(APP_VERSION)}`; }
+            if (est && est.usage != null && photos.length) { line += ` · 저장 공간 ${(est.usage / 1048576).toFixed(1)}MB`; el.innerHTML = `${escapeHtml(line)}<br>${escapeHtml(APP_NAME)} ${escapeHtml(APP_VERSION)}`; }
         } catch (e) {}
     }
     // 📞 문의: 채널·연락처가 정해지면 여기만 채운다 (비어 있으면 설정에서 숨김)
@@ -4122,7 +4135,7 @@
         // 받기·보내기 모두 같은 PDF 백업 (열면 복구 안내가 보이고, 안드로이드 파일 선택에서도 잘 골라진다)
         // data: 주소에 통째로 넣으면 사진이 많을 때(수 MB) 파일이 잘릴 수 있어 Blob으로 만든다
         const url = URL.createObjectURL(buildBackupPdf(backupJson()));
-        const downloadLink = document.createElement('a'); downloadLink.href = url; downloadLink.download = `창고지기_${storeFileName() ? storeFileName() + '_' : ''}백업_${fileDateTime()}.pdf`;
+        const downloadLink = document.createElement('a'); downloadLink.href = url; downloadLink.download = `${APP_NAME}_${storeFileName() ? storeFileName() + '_' : ''}백업_${fileDateTime()}.pdf`;
         document.body.appendChild(downloadLink); downloadLink.click(); downloadLink.remove();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
         markBackedUp();
@@ -4135,12 +4148,12 @@
         // 안내 그림 (PDF 기본 글꼴에는 한글이 없어서 글자를 그림으로 그려 넣는다)
         const W = 1240, H = 700, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
         const g = cv.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
-        g.fillStyle = '#3b3577'; g.font = 'bold 64px sans-serif'; g.fillText('창고지기 백업 파일', 80, 150);
+        g.fillStyle = '#3b3577'; g.font = 'bold 64px sans-serif'; g.fillText(`${APP_NAME} 백업 파일`, 80, 150);
         g.fillStyle = '#1a1a18'; g.font = '38px sans-serif';
         g.fillText('이 파일 안에 사진·구역·물건이 모두 들어 있어요.', 80, 240);
         g.fillStyle = '#c44444'; g.font = '30px sans-serif'; g.fillText('PDF 편집 앱으로 고쳐서 다시 저장하면 백업이 지워질 수 있어요.', 80, 295);
         g.fillStyle = '#1a1a18';
-        ['복구하는 법', '1. 이 파일을 폰에 저장해요.', '2. 창고지기 → 설정 → [백업 파일로 복구]', '3. 이 파일을 골라요.'].forEach((t, i) => { g.font = i ? '38px sans-serif' : 'bold 40px sans-serif'; g.fillText(t, 80, 385 + i * 62); });
+        ['복구하는 법', '1. 이 파일을 폰에 저장해요.', `2. ${APP_NAME} → 설정 → [백업 파일로 복구]`, '3. 이 파일을 골라요.'].forEach((t, i) => { g.font = i ? '38px sans-serif' : 'bold 40px sans-serif'; g.fillText(t, 80, 385 + i * 62); });
         g.fillStyle = '#6b6960'; g.font = '30px sans-serif'; g.fillText(`만든 날: ${fileDateTime().replace('_', ' ')}`, 80, 660);
         const jpg = atob(cv.toDataURL('image/jpeg', 0.85).split(',')[1]);
         const ascii = (t) => Uint8Array.from(t, c => c.charCodeAt(0) & 0xff);
@@ -4158,7 +4171,7 @@
         obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im1 5 0 R >> >> /Contents 4 0 R >>`);
         obj(4, '<< /Length LEN >>', ascii(`q ${imgW} 0 0 ${imgH.toFixed(1)} 40 ${(pageH - 40 - imgH).toFixed(1)} cm /Im1 Do Q`));
         obj(5, `<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length LEN >>`, ascii(jpg));
-        // 백업 내용: 페이지에 연결하지 않은 별도 스트림 (PDF 보기 앱은 무시하고, 창고지기 불러오기만 찾아 쓴다)
+        // 백업 내용: 페이지에 연결하지 않은 별도 스트림 (PDF 보기 앱은 무시하고, 이 앱의 불러오기만 찾아 쓴다)
         obj(6, '<< /Length LEN >>', new TextEncoder().encode(`${BACKUP_PDF_BEGIN}\n${json}\n${BACKUP_PDF_END}`));
         const xref = len;
         put(ascii(`xref\n0 7\n0000000000 65535 f \n${offsets.slice(1).map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`));
@@ -4174,7 +4187,7 @@
     }
     async function shareBackup() {
         closeBackupChoice();
-        const file = new File([buildBackupPdf(backupJson())], `창고지기_${storeFileName() ? storeFileName() + '_' : ''}백업_${fileDateTime()}.pdf`, { type: 'application/pdf' });
+        const file = new File([buildBackupPdf(backupJson())], `${APP_NAME}_${storeFileName() ? storeFileName() + '_' : ''}백업_${fileDateTime()}.pdf`, { type: 'application/pdf' });
         try {
             await navigator.share({ files: [file] }); // 제목·글을 같이 넣으면 일부 앱이 글만 보내서 파일만 넘긴다
             markBackedUp();
@@ -4201,7 +4214,7 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             let imported = null; try { imported = JSON.parse(extractBackupText(e.target.result)); } catch (err) {}
-            if (!imported || !Array.isArray(imported.savedSystemData) || !imported.baseItems) { alert("창고지기 백업 파일이 아니거나 파일이 손상됐어요.\n'창고지기_백업_…pdf' 파일을 골라 주세요."); return; }
+            if (!imported || !Array.isArray(imported.savedSystemData) || !imported.baseItems) { alert(`${APP_NAME} 백업 파일이 아니거나 파일이 손상됐어요.\n'${APP_NAME}_백업_…pdf' 파일을 골라 주세요.`); return; }
             if (!confirm("백업 파일로 복구할까요?\n지금 이 폰에 있는 사진·구역·물건이 모두 백업 파일 내용으로 바뀌어요.")) return;
             if (isSamplePreview) { try { sessionStorage.removeItem(SAMPLE_PREVIEW_KEY); } catch (e) {} isSamplePreview = false; }
             safeStorage.setItem('savedSystemData', JSON.stringify(imported.savedSystemData));
@@ -4353,7 +4366,7 @@
     const FEEDBACK_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeasXUyRCQNDvlBqHDo4SbQMsNkBpBaHqFqL6aWU091yDmpLw/viewform';
     function openFeedbackForm() { window.open(FEEDBACK_FORM_URL, '_blank', 'noopener'); }
 
-    // 창고지기 로고 → 저장된 데이터는 그대로 두고 첫 화면 카드만 다시 보여준다
+    // 왼쪽 위 로고 → 저장된 데이터는 그대로 두고 첫 화면 카드만 다시 보여준다
     function openWelcomeRevisit() {
         if (typeof deactivateHeroSearch === 'function') deactivateHeroSearch();
         if (hasSavedData()) {
@@ -5008,7 +5021,7 @@
         const notes = first.zones.filter(z => z.items.length).map(z => `<span class="ws-ba-note" data-x="${z.x}" data-y="${z.y}" data-w="${z.w}">${escapeHtml(z.items[0].name)}${z.items.length > 1 ? ' +' + (z.items.length - 1) : ''}</span>`).join('');
         box.innerHTML = `<section class="ws-sec"><h3 class="ws-h">선반 사진에 쪽지를 붙여요</h3><p class="ws-p">구역마다 뭐가 있는지 사진 위에 적어 두면, 선반 앞에 가지 않아도 바로 찾아요.</p>
             <div class="ws-ba" id="wsBa"><img src="${first.imgData}" alt="${escapeHtml(first.title)} 사진"><div class="ws-ba-notes">${notes}</div><span class="ws-ba-tag">정리 전</span></div>
-            <div class="ws-ba-switch" role="group" aria-label="정리 전후 보기"><button type="button" data-after="0" aria-pressed="true">정리 전</button><button type="button" data-after="1" aria-pressed="false">창고지기로 정리 후</button></div></section>
+            <div class="ws-ba-switch" role="group" aria-label="정리 전후 보기"><button type="button" data-after="0" aria-pressed="true">정리 전</button><button type="button" data-after="1" aria-pressed="false">${josa(APP_NAME, '으로', '로')} 정리 후</button></div></section>
             <section class="ws-sec"><h3 class="ws-h">벽에 붙이면 폰 없이도 찾아요</h3><p class="ws-p">A4로 뽑아 선반 옆에 붙여 두면, 직원·알바생도 폰을 꺼내지 않고 <b>꺼낼 때도, 다시 가져다 놓을 때도</b> 자리를 바로 찾아요.</p>
             <div class="ws-print"><img src="print-sample.jpg" alt="인쇄물 예시: 선반 사진에 구역 번호와 쪽지, 아래에 가나다순 물건 찾아보기" loading="lazy" width="600" height="849"></div>
             <ul class="ws-points"><li><b>찾을 때</b> 가나다순 목록에서 물건 이름 → 오른쪽 번호 → 사진 속 그 구역</li><li><b>넣을 때</b> 쓰고 난 물건도 원래 자리로, 사람마다 다르게 두지 않아요</li></ul></section>
@@ -5021,7 +5034,7 @@
         const ba = box.querySelector('#wsBa'), img = ba.querySelector('img');
         const place = () => { const h = 800 * img.naturalHeight / img.naturalWidth; ba.querySelectorAll('.ws-ba-note').forEach(n => { n.style.left = (n.dataset.x / 8) + '%'; n.style.top = (n.dataset.y / h * 100) + '%'; n.style.maxWidth = (n.dataset.w / 8 - 2) + '%'; }); };
         if (img.complete) place(); else img.onload = place;
-        const setAfter = (on) => { ba.classList.toggle('is-after', on); ba.querySelector('.ws-ba-tag').textContent = on ? '창고지기로 정리 후' : '정리 전'; box.querySelectorAll('.ws-ba-switch button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.after === '1') === on))); };
+        const setAfter = (on) => { ba.classList.toggle('is-after', on); ba.querySelector('.ws-ba-tag').textContent = on ? `${josa(APP_NAME, '으로', '로')} 정리 후` : '정리 전'; box.querySelectorAll('.ws-ba-switch button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.after === '1') === on))); };
         box.querySelectorAll('.ws-ba-switch button').forEach(b => b.onclick = () => { clearInterval(wsTimer); setAfter(b.dataset.after === '1'); });
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) setAfter(true);
         else { setTimeout(() => setAfter(true), 1200); wsTimer = setInterval(() => setAfter(!ba.classList.contains('is-after')), 2600); }
@@ -5062,7 +5075,7 @@
         ['storeNameInput', 'printStoreName'].forEach(id => { const el = document.getElementById(id); if (el && el !== document.activeElement) el.value = v; });
     }
     function printHeadDate(dateStr) { const n = storeName(); return n ? `${n} · ${dateStr}` : dateStr; }
-    function printBrand() { return storeName() || '창고지기'; }
+    function printBrand() { return storeName() || APP_NAME; }
     function storeFileName() { return storeName().replace(/[\\/:*?"<>|\s.]+/g, ''); } // 파일 이름에 못 쓰는 글자·띄어쓰기 빼고
     // 쪽 하나를 다 그린 캔버스 → PDF용 JPEG. 미리보기는 PRINT.raw로 캔버스를 그대로 받아 작게 줄여 쓴다 (큰 JPEG 만들기가 가장 느렸다)
     function printOut(canvas) { return PRINT.raw ? canvas : canvas.toDataURL('image/jpeg', 0.92); }
@@ -5932,7 +5945,7 @@
             }
             const F = PRINT_FORMS[printOpts.form] || PRINT_FORMS.map, one = photos.length > 1 && printScope !== 'all' ? photos.find(d => d.id == printPreviewId) : null;
             const part = one ? '_' + (one.title || '').replace(/[\\/:*?"<>|\s]+/g, '').slice(0, 20) : '';
-            doc.save(`${storeFileName() || '창고지기'}_${F.file}${part}_${fileDate()}.pdf`);
+            doc.save(`${storeFileName() || APP_NAME}_${F.file}${part}_${fileDate()}.pdf`);
         } catch (error) {
             console.error("PDF 생성 중 오류 발생:", error);
             alert("PDF 생성 중 문제가 발생했습니다.");
