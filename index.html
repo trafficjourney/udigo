@@ -35,18 +35,18 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"></noscript>
-    <title>수나비 - 나비 아니고, 수납 네비 · 사진으로 만드는 창고 지도</title>
+    <title>수나비 - 수납한 자리를 찾아 주는 네비 · 사진으로 만드는 창고 지도</title>
     <!-- 카톡·SNS 링크 미리보기 (이미지 주소는 반드시 전체 주소여야 카톡이 읽는다) -->
     <meta name="description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요. A4로 뽑아 벽에 붙일 수도 있어요.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="수나비">
-    <meta property="og:title" content="수나비 - 나비 아니고, 수납 네비예요">
+    <meta property="og:title" content="수나비 - 수납한 자리를 찾아 주는 네비">
     <meta property="og:description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요.">
     <meta property="og:url" content="https://trafficjourney.github.io/udigo/">
     <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=9">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="수나비: 나비 아니고, 수납 네비예요. 노란 쪽지 두 장이 날개처럼 붙은 위치 핀 아이콘과, 사진 한 장이 창고 지도가 된다는 소개">
+    <meta property="og:image:alt" content="수나비: 수납한 자리를 찾아 주는 네비. 노란 쪽지 두 장이 붙은 위치 핀 아이콘과, 사진 한 장이 창고 지도가 된다는 소개">
     <meta property="og:locale" content="ko_KR">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -1069,11 +1069,11 @@
         .welcome-sub { margin-top: 10px; font-size: 14px; line-height: 1.55; color: var(--text2); word-break: keep-all; }
         .brand-home { display: flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
         .brand-icon { width: 1.35em; height: 1.35em; border-radius: 0.34em; margin-right: 7px; flex: none; }
-        /* 첫 화면 이름 줄: 수나비 = 수납 + 네비 (나비로 읽히는 걸 반전으로) */
+        /* 첫 화면 이름 줄: 문장 속 '수납'·'네비'를 살짝 칠해서, 읽다 보면 수나비 = 수납 + 네비인 걸 알게 */
         .welcome-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 10px; font-size: 14px; color: var(--text2); flex-wrap: wrap; }
         .welcome-brand img { width: 28px; height: 28px; border-radius: 8px; }
         .welcome-brand b { font-size: 18px; color: var(--text); letter-spacing: -0.3px; }
-        .welcome-brand mark { background: #ffe27a; color: #2b2716; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+        .welcome-brand mark { background: #ffe27a; color: #2b2716; padding: 0 1px; border-radius: 3px; font-weight: 700; }
         body:not(.welcome-revisit) .revisit-only { display: none !important; }
         .welcome-back { display: inline-flex; margin: -16px 0 16px; }
         .install-banner-actions { display: flex; gap: 4px; flex-shrink: 0; }
@@ -1645,7 +1645,7 @@
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
-        <div class="welcome-brand"><img src="icon-192.png?v=8" alt=""><b data-app-name>수나비</b><span>나비 아니고, <mark>수납 네비</mark>예요</span></div>
+        <div class="welcome-brand"><img src="icon-192.png?v=8" alt=""><b data-app-name>수나비</b><span><mark>수납</mark>한 자리를 찾아 주는 <mark>네비</mark></span></div>
         <div class="welcome-beta"><span class="beta-pill"><i class="ti ti-flask"></i> 무료 베타 운영 중</span></div>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
