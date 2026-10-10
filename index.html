@@ -666,10 +666,37 @@
         /* 버튼(닫기·PDF 받기)은 늘 아래에 보이고, 미리보기만 안에서 스크롤 (예전엔 창 전체가 스크롤돼 버튼이 미리보기 밑에 숨었다) */
         #printModal { z-index: 1090; max-width: 520px; padding: 20px; flex-direction: column; overflow: hidden; max-height: 85vh; max-height: 88dvh; }
         #printModal > * { flex: none; }
-        #printModal .print-pages { flex: 1 1 auto; min-height: 120px; overflow-y: auto; overscroll-behavior: contain; }
+        #printModal .print-preview-wrap { flex: 1 1 auto; min-height: 120px; position: relative; display: flex; }
+        #printModal .print-pages { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+        .print-pages canvas { cursor: zoom-in; }
+        .print-zoom-btn { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 10px; border: 0; border-radius: 16px; background: rgba(26,26,24,0.72); color: #fff; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+        .print-page-badge { position: absolute; bottom: 8px; right: 8px; padding: 3px 9px; border-radius: 12px; background: rgba(26,26,24,0.72); color: #fff; font-size: 12px; font-weight: 700; pointer-events: none; }
+        #printModal .settings-head { margin-bottom: 12px; gap: 10px; }
+        .print-name-line { flex: 1; min-width: 0; display: flex; }
+        .print-name-line input[type="text"].store-name-input { min-height: 36px; padding: 4px 10px; }
+        .print-name-btn { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 2px 0; border: 0; background: none; font: inherit; font-size: 13px; color: var(--text2); cursor: pointer; text-align: left; }
+        .print-name-btn b { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .print-name-btn .ti { font-size: 15px; color: var(--accent2); flex: none; }
+        .print-name-btn.is-empty { color: var(--accent-text); font-weight: 700; }
+        .print-opt-btn { flex: 1; min-width: 0; min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+        .print-opt-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .print-opt-btn .ti { flex: none; color: var(--text3); transition: transform 0.2s; }
+        .print-opt-btn[aria-expanded="true"] .ti { transform: rotate(180deg); }
+        .print-opt-btn:disabled { cursor: default; color: var(--text3); }
+        .print-opt-btn:disabled .ti { display: none; }
+        .print-opt-panel { margin: -4px 0 10px; padding: 10px 10px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+        .print-opt-panel[hidden], .print-opt-panel .print-row[hidden] { display: none; }
+        #printViewer { position: fixed; inset: 0; z-index: 1200; display: flex; flex-direction: column; background: #2a2a28; }
+        #printViewer[hidden] { display: none; }
+        .print-viewer-bar { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); color: #fff; font-size: 14px; font-weight: 700; }
+        .print-viewer-bar span { flex: 1; }
+        .print-viewer-btn { display: inline-flex; align-items: center; gap: 4px; min-height: 38px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 19px; background: rgba(255,255,255,0.1); color: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+        .print-viewer-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 10px 24px; }
+        .print-viewer-body canvas { display: block; width: 100%; max-width: none; height: auto; margin: 0 0 14px; background: #fff; }
+        .print-viewer-body.is-zoom canvas { width: 200%; }
         #printBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 1085; }
         body.print-open #printBackdrop { display: block; }
-        .print-sub { font-size: 13px; color: var(--text2); margin: 4px 0 14px; word-break: keep-all; }
+        .print-sub { font-size: 12.5px; color: var(--text3); margin: -4px 0 12px 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         /* 인쇄 화면의 고르기 줄: 왼쪽 이름표 + 하나로 붙은 버튼(세그먼트). 떨어진 알약 버튼이면 줄끼리 한 묶음처럼 보였다 */
         .print-row { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
         .print-row[hidden] { display: none; }
@@ -1776,13 +1803,14 @@
 <div id="printBackdrop" onclick="closePrintPreview()"></div>
 <div id="printModal" role="dialog" aria-modal="true" aria-labelledby="printTitle">
     <div class="settings-head">
-        <h3 id="printTitle"><i class="ti ti-printer"></i> 사진 지도</h3>
+        <h3 id="printTitle"><i class="ti ti-printer"></i> 인쇄</h3>
+        <!-- 매장 이름: 한 번 정하면 잘 안 바꾸니 제목 옆 작은 글씨로 (누르면 그 자리에서 고친다) -->
+        <div class="print-name-line">
+            <button type="button" id="printNameBtn" class="print-name-btn" onclick="editPrintName()"></button>
+            <input type="text" id="printStoreName" class="store-name-input" maxlength="20" placeholder="매장 이름 (예: 다산점 창고)" autocomplete="off" hidden
+                oninput="setStoreName(this.value)" onblur="endPrintName()" onkeydown="if (event.key === 'Enter') this.blur()">
+        </div>
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
-    </div>
-    <p class="print-sub" id="printSub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
-    <div class="print-row">
-        <label class="print-row-label" for="printStoreName">이름</label>
-        <input type="text" id="printStoreName" class="store-name-input" maxlength="20" placeholder="매장 이름 (예: 다산점 창고)" autocomplete="off" oninput="setStoreName(this.value); clearTimeout(printNameTimer); printNameTimer = setTimeout(renderPrintPreview, 600)">
     </div>
     <!-- 양식: 지도(사진+찾아보기) · 위치 목록(큰 글씨 표) · 점검표 -->
     <div class="print-row">
@@ -1793,6 +1821,7 @@
             <button type="button" role="tab" data-form="check" onclick="setPrintOpt('form', 'check')">점검표</button>
         </div>
     </div>
+    <p class="print-sub" id="printSub"></p>
     <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진 -->
     <div class="print-row" id="printScopeRow" hidden>
         <span class="print-row-label">범위</span>
@@ -1801,35 +1830,60 @@
             <button type="button" role="tab" data-tab="all" onclick="renderPrintPreview('all')">전체 사진</button>
         </div>
     </div>
-    <!-- 큰 글씨 목록 옵션 -->
-    <div class="print-row" id="printListOpts" hidden>
-        <span class="print-row-label">정렬</span>
-        <div class="seg" role="group" aria-label="정렬">
-            <button type="button" data-sort="name" onclick="setPrintOpt('sort', 'name')">가나다순</button>
-            <button type="button" data-sort="zone" onclick="setPrintOpt('sort', 'zone')">칸 순서</button>
-        </div>
-        <button type="button" id="printMemoBtn" class="seg-solo" onclick="setPrintOpt('memo', !printOpts.memo)">메모</button>
+    <!-- 보조 옵션: 한 줄 요약으로 접어 두고, 누르면 펼친다 (양식마다 줄 수가 달라 미리보기가 들썩였다) -->
+    <div class="print-row" id="printOptRow">
+        <span class="print-row-label">옵션</span>
+        <button type="button" id="printOptBtn" class="print-opt-btn" aria-expanded="false" aria-controls="printOptPanel" onclick="togglePrintOpts()"><span id="printOptText"></span><i class="ti ti-chevron-down"></i></button>
     </div>
-    <div class="print-row" id="printSizeOpts" hidden>
-        <span class="print-row-label">글씨</span>
-        <div class="seg" role="group" aria-label="글씨 크기">
-            <button type="button" data-size="1" onclick="setPrintOpt('size', 1)">크게</button>
-            <button type="button" data-size="1.35" onclick="setPrintOpt('size', 1.35)">아주 크게</button>
+    <div id="printOptPanel" class="print-opt-panel" hidden>
+        <div class="print-row" data-for="list">
+            <span class="print-row-label">정렬</span>
+            <div class="seg" role="group" aria-label="정렬">
+                <button type="button" data-sort="name" onclick="setPrintOpt('sort', 'name')">가나다순</button>
+                <button type="button" data-sort="zone" onclick="setPrintOpt('sort', 'zone')">칸 순서</button>
+            </div>
+        </div>
+        <div class="print-row" data-for="list">
+            <span class="print-row-label">메모</span>
+            <div class="seg" role="group" aria-label="메모">
+                <button type="button" data-memo="1" onclick="setPrintOpt('memo', true)">보이기</button>
+                <button type="button" data-memo="0" onclick="setPrintOpt('memo', false)">숨기기</button>
+            </div>
+        </div>
+        <div class="print-row" data-for="list">
+            <span class="print-row-label">글씨</span>
+            <div class="seg" role="group" aria-label="글씨 크기">
+                <button type="button" data-size="1" onclick="setPrintOpt('size', 1)">크게</button>
+                <button type="button" data-size="1.35" onclick="setPrintOpt('size', 1.35)">아주 크게</button>
+            </div>
+        </div>
+        <!-- 사진 지도: 흑백 프린터·토너 아끼기 -->
+        <div class="print-row" data-for="map">
+            <span class="print-row-label">색</span>
+            <div class="seg" role="group" aria-label="인쇄 색">
+                <button type="button" data-ink="0" onclick="setPrintOpt('ink', false)">사진 그대로</button>
+                <button type="button" data-ink="1" onclick="setPrintOpt('ink', true)">잉크 절약</button>
+            </div>
         </div>
     </div>
-    <!-- 사진 지도 옵션: 흑백 프린터·토너 아끼기 -->
-    <div class="print-row" id="printMapOpts" hidden>
-        <span class="print-row-label">색</span>
-        <div class="seg" role="group" aria-label="인쇄 색">
-            <button type="button" data-ink="0" onclick="setPrintOpt('ink', false)">사진 그대로</button>
-            <button type="button" data-ink="1" onclick="setPrintOpt('ink', true)">잉크 절약</button>
-        </div>
+    <div id="printPreviewWrap" class="print-preview-wrap">
+        <div id="printPages" class="print-pages" onclick="if (event.target.tagName === 'CANVAS') openPrintViewer(event.target)"></div>
+        <button type="button" class="print-zoom-btn" onclick="openPrintViewer()"><i class="ti ti-arrows-maximize"></i> 크게 보기</button>
+        <span id="printPageBadge" class="print-page-badge" hidden></span>
     </div>
-    <div id="printPages" class="print-pages"></div>
     <div class="print-actions">
         <button type="button" class="btn-base btn-secondary" onclick="closePrintPreview()">닫기</button>
-        <button type="button" id="printDownloadBtn" class="btn-base btn-primary" onclick="downloadReportAsPDF()"><i class="ti ti-download"></i> PDF로 받기</button>
+        <button type="button" id="printDownloadBtn" class="btn-base btn-primary" onclick="downloadReportAsPDF()"><i class="ti ti-download"></i> PDF 받기</button>
     </div>
+</div>
+<!-- 미리보기 크게 보기: 미리보기 쪽들을 그대로 옮겨 와 화면 가득 (닫으면 제자리로) -->
+<div id="printViewer" role="dialog" aria-modal="true" aria-label="인쇄물 크게 보기" hidden>
+    <div class="print-viewer-bar">
+        <span id="printViewerPage"></span>
+        <button type="button" class="print-viewer-btn" id="printViewerZoom" onclick="togglePrintViewerZoom()"><i class="ti ti-zoom-in"></i> 더 크게</button>
+        <button type="button" class="print-viewer-btn" onclick="closePrintViewer()" aria-label="크게 보기 닫기"><i class="ti ti-x"></i> 닫기</button>
+    </div>
+    <div id="printViewerBody" class="print-viewer-body"></div>
 </div>
 <div id="settingsModal">
     <div class="settings-head">
@@ -5604,7 +5658,7 @@
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         if (!photos.length) { alert("먼저 사진을 등록해주세요."); return; }
         const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
-        printPreviewId = data.id; printCache = new Map(); document.getElementById('printStoreName').value = storeName(); // 열 때마다 새로 (그 사이 물건이 바뀌었을 수 있다)
+        printPreviewId = data.id; printCache = new Map(); printOptsOpen = false; // 열 때마다 새로 (그 사이 물건이 바뀌었을 수 있다)
         renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
         document.getElementById('printModal').style.display = 'flex';
         // 이미 열려 있는데 또 열면(인쇄 버튼 두 번 등) 잠금이 두 번 걸리고 닫을 때 한 번만 풀려 스크롤이 막힌 채 남았다
@@ -5615,9 +5669,9 @@
     try { Object.assign(printOpts, JSON.parse(localStorage.getItem('printOpts') || '{}')); } catch (e) {}
     if (![1, 1.35].includes(printOpts.size)) printOpts.size = 1;
     const PRINT_FORMS = {
-        map: { title: '사진 지도', sub: '선반 옆에 붙이는 용도: 사진 속 칸 번호와 아래 찾아보기로 폰 없이 자리를 찾아요', file: '지도' },
-        list: { title: '큰 글씨 목록', sub: '사진 없이 표로 크게: 칸 번호와 구역 이름까지 보여서 멀리서도, 흑백 프린터로도 잘 읽혀요', file: '위치목록' },
-        check: { title: '위치 점검표', sub: '칸 순서대로 걸으며 있음·없음에 체크해요 · 옮긴 곳은 메모 칸에 적었다가 앱에서 고쳐요', file: '점검표' }
+        map: { title: '사진 지도', sub: '칸 번호 붙은 사진 + 찾아보기 · 선반 옆에', file: '지도' },
+        list: { title: '큰 글씨 목록', sub: '사진 없이 큰 표 · 흑백 프린터도 OK', file: '위치목록' },
+        check: { title: '위치 점검표', sub: '칸 순서대로 있음·없음 체크', file: '점검표' }
     };
     function setPrintOpt(key, val) {
         printOpts[key] = val;
@@ -5654,8 +5708,8 @@
         const data = photos.find(d => d.id == printPreviewId) || photos[0], multi = photos.length > 1, i = photos.indexOf(data);
         const form = PRINT_FORMS[printOpts.form] ? printOpts.form : 'map', F = PRINT_FORMS[form];
         printOpts.form = form;
-        document.getElementById('printTitle').innerHTML = `<i class="ti ti-printer"></i> ${F.title}`;
         document.getElementById('printSub').textContent = F.sub;
+        syncPrintName();
         document.querySelectorAll('#printForms button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.form === form)));
         const tabs = document.getElementById('printTabs');
         document.getElementById('printScopeRow').hidden = !multi;
@@ -5664,15 +5718,19 @@
             tabs.querySelector('[data-tab="all"]').textContent = `전체 ${photos.length}장`;
             tabs.querySelectorAll('button').forEach(btn => btn.setAttribute('aria-selected', btn.dataset.tab === printScope ? 'true' : 'false'));
         }
-        const opts = document.getElementById('printListOpts');
-        opts.hidden = form !== 'list';
-        opts.querySelectorAll('[data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === printOpts.sort)));
-        const memoBtn = document.getElementById('printMemoBtn');
-        memoBtn.setAttribute('aria-pressed', String(!!printOpts.memo)); memoBtn.textContent = printOpts.memo ? '메모 표시' : '메모 숨김';
-        const sizeRow = document.getElementById('printSizeOpts'), mapRow = document.getElementById('printMapOpts');
-        sizeRow.hidden = form !== 'list'; mapRow.hidden = form !== 'map';
-        sizeRow.querySelectorAll('[data-size]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.size === printOpts.size)));
-        mapRow.querySelectorAll('[data-ink]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === (printOpts.ink ? '1' : '0'))));
+        // 옵션: 한 줄 요약 + 펼치면 그 양식의 옵션만
+        const panel = document.getElementById('printOptPanel'), optBtn = document.getElementById('printOptBtn');
+        panel.querySelectorAll('.print-row').forEach(r => { r.hidden = r.dataset.for !== form; });
+        panel.querySelectorAll('[data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === printOpts.sort)));
+        panel.querySelectorAll('[data-memo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.memo === (printOpts.memo ? '1' : '0'))));
+        panel.querySelectorAll('[data-size]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.size === printOpts.size)));
+        panel.querySelectorAll('[data-ink]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === (printOpts.ink ? '1' : '0'))));
+        const summary = form === 'list' ? [printOpts.sort === 'zone' ? '칸 순서' : '가나다순', printOpts.memo ? '메모 보이기' : '메모 숨기기', printOpts.size > 1 ? '아주 크게' : '크게'].join(' · ')
+            : form === 'map' ? (printOpts.ink ? '잉크 절약' : '사진 그대로') : '바꿀 것 없음';
+        document.getElementById('printOptText').textContent = summary;
+        optBtn.disabled = form === 'check';
+        const open = printOptsOpen && form !== 'check';
+        panel.hidden = !open; optBtn.setAttribute('aria-expanded', String(open));
         // PDF는 양식·범위 모두 미리보기에 보이는 그대로 (예전엔 지도만 범위와 상관없이 전부 받아져 헷갈렸다)
         const label = form === 'map' ? (printScope === 'all' && multi ? '사진 전체' : (data.title || '')) : F.title;
         const key = JSON.stringify([form, multi && printScope === 'all', printPreviewId, printOpts.sort, printOpts.memo, printOpts.size, printOpts.ink, storeName()]);
@@ -5696,10 +5754,77 @@
             printCache.set(key, pages);
         } else pages.forEach(add);
         loading.remove();
-        setBtn(pages.length);
+        setBtn(pages.length); syncPrintPageBadge();
     }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePrintPreview(); });
+    // 옵션 펼치기/접기 (창이 열려 있는 동안 그대로)
+    let printOptsOpen = false;
+    function togglePrintOpts() { printOptsOpen = !printOptsOpen; renderPrintOptsOnly(); }
+    function renderPrintOptsOnly() {
+        const panel = document.getElementById('printOptPanel'), open = printOptsOpen && printOpts.form !== 'check';
+        panel.hidden = !open; document.getElementById('printOptBtn').setAttribute('aria-expanded', String(open));
+    }
+    // 매장 이름 한 줄: "머리글: 다산점 창고 ✎" / 비어 있으면 "+ 매장 이름 넣기"
+    function syncPrintName() {
+        const n = storeName(), btn = document.getElementById('printNameBtn');
+        btn.classList.toggle('is-empty', !n);
+        btn.innerHTML = n ? `<b>${escapeHtml(n)}</b><i class="ti ti-pencil"></i>` : `<i class="ti ti-plus"></i> 매장 이름`;
+        btn.title = n ? '매장 이름 고치기 (종이 위·파일 이름에 들어가요)' : '매장 이름을 넣으면 종이 위·파일 이름에 들어가요';
+    }
+    function editPrintName() {
+        const btn = document.getElementById('printNameBtn'), input = document.getElementById('printStoreName');
+        input.value = storeName(); btn.hidden = true; input.hidden = false; input.focus();
+    }
+    function endPrintName() {
+        const btn = document.getElementById('printNameBtn'), input = document.getElementById('printStoreName');
+        input.hidden = true; btn.hidden = false;
+        renderPrintPreview(); // 머리글이 바뀌었으면 미리보기도 (같으면 기억해 둔 것을 바로 쓴다)
+    }
+    // 크게 보기: 미리보기 쪽들을 화면 가득한 창으로 옮겨 보여 주고, 닫으면 제자리로
+    function openPrintViewer(target) {
+        const pages = document.getElementById('printPages'), body = document.getElementById('printViewerBody');
+        if (!pages.querySelector('canvas')) return;
+        body.classList.remove('is-zoom'); syncViewerZoom();
+        const cs = [...pages.querySelectorAll('canvas')], top = pages.getBoundingClientRect().top + pages.clientHeight * 0.35;
+        const at = target && target.tagName === 'CANVAS' ? cs.indexOf(target) : Math.max(0, cs.findIndex(c => c.getBoundingClientRect().bottom > top));
+        body.append(...cs);
+        document.getElementById('printViewer').hidden = false;
+        body.scrollTop = 0; if (at > 0) body.scrollTop = cs[at].offsetTop - body.offsetTop; // 보던 쪽부터
+        syncPrintPageBadge();
+    }
+    function closePrintViewer() {
+        const v = document.getElementById('printViewer');
+        if (v.hidden) return false;
+        const pages = document.getElementById('printPages'), loading = pages.querySelector('.print-loading');
+        document.getElementById('printViewerBody').querySelectorAll('canvas').forEach(c => pages.insertBefore(c, loading));
+        v.hidden = true; syncPrintPageBadge();
+        return true;
+    }
+    function togglePrintViewerZoom() { // 보던 자리 그대로 확대/축소
+        const body = document.getElementById('printViewerBody'), r = body.scrollTop / Math.max(1, body.scrollHeight);
+        body.classList.toggle('is-zoom'); syncViewerZoom();
+        body.scrollTop = r * body.scrollHeight; body.scrollLeft = 0; syncPrintPageBadge();
+    }
+    function syncViewerZoom() {
+        const z = document.getElementById('printViewerBody').classList.contains('is-zoom');
+        document.getElementById('printViewerZoom').innerHTML = z ? '<i class="ti ti-zoom-out"></i> 맞추기' : '<i class="ti ti-zoom-in"></i> 더 크게';
+    }
+    // 지금 보고 있는 쪽 "3 / 9쪽" (미리보기·크게 보기 둘 다)
+    function syncPrintPageBadge() {
+        const viewer = !document.getElementById('printViewer').hidden;
+        const box = document.getElementById(viewer ? 'printViewerBody' : 'printPages'), cs = [...box.querySelectorAll('canvas')];
+        const badge = document.getElementById('printPageBadge'), vp = document.getElementById('printViewerPage');
+        const total = printPageCount || cs.length;
+        if (!cs.length) { badge.hidden = true; vp.textContent = ''; return; }
+        const top = box.getBoundingClientRect().top + box.clientHeight * 0.35;
+        let k = cs.findIndex(c => c.getBoundingClientRect().bottom > top); if (k < 0) k = cs.length - 1;
+        const t = `${k + 1} / ${total}쪽`;
+        badge.textContent = t; badge.hidden = total < 2; vp.textContent = t;
+    }
+    document.getElementById('printPages').addEventListener('scroll', syncPrintPageBadge, { passive: true });
+    document.getElementById('printViewerBody').addEventListener('scroll', syncPrintPageBadge, { passive: true });
     function closePrintPreview() {
+        if (closePrintViewer()) return; // 크게 보기가 떠 있으면 그것만 닫는다 (뒤로·Esc)
         if (document.getElementById('printModal').style.display !== 'flex') return;
         document.getElementById('printModal').style.display = 'none';
         document.body.classList.remove('print-open'); unlockPageScroll();
