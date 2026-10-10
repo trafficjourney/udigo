@@ -494,6 +494,11 @@
         .image-section { background: var(--card); padding: 20px; margin-bottom: 24px; border-radius: var(--radius-lg); border: 1px solid rgba(224,219,208,0.6); box-shadow: var(--shadow-sm); position: relative; }
         /* 사진이 여러 장이면 한 번에 한 장만 보여주고, 위 썸네일 줄로 바꿔 본다 */
         .image-section { scroll-margin-top: 84px; }
+        /* 폰: 사진을 카드 좌우 끝까지 (쪽지 글자가 덜 잘리게) */
+        @media (max-width: 600px) {
+            .image-section { padding: 16px 12px; }
+            .image-section .zoom-box:not(.is-fs) { margin-left: -12px; margin-right: -12px; }
+        }
         .image-section.is-other-photo { display: none; }
         .photo-strip { scroll-margin-top: 76px; }
         .photo-next { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); color: var(--text2); font: inherit; font-size: 13px; cursor: pointer; text-align: left; }
@@ -574,9 +579,9 @@
         .zoom-box.is-fs .draw-tool { bottom: calc(env(safe-area-inset-bottom, 0px) + 66px); left: 14px; }
         .zoom-ctl button { display: none; align-items: center; justify-content: center; gap: 4px; min-width: 34px; height: 34px; padding: 0 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 17px; background: rgba(255,255,255,0.94); color: #1a1a18; font: 600 12px sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer; }
         .zoom-ctl button i { font-size: 16px; }
-        .zoom-ctl .zoom-full { padding: 0; width: 46px; height: 46px; border-radius: 23px; background: rgba(26,26,24,0.72); border: 1.5px solid rgba(255,255,255,0.75); color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.3); } /* 크게 보기: 자주 쓸 기능이라 크게 */
-        .zoom-ctl .zoom-full i { font-size: 24px; }
-        .zoom-ctl .zoom-full { opacity: 0.6; transition: opacity 0.15s; } /* 쪽지를 가리지 않게 살짝 흐리게 */
+        .zoom-ctl .zoom-full { gap: 5px; padding: 0 12px 0 10px; height: 34px; border-radius: 17px; background: rgba(26,26,24,0.72); border: 1px solid rgba(255,255,255,0.6); color: #fff; font: 700 12.5px sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,0.3); } /* 크게 보기: 동그라미만으론 뜻이 안 보여서 글자를 붙인 알약 */
+        .zoom-ctl .zoom-full i { font-size: 16px; }
+        .zoom-ctl .zoom-full { opacity: 0.85; transition: opacity 0.15s; } /* 쪽지를 덜 가리게 살짝 투명하게 */
         .zoom-ctl .zoom-full:hover, .zoom-ctl .zoom-full:active, .zoom-ctl .zoom-full:focus-visible { opacity: 1; }
         .zoom-box.zoomed .zoom-ctl .zoom-reset, .zoom-ctl .zoom-full { display: inline-flex; }
         /* 크게 보기(전체 화면): 사진 칸을 화면 가득 띄운다. 구역 창(#modal)은 이보다 위에 뜬다 */
@@ -915,7 +920,7 @@
         .zl-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; color: var(--text); padding: 4px 10px; border-radius: var(--radius-pill); background: var(--bg); border: 1px solid var(--border); }
         .zl-chip small { font-size: 11px; color: var(--text2); }
         .zl-chip small::before { content: '· '; }
-        .zl-chip.has-memo small { color: #8a6a10; }
+        .zl-chip.has-memo small { color: var(--text2); }
         .zl-chip.is-movable { cursor: pointer; border-style: dashed; border-color: var(--accent2); min-height: 36px; }
         .zl-chip.is-movable i { color: var(--text3); font-size: 13px; }
         .zl-chip.is-movable:active { background: var(--accent-soft); }
@@ -968,7 +973,8 @@
 
         /* 🗓 마지막 확인일 */
         .zone-checked { font-size: 11px; font-weight: 500; color: var(--text3); }
-        .zone-checked.is-stale { color: var(--warn); }
+        .zone-checked.is-stale { color: var(--text3); } /* 한 달 넘음: 회색으로 조용히 */
+        .zone-checked.is-old { color: var(--warn); font-weight: 600; } /* 석 달 넘음: 주황으로 '확인 필요' */
 
         /* 🔎 결과 없음 → 등록 */
         .search-empty { padding: 14px 8px 8px; text-align: center; font-size: 13px; color: var(--text3); display: flex; flex-direction: column; gap: 12px; align-items: center; }
@@ -1333,7 +1339,7 @@
         .zm-body .zm-item.is-checked.has-memo { box-shadow: 0 0 0 2.5px #ffd84d; }
         .zm-body .zm-memo-ic { display: none; }
         .zm-body .zm-item.has-memo .zm-memo-ic { display: inline; color: #ffd84d; opacity: 1; font-size: 15px; }
-        .zl-chip.has-memo { background: #fff6c7; border-color: #f0d36a; }
+        .zl-chip.has-memo { background: var(--bg); border-color: var(--border); } /* 노랑은 사진 쪽지·찾은 칸에만. 메모는 칩 안 글자로 보인다 */
         .zl-chip .zl-memo-ic { margin-right: 2px; color: #b8901a; font-size: 12px; }
 
         /* 📍 "찾으셨나요?" 알약: 사진을 가리지 않게 오른쪽 아래 리모컨 위에 작게 */
@@ -3040,7 +3046,7 @@
         const stage = document.createElement('div'); stage.className = 'zoom-stage';
         const noteLayer = document.createElement('div'); noteLayer.className = 'note-layer'; noteLayer.setAttribute('aria-hidden', 'true');
         const zoomCtl = document.createElement('div'); zoomCtl.className = 'zoom-ctl';
-        zoomCtl.innerHTML = `<button type="button" class="zoom-out" aria-label="사진 작게"><i class="ti ti-minus"></i></button><button type="button" class="zoom-in" aria-label="사진 크게"><i class="ti ti-plus"></i></button><button type="button" class="zoom-reset" aria-label="원래 크기로"><i class="ti ti-arrows-minimize"></i> 원래 크기</button><button type="button" class="zoom-full" aria-label="사진 크게 보기" title="크게 보기"><i class="ti ti-maximize"></i></button>`;
+        zoomCtl.innerHTML = `<button type="button" class="zoom-out" aria-label="사진 작게"><i class="ti ti-minus"></i></button><button type="button" class="zoom-in" aria-label="사진 크게"><i class="ti ti-plus"></i></button><button type="button" class="zoom-reset" aria-label="원래 크기로"><i class="ti ti-arrows-minimize"></i> 원래 크기</button><button type="button" class="zoom-full" aria-label="사진 크게 보기" title="크게 보기"><i class="ti ti-arrows-maximize"></i><span>크게 보기</span></button>`;
         zoomCtl.querySelector('.zoom-in').onclick = () => setPhotoZoom(data, (data.zoom || 1) * 1.5);
         zoomCtl.querySelector('.zoom-out').onclick = () => setPhotoZoom(data, (data.zoom || 1) / 1.5);
         zoomCtl.querySelector('.zoom-reset').onclick = () => setPhotoZoom(data, 1);
@@ -3785,7 +3791,7 @@
                     return `<div role="button" tabindex="0" class="zone-item zl-row ${isEditMode ? 'is-edit' : ''} ${z === activeZone ? 'active' : ''}" onclick="${go}" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ${go}; }" aria-label="${escapeHtml(z.name || '이름 없는 구역')} ${isEditMode ? '고치기' : '사진에서 보기'}">
                         <span class="zl-num">${i + 1}</span>
                         <span class="zl-row-main">
-                            <span class="zl-row-top"><span class="zl-name">${escapeHtml(z.name || '이름 없는 구역')}</span>${isZoneStale(z) ? `<span class="zone-checked is-stale">${formatCheckedAgo(z.checkedAt)} 확인</span>` : ''}</span>
+                            <span class="zl-row-top"><span class="zl-name">${escapeHtml(z.name || '이름 없는 구역')}</span>${isZoneStale(z) ? `<span class="zone-checked is-stale${isZoneOld(z) ? ' is-old' : ''}">${formatCheckedAgo(z.checkedAt)} 확인</span>` : ''}</span>
                             <span class="zl-row-items" data-key="${data.id}:${i}">${z.items.length ? shown.map(chip).join('') + (more ? `<span class="zl-more">+${more}</span>` : '') : '<span class="zl-empty">비어 있음</span>'}</span>
                         </span>
                         <i class="ti ${isEditMode ? 'ti-pencil' : 'ti-chevron-right'} zl-go" aria-hidden="true"></i>
@@ -4675,7 +4681,7 @@
         }
         const subLine = field === 'title' ? highlight(data.title, query) : escapeHtml(data.title);
         const commentLine = field === 'comment' && item && item.comment ? ' · ' + highlight(item.comment, query) : '';
-        const checkedLine = z.checkedAt ? ` · <span class="${isZoneStale(z) ? 'zone-checked is-stale' : ''}">${formatCheckedAgo(z.checkedAt)} 확인</span>` : '';
+        const checkedLine = z.checkedAt ? ` · <span class="${isZoneStale(z) ? 'zone-checked is-stale' + (isZoneOld(z) ? ' is-old' : '') : ''}">${formatCheckedAgo(z.checkedAt)} 확인</span>` : '';
 
         return `
             <div class="search-dropdown-item" data-id="${escapeHtml(data.id)}" data-index="${idx}" data-name="${escapeHtml(item ? item.name : z.name)}" data-item="${item ? escapeHtml(item.name) : ''}" onclick="pickSearchResult(this)">
@@ -4812,6 +4818,7 @@
     }
     function markZoneChecked(z) { if (z) z.checkedAt = Date.now(); }
     function isZoneStale(z) { return !!z.checkedAt && Date.now() - z.checkedAt > STALE_DAYS * 86400000; }
+    function isZoneOld(z) { return !!z.checkedAt && Date.now() - z.checkedAt > 90 * 86400000; } // 석 달 넘게 확인 안 함 → 주황 경고
     function formatCheckedAgo(ts) {
         const startOf = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
         const days = Math.round((startOf(new Date()) - startOf(new Date(ts))) / 86400000);
