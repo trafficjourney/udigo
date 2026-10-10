@@ -1000,9 +1000,9 @@
         .welcome-beta { text-align: center; margin-bottom: 8px; }
         /* 첫 화면 이름 줄 + 대동여지도 느낌 선(방안·산줄기·물길)을 아주 옅게 깔아서, 옛 이름은 살짝만 비치고 화면은 모던하게 */
         .welcome-brand { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0 0 12px; }
-        .welcome-brand-name { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .welcome-brand-name { display: flex; flex-direction: column; align-items: center; gap: 1px; } /* 창고여지도가 가운데서 주인공, 영문은 아래에 작게 */
         .welcome-brand b { font-size: 22px; font-weight: 900; color: var(--accent-text); letter-spacing: -0.6px; }
-        .welcome-brand .welcome-en { font-size: 12px; font-weight: 700; color: var(--text3); letter-spacing: 0.4px; }
+        .welcome-brand .welcome-en { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; }
         .welcome-brand span { font-size: 13px; font-weight: 600; color: var(--text2); }
         .welcome-top { position: relative; }
         .welcome-top > * { position: relative; }
@@ -1024,9 +1024,12 @@
         .ws-setup-list .ti { color: #b8901a; margin-right: 4px; }
         .ws-setup-cond { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text2); word-break: keep-all; }
         .ws-setup-go { width: 100%; text-decoration: none; }
-        .welcome-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--text2); }
+        .welcome-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; margin: 12px 0 0; font-size: 12.5px; color: var(--text2); }
         .welcome-trust span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
         .welcome-trust .ti { font-size: 15px; color: var(--accent2); }
+        /* 무료 베타는 기간 한정이라 강조: 진하게 + 노란 형광펜 (쪽지 색) */
+        .welcome-trust .trust-free { font-weight: 800; color: var(--text); background: linear-gradient(transparent 55%, #ffe27a 55%); padding: 0 2px; }
+        .welcome-trust .trust-free .ti { color: #b8901a; }
         .ws { width: 100%; max-width: 520px; margin: 28px auto 4px; text-align: left; scroll-margin-top: 80px; }
         .welcome-more { display: inline-flex; align-items: center; gap: 4px; margin: 18px auto 0; padding: 6px 12px; border: 0; background: none; color: var(--text2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
         .welcome-more .ti { animation: more-bob 1.6s ease-in-out infinite; }
@@ -1664,7 +1667,7 @@
                 <span class="setup-promo-text"><b>10/31까지 무료 방문 세팅</b> <span>다산·구리</span></span>
                 <span class="setup-promo-go">신청 <i class="ti ti-chevron-right"></i></span>
             </a>
-            <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><button type="button" class="trust-link" onclick="openDataInfo()"><i class="ti ti-device-mobile"></i> 내 폰에 저장</button></p>
+            <p class="welcome-trust"><span class="trust-free"><i class="ti ti-gift"></i> 무료 베타</span><span><i class="ti ti-bolt"></i> 가입 없이</span><button type="button" class="trust-link" onclick="openDataInfo()"><i class="ti ti-device-mobile"></i> 내 폰에 저장</button></p>
         </div>
         <!-- 첫 화면은 단순하게: 아래에 더 있다는 표시만 두고, 정리 전/후·업종 예시는 한 화면 아래에 -->
         <button type="button" class="welcome-more" onclick="document.getElementById('welcomeShowcase').scrollIntoView({ behavior: 'smooth', block: 'start' })">어떻게 되는지 보기 <i class="ti ti-chevron-down"></i></button>
