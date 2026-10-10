@@ -681,7 +681,10 @@
         .seg-solo { flex: none; min-height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
         .seg-solo[aria-pressed="true"] { background: var(--card); color: var(--accent-text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
         .print-pages { display: grid; gap: 12px; background: var(--bg); border-radius: var(--radius-md); padding: 12px; }
-        .print-pages img { display: block; width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .print-pages img, .print-pages canvas { display: block; width: 100%; height: auto; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .print-loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 18px 0; font-size: 14px; color: var(--text2); }
+        .print-loading .ti { font-size: 20px; animation: spin 0.8s linear infinite; }
+        #printDownloadBtn:disabled { opacity: 0.75; cursor: progress; }
         .print-actions { display: flex; gap: 8px; margin-top: 14px; }
         .print-actions .btn-base { flex: 1; }
         .sample-banner > span { word-break: keep-all; }
@@ -4972,6 +4975,8 @@
     // ────────────────────────────────────────────────────────────
     const PRINT = { pageWmm: 210, pageHmm: 297, marginMm: 14, pxPerMm: 8, ink: '#1a1a18', sub: '#6b6960', line: '#e0dbd0' };
     function printPx(mm) { return Math.round(mm * PRINT.pxPerMm); }
+    // 쪽 하나를 다 그린 캔버스 → PDF용 JPEG. 미리보기는 PRINT.raw로 캔버스를 그대로 받아 작게 줄여 쓴다 (큰 JPEG 만들기가 가장 느렸다)
+    function printOut(canvas) { return PRINT.raw ? canvas : canvas.toDataURL('image/jpeg', 0.92); }
 
     // 캔버스 텍스트 줄바꿈: ctx.measureText로 폭을 재서 maxW 안에 들어오게 나눈다 (한글은 글자 단위로도 자를 수 있게)
     function wrapCanvasText(ctx, text, maxW) {
@@ -5029,8 +5034,8 @@
         const badgeR = printPx(2.6);
         data.zones.forEach((z) => {
             const zx = x + z.x * scale, zy = y + z.y * scale, zw = z.w * scale, zh = z.h * scale;
-            ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(zx, zy, zw, zh);
-            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(zx, zy, zw, zh);
+            ctx.lineWidth = printPx(0.6); ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeRect(zx, zy, zw, zh);
+            ctx.lineWidth = printPx(0.25); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.strokeRect(zx, zy, zw, zh);
         });
         data.zones.forEach((z, i) => {
             const zx = x + z.x * scale, zy = y + z.y * scale, zw = z.w * scale, zh = z.h * scale;
@@ -5208,7 +5213,7 @@
             ctx.fillText(`${dateStr} · 위치가 바뀌면 앱에서 고치고 다시 뽑아 붙이세요`, margin, pageH - margin - printPx(1));
             ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - margin, pageH - margin - printPx(1));
 
-            return canvas.toDataURL('image/jpeg', 0.92);
+            return printOut(canvas);
         });
     }
 
@@ -5334,7 +5339,7 @@
             ctx.font = footFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             ctx.fillText(`${dateStr} · 창고 입구에 붙여 두세요 · 위치가 바뀌면 앱에서 고치고 다시 뽑기`, margin, pageH - margin - printPx(1));
             ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - margin, pageH - margin - printPx(1));
-            return canvas.toDataURL('image/jpeg', 0.92);
+            return printOut(canvas);
         });
     }
 
@@ -5427,7 +5432,7 @@
             });
             if (!labels.length) { ctx.font = `${printPx(5)}px sans-serif`; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.fillText('아직 만든 구역이 없어요', m, top0 + printPx(10)); }
             drawPrintFoot(ctx, `${dateStr} · 칸이 바뀌면 앱에서 고치고 다시 뽑아 붙이세요`);
-            pages.push(c.toDataURL('image/jpeg', 0.92));
+            pages.push(printOut(c));
         }
         return pages;
     }
@@ -5497,7 +5502,7 @@
             }
             if (!rows.length) { ctx.font = `${printPx(5)}px sans-serif`; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText('아직 적은 물건이 없어요', m, y + printPx(4)); }
             drawPrintFoot(ctx, `${dateStr} · 위치가 바뀌면 앱에서 고치고 다시 뽑아 붙이세요`);
-            pages.push(c.toDataURL('image/jpeg', 0.92));
+            pages.push(printOut(c));
         } while (i < rows.length);
         return pages.length > 1 ? pages : pages;
     }
@@ -5547,7 +5552,7 @@
             }
             if (!rows.length) { ctx.font = `${printPx(5)}px sans-serif`; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText('아직 적은 물건이 없어요', m, y + printPx(4)); }
             drawPrintFoot(ctx, `${dateStr} · 점검 후 앱에서 "찾으셨나요?"로 확인하거나 옮긴 곳을 고쳐 주세요`);
-            pages.push(c.toDataURL('image/jpeg', 0.92));
+            pages.push(printOut(c));
         } while (i < rows.length);
         return pages;
     }
@@ -5555,7 +5560,7 @@
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         if (!photos.length) { alert("먼저 사진을 등록해주세요."); return; }
         const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
-        printPreviewId = data.id;
+        printPreviewId = data.id; printCache = new Map(); // 열 때마다 새로 (그 사이 물건이 바뀌었을 수 있다)
         renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
         document.getElementById('printModal').style.display = 'flex';
         // 이미 열려 있는데 또 열면(인쇄 버튼 두 번 등) 잠금이 두 번 걸리고 닫을 때 한 번만 풀려 스크롤이 막힌 채 남았다
@@ -5574,16 +5579,29 @@
         try { localStorage.setItem('printOpts', JSON.stringify(printOpts)); } catch (e) {}
         renderPrintPreview();
     }
-    // 지금 고른 양식·범위의 쪽들 (미리보기와 PDF가 같은 것을 쓴다)
-    function currentPrintPages() {
+    // 지금 고른 양식·범위의 쪽들을 덩어리(사진 한 장 몫 등)로 나눠 만드는 함수 목록 (미리보기와 PDF가 같은 것을 쓴다)
+    // 덩어리마다 화면에 숨 돌릴 틈을 줘서, 사진이 많아도 첫 쪽부터 바로 보이고 화면이 멈추지 않는다
+    function printChunks() {
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         const data = photos.find(d => d.id == printPreviewId) || photos[0], multi = photos.length > 1, i = photos.indexOf(data);
         const all = printScope === 'all' && multi, scope = all ? photos : [data], ds = printDateStr();
-        if (printOpts.form === 'list') return buildBigListPages(scope, ds, { sort: printOpts.sort, memo: printOpts.memo });
-        if (printOpts.form === 'check') return buildCheckPages(scope, ds);
-        if (!all) return buildPrintPages(data, i, ds, multi ? photoLetter(i) : null);
-        // 전체: 맨 앞에 창고 입구에 붙일 전체 찾아보기, 이어서 사진마다 지도 (미리보기에 보이는 쪽이 그대로 PDF가 된다)
-        return [...buildMasterIndexPages(photos, ds), ...photos.flatMap((d, pi) => buildPrintPages(d, pi, ds, photoLetter(pi)))];
+        if (printOpts.form === 'list') return [() => buildBigListPages(scope, ds, { sort: printOpts.sort, memo: printOpts.memo })];
+        if (printOpts.form === 'check') return [() => buildCheckPages(scope, ds)];
+        if (!all) return [() => buildPrintPages(data, i, ds, multi ? photoLetter(i) : null)];
+        // 전체: 맨 앞에 창고 입구에 붙일 전체 찾아보기, 이어서 사진마다 지도
+        return [() => buildMasterIndexPages(photos, ds), ...photos.map((d, pi) => () => buildPrintPages(d, pi, ds, photoLetter(pi)))];
+    }
+    const printYield = () => new Promise(r => setTimeout(r, 0));
+    // 미리보기는 종이 해상도의 절반으로 그려 캔버스를 그대로 붙인다 (큰 JPEG를 만들던 게 느림의 대부분이었다). 열려 있는 동안 고른 조합은 기억
+    const PRINT_PREVIEW_PX = 4;
+    let printJob = 0, printCache = new Map(), printPageCount = 0;
+    function syncPrintBtn() { // PDF를 만드는 동안엔 진행 표시를 그대로 둔다
+        const btn = document.getElementById('printDownloadBtn');
+        if (!btn.disabled) btn.innerHTML = `<i class="ti ti-download"></i> PDF 받기${printPageCount ? ` (${printPageCount}쪽)` : ''}`;
+    }
+    function printPreviewChunk(fn) {
+        const px = PRINT.pxPerMm; PRINT.pxPerMm = PRINT_PREVIEW_PX; PRINT.raw = true;
+        try { return fn(); } finally { PRINT.pxPerMm = px; PRINT.raw = false; }
     }
     function renderPrintPreview(tab) {
         if (tab) printScope = tab;
@@ -5607,11 +5625,29 @@
         const memoBtn = document.getElementById('printMemoBtn');
         memoBtn.setAttribute('aria-pressed', String(!!printOpts.memo)); memoBtn.textContent = printOpts.memo ? '메모 표시' : '메모 숨김';
         // PDF는 양식·범위 모두 미리보기에 보이는 그대로 (예전엔 지도만 범위와 상관없이 전부 받아져 헷갈렸다)
-        const pages = currentPrintPages();
-        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기 (${pages.length}쪽)`;
         const label = form === 'map' ? (printScope === 'all' && multi ? '사진 전체' : (data.title || '')) : F.title;
-        document.getElementById('printPages').innerHTML = pages.map((src, k) => `<img src="${src}" alt="${escapeHtml(label)} 인쇄물 ${k + 1}쪽">`).join('');
-        document.getElementById('printPages').scrollTop = 0;
+        const key = JSON.stringify([form, multi && printScope === 'all', printPreviewId, printOpts.sort, printOpts.memo]);
+        fillPrintPreview(++printJob, key, label);
+    }
+    async function fillPrintPreview(job, key, label) {
+        const box = document.getElementById('printPages');
+        const setBtn = (n) => { printPageCount = n; syncPrintBtn(); };
+        box.innerHTML = ''; box.scrollTop = 0;
+        const add = (cv) => { cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', `${label} 인쇄물 ${box.querySelectorAll('canvas').length + 1}쪽`); box.insertBefore(cv, loading); };
+        const loading = document.createElement('div'); loading.className = 'print-loading'; loading.innerHTML = '<i class="ti ti-loader-2"></i> 인쇄물 만드는 중…';
+        box.appendChild(loading);
+        let pages = printCache.get(key);
+        if (!pages) {
+            setBtn(0); pages = [];
+            for (const fn of printChunks()) {
+                await printYield(); // 창과 빙글이가 먼저 그려지게
+                if (job !== printJob) return; // 그 사이 다른 양식·범위를 골랐다
+                const got = printPreviewChunk(fn); pages.push(...got); got.forEach(add);
+            }
+            printCache.set(key, pages);
+        } else pages.forEach(add);
+        loading.remove();
+        setBtn(pages.length);
     }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePrintPreview(); });
     function closePrintPreview() {
@@ -5641,27 +5677,30 @@
         return jsPdfLoading;
     }
     async function downloadReportAsPDF() {
-        try { await loadJsPdf(); } catch (e) {}
-        if (!window.jspdf || !window.jspdf.jsPDF) { alert("PDF 만드는 도구를 불러오지 못했어요. 인터넷 연결을 확인하고 잠시 뒤 다시 눌러주세요."); return; }
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
+        const btn = document.getElementById('printDownloadBtn');
+        if (btn.disabled) return;
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
-
-        if (photos.length === 0) {
-            alert("다운로드할 데이터가 없습니다. 먼저 매장 사진을 등록해주세요.");
-            return;
-        }
-
+        if (photos.length === 0) { alert("다운로드할 데이터가 없습니다. 먼저 매장 사진을 등록해주세요."); return; }
+        const busy = (t) => { btn.innerHTML = `<i class="ti ti-loader-2" style="animation: spin 0.8s linear infinite;"></i> ${t}`; };
+        btn.disabled = true; busy('PDF 만드는 중…');
         try {
-            // 미리보기에 보이는 그대로 (양식·범위)
-            currentPrintPages().forEach((imgData, k) => { if (k) doc.addPage(); doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm); });
+            try { await loadJsPdf(); } catch (e) {}
+            if (!window.jspdf || !window.jspdf.jsPDF) { alert("PDF 만드는 도구를 불러오지 못했어요. 인터넷 연결을 확인하고 잠시 뒤 다시 눌러주세요."); return; }
+            const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
+            // 미리보기에 보이는 그대로 (양식·범위), 종이 해상도로. 덩어리마다 숨 돌리며 진행을 보여 준다
+            let k = 0;
+            for (const fn of printChunks()) {
+                busy(`PDF 만드는 중…${k ? ` ${k}${printPageCount ? `/${printPageCount}` : ''}쪽` : ''}`);
+                await printYield();
+                for (const imgData of fn()) { if (k) doc.addPage(); doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm); k++; }
+            }
             const F = PRINT_FORMS[printOpts.form] || PRINT_FORMS.map, one = photos.length > 1 && printScope !== 'all' ? photos.find(d => d.id == printPreviewId) : null;
             const part = one ? '_' + (one.title || '').replace(/[\\/:*?"<>|\s]+/g, '').slice(0, 20) : '';
             doc.save(`창고지기_${F.file}${part}_${fileDate()}.pdf`);
         } catch (error) {
             console.error("PDF 생성 중 오류 발생:", error);
             alert("PDF 생성 중 문제가 발생했습니다.");
-        }
+        } finally { btn.disabled = false; syncPrintBtn(); }
     }
 
     // 초기 실행 로직 (읽기 전용 상태로 시작)
