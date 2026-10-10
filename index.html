@@ -58,6 +58,12 @@
         }
         /* 🎨 디자인 토큰 시스템 적용 (애플 스타일: 부드러운 다층 그림자 + 일관된 라운드 + 톤다운 컬러) */
         :root {
+            /* 구역 고치기 띠: 테마 색을 따라간다 (그린 기본) */
+            --editbar-bg: #1f4d38;
+            --editbar-text: #ffffff;
+            --editbar-line: #1f4d38;
+            --editbar-done-bg: #ffffff;
+            --editbar-done-text: #1f4d38;
             --bg: #f8f6f1;
             --card: #fff;
             --border: #e0dbd0;
@@ -232,6 +238,11 @@
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
         :root[data-theme="pastel"] { /* 파스텔 핑크: 연분홍 바탕 + 장미색 버튼 (버튼 글자는 흰색이 또렷하게 읽히는 진하기) */
+            --editbar-bg: #a23e63;
+            --editbar-text: #ffffff;
+            --editbar-line: #a23e63;
+            --editbar-done-bg: #ffffff;
+            --editbar-done-text: #a23e63;
             --bg: #fdf3f6;
             --card: #fffafb;
             --border: #f2dbe3;
@@ -277,6 +288,11 @@
 
         /* 🟡🔵 옐로우 & 네이비 테마: 노란 헤더 + 네이비 주요 버튼 + 노란 강조 */
         :root[data-theme="yellow"] {
+            --editbar-bg: #13306b;
+            --editbar-text: #ffffff;
+            --editbar-line: #ffd200;
+            --editbar-done-bg: #ffd200;
+            --editbar-done-text: #13306b;
             --bg: #f4f6fa;
             --card: #fff;
             --border: #dde2ec;
