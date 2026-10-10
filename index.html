@@ -1169,7 +1169,11 @@
         }
         body.found-bar-open .found-bar { transform: none; opacity: 1; pointer-events: auto; }
         body.found-bar-open .floating-remote { opacity: 0; pointer-events: none; }
-        .floating-remote { transition: opacity 0.2s var(--ease); }
+        .floating-remote { transition: opacity 0.2s var(--ease), transform 0.25s var(--ease); }
+        /* 아래로 읽어 내려가는 동안은 버튼 모음을 아래로 숨기고, 올리거나 멈추면 다시 (목록 아래쪽 칩을 가렸다) */
+        .floating-remote.is-tucked { transform: translateY(calc(100% + 32px)); opacity: 0; pointer-events: none; }
+        /* 맨 아래 내용이 버튼 모음 위까지 올라올 수 있게 여백 */
+        body:not(.welcome-open) { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
         .found-bar-info { display: flex; flex-direction: column; min-width: 0; }
         .found-bar-info b { font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .found-bar-info span { font-size: 12px; color: var(--text2); }
@@ -2662,6 +2666,17 @@
         if (scrollY > 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) cur = photos[photos.length - 1].id;
         markCurrentPhoto(cur);
     }
+    // 버튼 모음 숨기기: 아래로 스크롤 중이면 숨기고, 위로 올리거나 0.9초 멈추면 다시. 편집 중·맨 아래에서는 늘 보이게
+    let remoteLastY = scrollY, remoteIdle = 0;
+    window.addEventListener('scroll', () => {
+        const fr = document.getElementById('floatingRemote'); if (!fr) return;
+        const y = scrollY, atBottom = innerHeight + y >= document.documentElement.scrollHeight - 4;
+        const down = y > remoteLastY + 6, up = y < remoteLastY - 6;
+        if (down && y > 120 && !isEditMode && !atBottom) fr.classList.add('is-tucked');
+        else if (up || atBottom) fr.classList.remove('is-tucked');
+        if (down || up) remoteLastY = y;
+        clearTimeout(remoteIdle); remoteIdle = setTimeout(() => fr.classList.remove('is-tucked'), 900);
+    }, { passive: true });
     let photoSpyQueued = false;
     window.addEventListener('scroll', () => {
         if (photoSpyQueued) return;
