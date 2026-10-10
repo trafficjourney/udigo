@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=7">
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=7">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=8">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=8">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="창고지기">
+    <meta name="apple-mobile-web-app-title" content="수나비">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
         // ✏ 서비스 이름: 앱 화면 글자·공유·백업/인쇄 파일 이름·인쇄물은 모두 이 한 곳을 쓴다.
         //   이름을 바꿀 땐 python3 tools/rename_app.py 새이름 → 이 줄과 아래 <head>의 제목·공유 미리보기 글, manifest까지 한 번에 바뀐다.
         //   (검색·카톡 미리보기는 스크립트를 실행하지 않고 <head> 글자를 그대로 읽어서, 그쪽은 글자로 따로 적혀 있어야 한다)
-        const APP_NAME = '창고지기';
+        const APP_NAME = '수나비';
         // 이름 뒤 조사: 받침 있으면 '으로/이/은/을', 없으면 '로/가/는/를' (ㄹ 받침 + 로)
         function josa(word, withBatchim, without) {
             const c = word.charCodeAt(word.length - 1) - 0xAC00;
@@ -35,18 +35,18 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"></noscript>
-    <title>창고지기 - 사진 한 장으로 만드는 창고 지도</title>
+    <title>수나비 - 나비 아니고, 수납 네비 · 사진으로 만드는 창고 지도</title>
     <!-- 카톡·SNS 링크 미리보기 (이미지 주소는 반드시 전체 주소여야 카톡이 읽는다) -->
     <meta name="description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요. A4로 뽑아 벽에 붙일 수도 있어요.">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="창고지기">
-    <meta property="og:title" content="창고지기 - 사진 한 장이 창고 지도가 돼요">
+    <meta property="og:site_name" content="수나비">
+    <meta property="og:title" content="수나비 - 나비 아니고, 수납 네비예요">
     <meta property="og:description" content="선반 사진을 구역으로 나누고 물건을 적으면, 검색 한 번으로 위치를 찾아요.">
     <meta property="og:url" content="https://trafficjourney.github.io/udigo/">
-    <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=8">
+    <meta property="og:image" content="https://trafficjourney.github.io/udigo/og-image.png?v=9">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="창고지기: 사진 한 장이 창고 지도가 돼요. 남색 앱 아이콘 속 선반에서 찾는 상자에 노란 쪽지와 위치 핀, 아래에 '빨대 → 아래 칸 가운데' 검색 결과">
+    <meta property="og:image:alt" content="수나비: 나비 아니고, 수납 네비예요. 노란 쪽지 두 장이 날개처럼 붙은 위치 핀 아이콘과, 사진 한 장이 창고 지도가 된다는 소개">
     <meta property="og:locale" content="ko_KR">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -1068,6 +1068,12 @@
         .welcome-steps span { font-size: 11.5px; line-height: 1.35; color: var(--text2); word-break: keep-all; text-align: center; }
         .welcome-sub { margin-top: 10px; font-size: 14px; line-height: 1.55; color: var(--text2); word-break: keep-all; }
         .brand-home { display: flex; align-items: center; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+        .brand-icon { width: 1.35em; height: 1.35em; border-radius: 0.34em; margin-right: 7px; flex: none; }
+        /* 첫 화면 이름 줄: 수나비 = 수납 + 네비 (나비로 읽히는 걸 반전으로) */
+        .welcome-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 10px; font-size: 14px; color: var(--text2); flex-wrap: wrap; }
+        .welcome-brand img { width: 28px; height: 28px; border-radius: 8px; }
+        .welcome-brand b { font-size: 18px; color: var(--text); letter-spacing: -0.3px; }
+        .welcome-brand mark { background: #ffe27a; color: #2b2716; padding: 0 4px; border-radius: 4px; font-weight: 700; }
         body:not(.welcome-revisit) .revisit-only { display: none !important; }
         .welcome-back { display: inline-flex; margin: -16px 0 16px; }
         .install-banner-actions { display: flex; gap: 4px; flex-shrink: 0; }
@@ -1423,7 +1429,7 @@
 </div>
 
 <div id="guideModal" style="display:none; line-height: 1.6;">
-    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;"><span data-app-name>창고지기</span> 사용법</h2>
+    <h2 style="text-align: center; color: var(--accent-text); margin-bottom: 16px; font-size: 1.25em;"><span data-app-name>수나비</span> 사용법</h2>
     <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <ol class="guide-steps">
             <li><i class="ti ti-camera"></i><div><b>사진 올리고 구역 만들기</b><span>사진 가운데 <b>[AI로 구역 찾기]</b>를 누르거나, <b>[직접 그리기]</b>로 사진 위를 끌어 구역을 만들어요. 나중에 고치려면 오른쪽 아래 <b>[구역 고치기]</b>.</span><small>AI로 찾을 때 사진만 외부 AI 서버로 보내져요.</small></div></li>
@@ -1551,7 +1557,7 @@
 
 <div class="search-bar">
     <div class="app-brand" style="display: flex; align-items: center;">
-        <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><i class="ti ti-box" style="margin-right: 6px;"></i><span data-app-name>창고지기</span><span class="beta-badge">베타</span></button>
+        <button type="button" class="brand-home" onclick="openWelcomeRevisit()" title="첫 화면 보기"><img src="icon-192.png?v=8" alt="" class="brand-icon"><span data-app-name>수나비</span><span class="beta-badge">베타</span></button>
         <button onclick="openVideoGuideModal()" style="background: none; border: none; padding: 0; margin-left: 8px; cursor: pointer; color: #e09b3a; display: flex; align-items: center;" title="사용방법 가이드">
             <i class="ti ti-bulb" style="font-size: 18px; transition: color 0.2s;"></i>
         </button>
@@ -1639,6 +1645,7 @@
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
+        <div class="welcome-brand"><img src="icon-192.png?v=8" alt=""><b data-app-name>수나비</b><span>나비 아니고, <mark>수납 네비</mark>예요</span></div>
         <div class="welcome-beta"><span class="beta-pill"><i class="ti ti-flask"></i> 무료 베타 운영 중</span></div>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
@@ -1951,7 +1958,7 @@
         <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
         <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
         <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
-        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고지기</span> 알려주기 (링크 공유)</button>
+        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>수나비</span> 알려주기 (링크 공유)</button>
         <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
         <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
         <button id="resetRow" class="settings-row is-danger" onclick="openResetAsk()"><i class="ti ti-trash"></i> 모든 데이터 지우기</button>
