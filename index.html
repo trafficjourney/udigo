@@ -663,7 +663,10 @@
         #photoTipBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         #editIntroBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 10000; }
         /* 🖨 인쇄물 미리보기: 벽에 붙일 A4 지도를 그대로 보여준다 */
-        #printModal { z-index: 1090; max-width: 520px; padding: 20px; }
+        /* 버튼(닫기·PDF 받기)은 늘 아래에 보이고, 미리보기만 안에서 스크롤 (예전엔 창 전체가 스크롤돼 버튼이 미리보기 밑에 숨었다) */
+        #printModal { z-index: 1090; max-width: 520px; padding: 20px; flex-direction: column; overflow: hidden; max-height: 85vh; max-height: 88dvh; }
+        #printModal > * { flex: none; }
+        #printModal .print-pages { flex: 1 1 auto; min-height: 120px; overflow-y: auto; overscroll-behavior: contain; }
         #printBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 1085; }
         body.print-open #printBackdrop { display: block; }
         .print-sub { font-size: 13px; color: var(--text2); margin: 4px 0 14px; word-break: keep-all; }
@@ -5554,7 +5557,7 @@
         const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
         printPreviewId = data.id;
         renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
-        document.getElementById('printModal').style.display = 'block';
+        document.getElementById('printModal').style.display = 'flex';
         // 이미 열려 있는데 또 열면(인쇄 버튼 두 번 등) 잠금이 두 번 걸리고 닫을 때 한 번만 풀려 스크롤이 막힌 채 남았다
         if (!document.body.classList.contains('print-open')) { document.body.classList.add('print-open'); lockPageScroll(); }
     }
@@ -5612,7 +5615,7 @@
     }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePrintPreview(); });
     function closePrintPreview() {
-        if (document.getElementById('printModal').style.display !== 'block') return;
+        if (document.getElementById('printModal').style.display !== 'flex') return;
         document.getElementById('printModal').style.display = 'none';
         document.body.classList.remove('print-open'); unlockPageScroll();
     }
