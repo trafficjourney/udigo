@@ -231,48 +231,48 @@
         :root[data-theme="champagne"] .zone-item.active .zl-num { background: var(--danger); color: #fff; }
 
         /* 🩷 파스텔 테마: 라벤더·피치 톤의 부드러운 밝은 테마 */
-        :root[data-theme="pastel"] {
-            --bg: #f6f2fb;
-            --card: #fffdfc;
-            --border: #e8dced;
-            --accent: #7c6a9c;
-            --accent2: #f3b78c;
-            --text: #4a3f57;
-            --text2: #8c8296;
-            --text3: #b7aec2;
-            --danger: #e07a7a;
+        :root[data-theme="pastel"] { /* 파스텔 핑크: 연분홍 바탕 + 장미색 버튼 (버튼 글자는 흰색이 또렷하게 읽히는 진하기) */
+            --bg: #fdf3f6;
+            --card: #fffafb;
+            --border: #f2dbe3;
+            --accent: #b84a72;
+            --accent2: #f6b8c8;
+            --text: #4a2f3a;
+            --text2: #8f7480;
+            --text3: #c2a9b4;
+            --danger: #d9534f;
             --warn: #e3b45c;
-            --search-hl: #fdeaa8;
-            --zone-border: rgba(124,106,156,0.85);
+            --search-hl: #ffe6a8;
+            --zone-border: rgba(184,74,114,0.85);
             --ivory-bg: rgba(255,255,255,0.9);
-            --ivory-border: #e8dced;
-            --charcoal: #7c6a9c;
+            --ivory-border: #f2dbe3;
+            --charcoal: #b84a72;
             --ivory-text: #fff;
-            --charcoal-mute: #8c8296;
-            --shadow-focus: 0 0 0 4px rgba(243,183,140,0.35);
+            --charcoal-mute: #8f7480;
+            --shadow-focus: 0 0 0 4px rgba(246,184,200,0.45);
 
-            --accent-hover: #665579;
-            --accent-soft: #f1e9f7;
-            --accent-rgb: 243, 183, 140;
-            --accent-dark-rgb: 124, 106, 156;
-            --on-accent2: #5a3a28;
+            --accent-hover: #9c3c5f;
+            --accent-soft: #fbe6ee;
+            --accent-rgb: 246, 184, 200;
+            --accent-dark-rgb: 184, 74, 114;
+            --on-accent2: #5e2338;
             --on-accent: #fff;
-            --header-bg: rgba(246,242,251,0.88);
-            --badge-bg: #f3b78c;
-            --badge-text: #5a3a28;
-            --active-zone-bg: #fdf1cf;
-            --active-zone-bar: #cf9f5a;
-            --zone-stroke: #9b7fc7;
-            --zone-fill-rgb: 124, 106, 156;
-            --hero-bg: #7c6a9c;
+            --header-bg: rgba(253,243,246,0.88);
+            --badge-bg: #f6b8c8;
+            --badge-text: #5e2338;
+            --active-zone-bg: #fff0d6;
+            --active-zone-bar: #e0a24f;
+            --zone-stroke: #e07fa0;
+            --zone-fill-rgb: 184, 74, 114;
+            --hero-bg: #c35a7f;
             --hero-text: #ffffff;
-            --hero-text2: rgba(255,255,255,0.78);
-            --hero-chip-bg: rgba(255,255,255,0.16);
-            --hero-chip-border: rgba(255,255,255,0.3);
-            --notice-bg: #fbe4cf;
-            --notice-border: #f0cda0;
-            --notice-text: #8a5a26;
-            --danger-soft: #f9dede;
+            --hero-text2: rgba(255,255,255,0.8);
+            --hero-chip-bg: rgba(255,255,255,0.18);
+            --hero-chip-border: rgba(255,255,255,0.32);
+            --notice-bg: #fde2ea;
+            --notice-border: #f5c3d2;
+            --notice-text: #8a3a55;
+            --danger-soft: #fbe0e0;
         }
 
         /* 🟡🔵 옐로우 & 네이비 테마: 노란 헤더 + 네이비 주요 버튼 + 노란 강조 */
@@ -858,7 +858,12 @@
         /* ⚙️ 설정 창: 한 화면 안에 들어오게 짧게 */
         .settings-head { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 16px; }
         .settings-head h3 { margin: 0; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 6px; }
-        .settings-group { display: grid; gap: 8px; margin-bottom: 18px; }
+        .settings-group { display: grid; gap: 8px; margin-bottom: 14px; }
+        .settings-sec { margin-bottom: 20px; }
+        .settings-sec > .settings-group:last-child { margin-bottom: 0; }
+        .settings-sec-title { margin: 0 0 10px; font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+        .settings-danger { margin-top: 4px; }
+        .settings-danger[hidden] { display: none; }
         .settings-label { font-weight: 600; font-size: 12px; color: var(--text2); }
         .settings-inline { display: flex; gap: 8px; }
         .settings-inline select { flex: 1; min-width: 0; margin: 0; }
@@ -883,15 +888,15 @@
         @media (hover: hover) { .settings-row:hover { background: var(--bg); } }
         .settings-row:active { background: var(--bg); }
         /* 🎨 테마 선택: 색 두 개짜리 동그라미 5개를 한 줄로 */
-        .theme-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .theme-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; } /* 5개를 한 줄로 (4칸이면 파스텔만 아래로 떨어졌다) */
         .theme-option {
-            display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; min-height: 56px;
+            display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 0; min-height: 52px; min-width: 0;
             background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-md);
-            font: inherit; font-size: 11px; font-weight: 600; color: var(--text2); cursor: pointer; line-height: 1.2;
+            font: inherit; font-size: 10.5px; font-weight: 600; color: var(--text2); cursor: pointer; line-height: 1.2; white-space: nowrap; letter-spacing: -0.3px;
         }
         .theme-option[aria-checked="true"] { border-color: var(--accent-text); color: var(--text); box-shadow: var(--shadow-focus); }
         .theme-swatch { display: flex; }
-        .theme-swatch i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; margin-left: -5px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+        .theme-swatch i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; margin-left: -5px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
         .theme-swatch i:first-child { margin-left: 0; }
 
         /* 📋 사진 아래 구역 목록: 사진의 번호와 같은 번호로 연결 */
@@ -1000,9 +1005,9 @@
         .welcome-beta { text-align: center; margin-bottom: 8px; }
         /* 첫 화면 이름 줄 + 대동여지도 느낌 선(방안·산줄기·물길)을 아주 옅게 깔아서, 옛 이름은 살짝만 비치고 화면은 모던하게 */
         .welcome-brand { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0 0 12px; }
-        .welcome-brand-name { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .welcome-brand-name { display: flex; flex-direction: column; align-items: center; gap: 1px; } /* 창고여지도가 가운데서 주인공, 영문은 아래에 작게 */
         .welcome-brand b { font-size: 22px; font-weight: 900; color: var(--accent-text); letter-spacing: -0.6px; }
-        .welcome-brand .welcome-en { font-size: 12px; font-weight: 700; color: var(--text3); letter-spacing: 0.4px; }
+        .welcome-brand .welcome-en { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; }
         .welcome-brand span { font-size: 13px; font-weight: 600; color: var(--text2); }
         .welcome-top { position: relative; }
         .welcome-top > * { position: relative; }
@@ -1010,11 +1015,12 @@
             -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent); pointer-events: none; }
         .hero-beta { display: none; justify-content: center; margin-top: -6px; }
         .hero-beta .beta-pill { background: var(--hero-chip-bg); border: 1px solid var(--hero-chip-border); color: var(--hero-text); }
-        .setup-promo { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 360px; margin: 12px auto 0; padding: 10px 12px; border-radius: var(--radius-md); background: #fff6c7; border: 1px solid #f0d36a; color: #3a2f0a; text-decoration: none; text-align: left; }
+        .setup-promo { display: flex; align-items: center; gap: 6px; width: 100%; max-width: 360px; margin: 10px auto 0; padding: 7px 10px; border-radius: 999px; background: #fff6c7; border: 1px solid #f0d36a; color: #3a2f0a; text-decoration: none; text-align: left; }
         .setup-promo[hidden] { display: none; }
-        .setup-promo-ic { font-size: 22px; color: #b8901a; flex: none; }
-        .setup-promo-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; line-height: 1.35; word-break: keep-all; }
-        .setup-promo-text b { font-size: 14px; }
+        .setup-promo-ic { font-size: 18px; color: #b8901a; flex: none; }
+        .setup-promo-text { flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 한 줄 띠: 버튼보다 튀지 않게 */
+        .setup-promo-text b { font-size: 13px; }
+        .setup-promo-text span { color: #8a6a10; margin-left: 1px; font-size: 12px; }
         .setup-promo-go { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 800; color: #8a6a10; }
         .setup-promo:active { transform: scale(0.99); }
         .ws-setup { padding: 18px 16px; border-radius: var(--radius-md); background: #fffbe8; border: 1px solid #f0d36a; }
@@ -1023,9 +1029,12 @@
         .ws-setup-list .ti { color: #b8901a; margin-right: 4px; }
         .ws-setup-cond { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text2); word-break: keep-all; }
         .ws-setup-go { width: 100%; text-decoration: none; }
-        .welcome-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--text2); }
+        .welcome-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; margin: 12px 0 0; font-size: 12.5px; color: var(--text2); }
         .welcome-trust span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
         .welcome-trust .ti { font-size: 15px; color: var(--accent2); }
+        /* 무료 베타는 기간 한정이라 강조: 진하게 + 노란 형광펜 (쪽지 색) */
+        .welcome-trust .trust-free { font-weight: 800; color: var(--text); background: linear-gradient(transparent 55%, #ffe27a 55%); padding: 0 2px; }
+        .welcome-trust .trust-free .ti { color: #b8901a; }
         .ws { width: 100%; max-width: 520px; margin: 28px auto 4px; text-align: left; scroll-margin-top: 80px; }
         .welcome-more { display: inline-flex; align-items: center; gap: 4px; margin: 18px auto 0; padding: 6px 12px; border: 0; background: none; color: var(--text2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
         .welcome-more .ti { animation: more-bob 1.6s ease-in-out infinite; }
@@ -1650,21 +1659,20 @@
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
-        <div class="welcome-brand"><div class="welcome-brand-name"><b data-app-name>창고여지도</b><small class="welcome-en" data-app-name-en>Backroom Atlas</small></div><span>사진으로 만드는 매장 물품 지도</span></div>
-        <div class="welcome-beta"><span class="beta-pill"><i class="ti ti-flask"></i> 무료 베타 운영 중</span></div>
+        <div class="welcome-brand"><div class="welcome-brand-name"><b data-app-name>창고여지도</b><small class="welcome-en" data-app-name-en>Backroom Atlas</small></div></div>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
-        <p class="welcome-sub">물건 이름만 대면 어느 구역인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
+        <p class="welcome-sub">물건 이름만 대면 어느 칸인지 안내해요</p>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
             <button class="btn-base btn-secondary btn-lg" onclick="pickPhoto()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
             <p class="revisit-only welcome-revisit-note">지금 쓰던 지도는 그대로 있어요. 예시는 저장하지 않고 미리보기로 열려요.</p>
             <a class="setup-promo" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden>
                 <i class="ti ti-gift setup-promo-ic" aria-hidden="true"></i>
-                <span class="setup-promo-text"><b>매장에 직접 가서 무료 세팅</b><span>10월 31일까지 · 다산동·구리시 · 선착순 10팀</span></span>
+                <span class="setup-promo-text"><b>10/31까지 무료 방문 세팅</b> <span>다산·구리</span></span>
                 <span class="setup-promo-go">신청 <i class="ti ti-chevron-right"></i></span>
             </a>
-            <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><button type="button" class="trust-link" onclick="openDataInfo()"><i class="ti ti-device-mobile"></i> 내 폰에 저장</button></p>
+            <p class="welcome-trust"><span class="trust-free"><i class="ti ti-gift"></i> 무료 베타</span><span><i class="ti ti-bolt"></i> 가입 없이</span><button type="button" class="trust-link" onclick="openDataInfo()"><i class="ti ti-device-mobile"></i> 내 폰에 저장</button></p>
         </div>
         <!-- 첫 화면은 단순하게: 아래에 더 있다는 표시만 두고, 정리 전/후·업종 예시는 한 화면 아래에 -->
         <button type="button" class="welcome-more" onclick="document.getElementById('welcomeShowcase').scrollIntoView({ behavior: 'smooth', block: 'start' })">어떻게 되는지 보기 <i class="ti ti-chevron-down"></i></button>
@@ -1915,57 +1923,74 @@
         <h3><i class="ti ti-settings"></i> 설정</h3>
         <button class="btn-ghost" onclick="closeSettingsModal()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <div class="settings-group">
-        <div class="settings-label">화면 테마</div>
-        <div class="theme-options" role="radiogroup" aria-label="화면 테마">
-            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
-                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙">
-                <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>샴페인</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
-                <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
-                <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔">
-                <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
-            </button>
+    <!-- 설정은 묶음(1단계 제목) 안에 항목(2단계 이름)으로: 화면 · 매장 · 백업 · 도움 순서, 지우기는 맨 아래 따로 -->
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">화면</h4>
+        <div class="settings-group">
+            <div class="settings-label">테마</div>
+            <div class="theme-options" role="radiogroup" aria-label="화면 테마">
+                <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
+                    <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙">
+                    <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>샴페인</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
+                    <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
+                    <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔 핑크">
+                    <span class="theme-swatch"><i style="background:#fdf3f6;box-shadow:inset 0 0 0 1px #f2dbe3"></i><i style="background:#b84a72"></i></span><span>핑크</span>
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="settings-group">
-        <label class="settings-label" for="storeNameInput">매장 이름 <small style="font-weight: 400; color: var(--text3);">인쇄물 머리글·파일 이름에 들어가요</small></label>
-        <input type="text" id="storeNameInput" class="store-name-input" maxlength="20" placeholder="예: 다산점 창고" autocomplete="off" oninput="setStoreName(this.value)">
-    </div>
-    <div class="settings-group">
-        <label class="settings-label" for="industrySelect">업종 기본 품목</label>
-        <div class="settings-inline">
-            <select id="industrySelect"></select>
-            <button class="btn-base btn-secondary" onclick="applyIndustryTemplate()">적용</button>
+        <div class="settings-group">
+            <div class="settings-label">사진 위 글자 크기</div>
+            <div class="font-seg" id="fontSeg" role="group" aria-label="사진 위 글자 크기">
+                <button type="button" data-step="-4" onclick="setFontDelta(-4)" style="font-size: 12px;">작게</button>
+                <button type="button" data-step="0" onclick="setFontDelta(0)" style="font-size: 14px;">보통</button>
+                <button type="button" data-step="4" onclick="setFontDelta(4)" style="font-size: 15px;">크게</button>
+                <button type="button" data-step="8" onclick="setFontDelta(8)" style="font-size: 16px;">아주 크게</button>
+            </div>
         </div>
-    </div>
-    <div class="settings-group">
-        <div class="settings-label">사진 위 글자 크기</div>
-        <div class="font-seg" id="fontSeg" role="group" aria-label="사진 위 글자 크기">
-            <button type="button" data-step="-4" onclick="setFontDelta(-4)" style="font-size: 12px;">작게</button>
-            <button type="button" data-step="0" onclick="setFontDelta(0)" style="font-size: 14px;">보통</button>
-            <button type="button" data-step="4" onclick="setFontDelta(4)" style="font-size: 15px;">크게</button>
-            <button type="button" data-step="8" onclick="setFontDelta(8)" style="font-size: 16px;">아주 크게</button>
+    </section>
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">매장</h4>
+        <div class="settings-group">
+            <label class="settings-label" for="storeNameInput">매장 이름 <small style="font-weight: 400; color: var(--text3);">인쇄물 머리글·파일 이름에 들어가요</small></label>
+            <input type="text" id="storeNameInput" class="store-name-input" maxlength="20" placeholder="예: 다산점 창고" autocomplete="off" oninput="setStoreName(this.value)">
         </div>
-    </div>
-    <div class="settings-list">
-        <a id="promoRow" class="settings-row promo-row" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden><i class="ti ti-gift"></i> 무료 방문 세팅 신청 <small style="margin-left: auto; color: var(--text3); font-weight: 400;">10/31까지 · 다산동·구리시</small></a>
-        <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
-        <button id="shareBackupRow" class="settings-row" onclick="shareBackup()" hidden><i class="ti ti-send"></i> 백업 보내기 (카톡·메일)</button>
-        <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
-        <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
-        <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
-        <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
-        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고여지도</span> 알려주기 (링크 공유)</button>
-        <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
-        <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+        <div class="settings-group">
+            <label class="settings-label" for="industrySelect">업종 기본 품목</label>
+            <div class="settings-inline">
+                <select id="industrySelect"></select>
+                <button class="btn-base btn-secondary" onclick="applyIndustryTemplate()">적용</button>
+            </div>
+        </div>
+    </section>
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">데이터 · 백업</h4>
+        <div class="settings-list">
+            <!-- 백업은 한 줄: 보내기가 되는 폰이면 [카톡 등으로 보내기 / 이 폰에 저장]을 고르고, 아니면 바로 저장 (예전엔 '보내기'·'받기' 두 줄이 겹쳤다) -->
+            <button class="settings-row" onclick="closeSettingsModal(); startBackup()"><i class="ti ti-cloud-upload"></i> 백업하기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+            <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
+            <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
+        </div>
+    </section>
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">도움 · 소식</h4>
+        <div class="settings-list">
+    <a id="promoRow" class="settings-row promo-row" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden><i class="ti ti-gift"></i> 무료 방문 세팅 <small style="margin-left: auto; color: var(--text3); font-weight: 400;">10/31까지 · 다산·구리</small></a>
+            <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
+            <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
+            <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고여지도</span> 알려주기</button>
+            <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
+            <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+        </div>
+    </section>
+    <div class="settings-list settings-danger">
         <button id="resetRow" class="settings-row is-danger" onclick="openResetAsk()"><i class="ti ti-trash"></i> 모든 데이터 지우기</button>
     </div>
     <p id="settingsFooter" class="settings-footer"></p>
@@ -2746,7 +2771,7 @@
     }
 
     // 🎨 화면 테마 전환 (기본 인디고 / 샴페인 / 옐로우 & 네이비(빽다방용) / 그린 & 아이보리 / 파스텔) — 저장해 두고 다음 접속에도 유지. 그린의 저장값은 호환을 위해 'default' 유지
-    const THEME_META_COLORS = { mono: '#ffffff', champagne: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#f6f2fb' };
+    const THEME_META_COLORS = { mono: '#ffffff', champagne: '#ffffff', default: '#f8f6f1', yellow: '#ffd200', pastel: '#fdf3f6' };
     function setTheme(name) {
         if (name === 'default') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = name;
         try { localStorage.setItem('uiTheme', name); } catch (e) {}
@@ -2767,10 +2792,9 @@
         syncIndustryUI();
         document.getElementById('installAppRow').hidden = isInstalledApp();
         syncLastBackupText();
-        document.getElementById('shareBackupRow').hidden = !canShareBackup();
         document.getElementById('promoRow').hidden = !setupPromoOn();
         syncSettingsFooter(); syncFontSeg(); document.getElementById('storeNameInput').value = storeName();
-        document.getElementById('resetRow').hidden = isSamplePreview || !hasSavedData();
+        document.getElementById('resetRow').parentElement.hidden = isSamplePreview || !hasSavedData(); // 지울 게 없으면 묶음째 숨김
         document.getElementById('contactRow').hidden = !CONTACT.url;
         document.getElementById('contactText').textContent = CONTACT.label || '';
         document.getElementById('settingsModal').style.display = 'block';
