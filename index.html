@@ -673,6 +673,8 @@
         /* 인쇄 화면의 고르기 줄: 왼쪽 이름표 + 하나로 붙은 버튼(세그먼트). 떨어진 알약 버튼이면 줄끼리 한 묶음처럼 보였다 */
         .print-row { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
         .print-row[hidden] { display: none; }
+        input[type="text"].store-name-input { width: 100%; min-width: 0; margin: 0; box-sizing: border-box; min-height: 42px; font-size: 16px; } /* 16px 아래면 아이폰이 입력할 때 화면을 확대한다 */
+        .print-row input[type="text"].store-name-input { flex: 1; }
         .print-row-label { flex: none; width: 2.3em; font-size: 13px; font-weight: 700; color: var(--text2); }
         .seg { flex: 1; min-width: 0; display: flex; gap: 2px; padding: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
         .seg button { flex: 1 1 auto; min-width: 0; min-height: 36px; padding: 0 6px; border: 0; border-radius: 9px; background: transparent; color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
@@ -1778,6 +1780,10 @@
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
     <p class="print-sub" id="printSub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
+    <div class="print-row">
+        <label class="print-row-label" for="printStoreName">이름</label>
+        <input type="text" id="printStoreName" class="store-name-input" maxlength="20" placeholder="매장 이름 (예: 다산점 창고)" autocomplete="off" oninput="setStoreName(this.value); clearTimeout(printNameTimer); printNameTimer = setTimeout(renderPrintPreview, 600)">
+    </div>
     <!-- 양식: 지도(사진+찾아보기) · 위치 목록(큰 글씨 표) · 점검표 -->
     <div class="print-row">
         <span class="print-row-label">양식</span>
@@ -1849,6 +1855,10 @@
                 <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
             </button>
         </div>
+    </div>
+    <div class="settings-group">
+        <label class="settings-label" for="storeNameInput">매장 이름 <small style="font-weight: 400; color: var(--text3);">인쇄물 머리글·파일 이름에 들어가요</small></label>
+        <input type="text" id="storeNameInput" class="store-name-input" maxlength="20" placeholder="예: 다산점 창고" autocomplete="off" oninput="setStoreName(this.value)">
     </div>
     <div class="settings-group">
         <label class="settings-label" for="industrySelect">업종 기본 품목</label>
@@ -2680,7 +2690,7 @@
         syncLastBackupText();
         document.getElementById('shareBackupRow').hidden = !canShareBackup();
         document.getElementById('promoRow').hidden = !setupPromoOn();
-        syncSettingsFooter(); syncFontSeg();
+        syncSettingsFooter(); syncFontSeg(); document.getElementById('storeNameInput').value = storeName();
         document.getElementById('resetRow').hidden = isSamplePreview || !hasSavedData();
         document.getElementById('contactRow').hidden = !CONTACT.url;
         document.getElementById('contactText').textContent = CONTACT.label || '';
@@ -4057,7 +4067,7 @@
         // 받기·보내기 모두 같은 PDF 백업 (열면 복구 안내가 보이고, 안드로이드 파일 선택에서도 잘 골라진다)
         // data: 주소에 통째로 넣으면 사진이 많을 때(수 MB) 파일이 잘릴 수 있어 Blob으로 만든다
         const url = URL.createObjectURL(buildBackupPdf(backupJson()));
-        const downloadLink = document.createElement('a'); downloadLink.href = url; downloadLink.download = `창고지기_백업_${fileDateTime()}.pdf`;
+        const downloadLink = document.createElement('a'); downloadLink.href = url; downloadLink.download = `창고지기_${storeFileName() ? storeFileName() + '_' : ''}백업_${fileDateTime()}.pdf`;
         document.body.appendChild(downloadLink); downloadLink.click(); downloadLink.remove();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
         markBackedUp();
@@ -4109,7 +4119,7 @@
     }
     async function shareBackup() {
         closeBackupChoice();
-        const file = new File([buildBackupPdf(backupJson())], `창고지기_백업_${fileDateTime()}.pdf`, { type: 'application/pdf' });
+        const file = new File([buildBackupPdf(backupJson())], `창고지기_${storeFileName() ? storeFileName() + '_' : ''}백업_${fileDateTime()}.pdf`, { type: 'application/pdf' });
         try {
             await navigator.share({ files: [file] }); // 제목·글을 같이 넣으면 일부 앱이 글만 보내서 파일만 넘긴다
             markBackedUp();
@@ -4990,6 +5000,15 @@
     // ────────────────────────────────────────────────────────────
     const PRINT = { pageWmm: 210, pageHmm: 297, marginMm: 14, pxPerMm: 8, ink: '#1a1a18', sub: '#6b6960', line: '#e0dbd0' };
     function printPx(mm) { return Math.round(mm * PRINT.pxPerMm); }
+    // 매장 이름 (선택): 인쇄물 머리글 날짜 옆·아래 오른쪽, PDF·백업 파일 이름에 들어간다. 지점이 여러 곳이면 종이·파일을 구분하기 쉽게
+    function storeName() { try { return (localStorage.getItem('storeName') || '').trim().slice(0, 20); } catch (e) { return ''; } }
+    function setStoreName(v) {
+        try { localStorage.setItem('storeName', String(v || '').slice(0, 20)); } catch (e) {}
+        ['storeNameInput', 'printStoreName'].forEach(id => { const el = document.getElementById(id); if (el && el !== document.activeElement) el.value = v; });
+    }
+    function printHeadDate(dateStr) { const n = storeName(); return n ? `${n} · ${dateStr}` : dateStr; }
+    function printBrand() { return storeName() || '창고지기'; }
+    function storeFileName() { return storeName().replace(/[\\/:*?"<>|\s.]+/g, ''); } // 파일 이름에 못 쓰는 글자·띄어쓰기 빼고
     // 쪽 하나를 다 그린 캔버스 → PDF용 JPEG. 미리보기는 PRINT.raw로 캔버스를 그대로 받아 작게 줄여 쓴다 (큰 JPEG 만들기가 가장 느렸다)
     function printOut(canvas) { return PRINT.raw ? canvas : canvas.toDataURL('image/jpeg', 0.92); }
 
@@ -5176,7 +5195,7 @@
             ctx.font = titleFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left';
             ctx.fillText((letter ? `${letter} · ` : '') + (data.title || `#${index + 1}`) + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(7));
             ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'right';
-            ctx.fillText(dateStr, pageW - margin, cy + printPx(7));
+            ctx.fillText(printHeadDate(dateStr), pageW - margin, cy + printPx(7));
             cy += printPx(12);
             ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.6); ctx.beginPath();
             ctx.moveTo(margin, cy); ctx.lineTo(pageW - margin, cy); ctx.stroke();
@@ -5236,7 +5255,7 @@
             ctx.moveTo(margin, pageH - margin - printPx(7)); ctx.lineTo(pageW - margin, pageH - margin - printPx(7)); ctx.stroke();
             ctx.font = footFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             ctx.fillText(`${dateStr} · 위치가 바뀌면 앱에서 고치고 다시 뽑아 붙이세요`, margin, pageH - margin - printPx(1));
-            ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - margin, pageH - margin - printPx(1));
+            ctx.textAlign = 'right'; ctx.fillText(printBrand(), pageW - margin, pageH - margin - printPx(1));
 
             return printOut(canvas);
         });
@@ -5311,7 +5330,7 @@
             let cy = margin;
             ctx.textBaseline = 'alphabetic'; ctx.font = titleFont; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left';
             ctx.fillText('전체 물건 찾아보기' + (pages.length > 1 ? ` (${pgi + 1}/${pages.length})` : ''), margin, cy + printPx(7));
-            ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'right'; ctx.fillText(dateStr, pageW - margin, cy + printPx(7));
+            ctx.font = dateFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'right'; ctx.fillText(printHeadDate(dateStr), pageW - margin, cy + printPx(7));
             cy += printPx(12);
             ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.6); ctx.beginPath(); ctx.moveTo(margin, cy); ctx.lineTo(pageW - margin, cy); ctx.stroke();
             cy += printPx(6);
@@ -5363,7 +5382,7 @@
             ctx.moveTo(margin, pageH - margin - printPx(7)); ctx.lineTo(pageW - margin, pageH - margin - printPx(7)); ctx.stroke();
             ctx.font = footFont; ctx.fillStyle = PRINT.sub; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             ctx.fillText(`${dateStr} · 창고 입구에 붙여 두세요 · 위치가 바뀌면 앱에서 고치고 다시 뽑기`, margin, pageH - margin - printPx(1));
-            ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - margin, pageH - margin - printPx(1));
+            ctx.textAlign = 'right'; ctx.fillText(printBrand(), pageW - margin, pageH - margin - printPx(1));
             return printOut(canvas);
         });
     }
@@ -5385,7 +5404,7 @@
         const pageW = printPx(PRINT.pageWmm), m = printPx(PRINT.marginMm);
         ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.fillStyle = PRINT.ink; ctx.font = `bold ${printPx(7)}px sans-serif`;
         ctx.fillText(title, m, m + printPx(7));
-        ctx.textAlign = 'right'; ctx.fillStyle = PRINT.sub; ctx.font = `${printPx(3.6)}px sans-serif`; ctx.fillText(dateStr, pageW - m, m + printPx(7));
+        ctx.textAlign = 'right'; ctx.fillStyle = PRINT.sub; ctx.font = `${printPx(3.6)}px sans-serif`; ctx.fillText(printHeadDate(dateStr), pageW - m, m + printPx(7));
         let y = m + printPx(12);
         ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.6); ctx.beginPath(); ctx.moveTo(m, y); ctx.lineTo(pageW - m, y); ctx.stroke();
         y += printPx(5);
@@ -5397,7 +5416,7 @@
         ctx.strokeStyle = PRINT.line; ctx.lineWidth = printPx(0.3); ctx.beginPath(); ctx.moveTo(m, pageH - m - printPx(7)); ctx.lineTo(pageW - m, pageH - m - printPx(7)); ctx.stroke();
         ctx.font = `${printPx(3.2)}px sans-serif`; ctx.fillStyle = PRINT.sub; ctx.textBaseline = 'alphabetic';
         ctx.textAlign = 'left'; ctx.fillText(text, m, pageH - m - printPx(1));
-        ctx.textAlign = 'right'; ctx.fillText('창고지기', pageW - m, pageH - m - printPx(1));
+        ctx.textAlign = 'right'; ctx.fillText(printBrand(), pageW - m, pageH - m - printPx(1));
     }
     // 사진 순서대로 모든 칸: { code: "3" 또는 "A-3", photo, zone, num }
     function printZoneList(photos) {
@@ -5585,7 +5604,7 @@
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         if (!photos.length) { alert("먼저 사진을 등록해주세요."); return; }
         const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
-        printPreviewId = data.id; printCache = new Map(); // 열 때마다 새로 (그 사이 물건이 바뀌었을 수 있다)
+        printPreviewId = data.id; printCache = new Map(); document.getElementById('printStoreName').value = storeName(); // 열 때마다 새로 (그 사이 물건이 바뀌었을 수 있다)
         renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
         document.getElementById('printModal').style.display = 'flex';
         // 이미 열려 있는데 또 열면(인쇄 버튼 두 번 등) 잠금이 두 번 걸리고 닫을 때 한 번만 풀려 스크롤이 막힌 채 남았다
@@ -5620,7 +5639,7 @@
     const printYield = () => new Promise(r => setTimeout(r, 0));
     // 미리보기는 종이 해상도의 절반으로 그려 캔버스를 그대로 붙인다 (큰 JPEG를 만들던 게 느림의 대부분이었다). 열려 있는 동안 고른 조합은 기억
     const PRINT_PREVIEW_PX = 4;
-    let printJob = 0, printCache = new Map(), printPageCount = 0;
+    let printJob = 0, printCache = new Map(), printPageCount = 0, printNameTimer = 0;
     function syncPrintBtn() { // PDF를 만드는 동안엔 진행 표시를 그대로 둔다
         const btn = document.getElementById('printDownloadBtn');
         if (!btn.disabled) btn.innerHTML = `<i class="ti ti-download"></i> PDF 받기${printPageCount ? ` (${printPageCount}쪽)` : ''}`;
@@ -5656,7 +5675,7 @@
         mapRow.querySelectorAll('[data-ink]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === (printOpts.ink ? '1' : '0'))));
         // PDF는 양식·범위 모두 미리보기에 보이는 그대로 (예전엔 지도만 범위와 상관없이 전부 받아져 헷갈렸다)
         const label = form === 'map' ? (printScope === 'all' && multi ? '사진 전체' : (data.title || '')) : F.title;
-        const key = JSON.stringify([form, multi && printScope === 'all', printPreviewId, printOpts.sort, printOpts.memo, printOpts.size, printOpts.ink]);
+        const key = JSON.stringify([form, multi && printScope === 'all', printPreviewId, printOpts.sort, printOpts.memo, printOpts.size, printOpts.ink, storeName()]);
         fillPrintPreview(++printJob, key, label);
     }
     async function fillPrintPreview(job, key, label) {
@@ -5726,7 +5745,7 @@
             }
             const F = PRINT_FORMS[printOpts.form] || PRINT_FORMS.map, one = photos.length > 1 && printScope !== 'all' ? photos.find(d => d.id == printPreviewId) : null;
             const part = one ? '_' + (one.title || '').replace(/[\\/:*?"<>|\s]+/g, '').slice(0, 20) : '';
-            doc.save(`창고지기_${F.file}${part}_${fileDate()}.pdf`);
+            doc.save(`${storeFileName() || '창고지기'}_${F.file}${part}_${fileDate()}.pdf`);
         } catch (error) {
             console.error("PDF 생성 중 오류 발생:", error);
             alert("PDF 생성 중 문제가 발생했습니다.");
