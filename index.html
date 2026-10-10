@@ -667,6 +667,13 @@
         .print-sub { font-size: 13px; color: var(--text2); margin: 4px 0 14px; word-break: keep-all; }
         .print-tabs { display: flex; gap: 6px; margin: 0 0 12px; }
         .print-tabs[hidden] { display: none; }
+        .print-tabs.print-forms button[aria-selected="true"] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); } /* 양식은 진하게, 범위(이 사진/전체)는 연하게 구분 */
+        .print-opts { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; font-size: 13px; color: var(--text2); }
+        .print-opts[hidden] { display: none; }
+        .print-opts-label { font-weight: 700; margin-right: 2px; }
+        .print-opts-gap { flex: 1; }
+        .print-opts button { min-height: 34px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: var(--radius-pill); background: var(--card); color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .print-opts button[aria-pressed="true"] { border-color: var(--accent-text); background: var(--accent-soft); color: var(--accent-text); }
         .print-tabs button { flex: 1; min-width: 0; min-height: 40px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: var(--radius-pill); background: var(--card); color: var(--text2); font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
         .print-tabs button[aria-selected="true"] { border-color: var(--accent-text); background: var(--accent-soft); color: var(--accent-text); }
         .print-pages { display: grid; gap: 12px; background: var(--bg); border-radius: var(--radius-md); padding: 12px; }
@@ -1751,11 +1758,25 @@
         <h3 id="printTitle"><i class="ti ti-printer"></i> 벽에 붙일 지도</h3>
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <p class="print-sub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
-    <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진을 합친 전체 찾아보기 -->
+    <p class="print-sub" id="printSub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
+    <!-- 양식: 지도(사진+찾아보기) · 위치 목록(큰 글씨 표) · 점검표 -->
+    <div id="printForms" class="print-tabs print-forms" role="tablist" aria-label="인쇄 양식">
+        <button type="button" role="tab" data-form="map" onclick="setPrintOpt('form', 'map')"><i class="ti ti-map-2"></i> 지도</button>
+        <button type="button" role="tab" data-form="list" onclick="setPrintOpt('form', 'list')"><i class="ti ti-list-details"></i> 위치 목록</button>
+        <button type="button" role="tab" data-form="check" onclick="setPrintOpt('form', 'check')"><i class="ti ti-checkbox"></i> 점검표</button>
+    </div>
+    <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진 -->
     <div id="printTabs" class="print-tabs" role="tablist" hidden>
         <button type="button" role="tab" data-tab="photo" onclick="renderPrintPreview('photo')"></button>
-        <button type="button" role="tab" data-tab="all" onclick="renderPrintPreview('all')"><i class="ti ti-list-search"></i> 전체 찾아보기</button>
+        <button type="button" role="tab" data-tab="all" onclick="renderPrintPreview('all')"><i class="ti ti-list-search"></i> 전체 사진</button>
+    </div>
+    <!-- 위치 목록 옵션 -->
+    <div id="printListOpts" class="print-opts" hidden>
+        <span class="print-opts-label">정렬</span>
+        <button type="button" data-sort="name" onclick="setPrintOpt('sort', 'name')">가나다순</button>
+        <button type="button" data-sort="zone" onclick="setPrintOpt('sort', 'zone')">칸 순서</button>
+        <span class="print-opts-gap"></span>
+        <button type="button" id="printMemoBtn" onclick="setPrintOpt('memo', !printOpts.memo)">메모</button>
     </div>
     <div id="printPages" class="print-pages"></div>
     <div class="print-actions">
@@ -5486,23 +5507,58 @@
         if (!photos.length) { alert("먼저 사진을 등록해주세요."); return; }
         const data = photos.find(d => d.id == (dataId || currentPhotoId)) || photos[0];
         printPreviewId = data.id;
-        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${photos.length > 1 ? ` (전체 찾아보기 + 사진 ${photos.length}장)` : ''}`;
         renderPrintPreview(photos.length > 1 && !dataId ? 'all' : 'photo');
         document.getElementById('printModal').style.display = 'block';
         // 이미 열려 있는데 또 열면(인쇄 버튼 두 번 등) 잠금이 두 번 걸리고 닫을 때 한 번만 풀려 스크롤이 막힌 채 남았다
         if (!document.body.classList.contains('print-open')) { document.body.classList.add('print-open'); lockPageScroll(); }
     }
-    function renderPrintPreview(tab) {
+    // 인쇄 양식·옵션 (다음에 열어도 그대로)
+    let printOpts = { form: 'map', sort: 'name', memo: true }, printScope = 'photo';
+    try { Object.assign(printOpts, JSON.parse(localStorage.getItem('printOpts') || '{}')); } catch (e) {}
+    const PRINT_FORMS = {
+        map: { title: '벽에 붙일 지도', sub: '선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요', file: '지도' },
+        list: { title: '물건 위치 목록', sub: '사진 없이 큰 글씨 표로: 물건 이름만 알면 칸 번호가 바로 보여요 · 흑백 프린터도 잘 나와요', file: '위치목록' },
+        check: { title: '위치 점검표', sub: '칸 순서대로 걸으며 있음·없음에 체크해요 · 옮긴 곳은 메모 칸에 적었다가 앱에서 고쳐요', file: '점검표' }
+    };
+    function setPrintOpt(key, val) {
+        printOpts[key] = val;
+        try { localStorage.setItem('printOpts', JSON.stringify(printOpts)); } catch (e) {}
+        renderPrintPreview();
+    }
+    // 지금 고른 양식·범위의 쪽들 (미리보기와 PDF가 같은 것을 쓴다)
+    function currentPrintPages() {
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         const data = photos.find(d => d.id == printPreviewId) || photos[0], multi = photos.length > 1, i = photos.indexOf(data);
+        const all = printScope === 'all' && multi, scope = all ? photos : [data], ds = printDateStr();
+        if (printOpts.form === 'list') return buildBigListPages(scope, ds, { sort: printOpts.sort, memo: printOpts.memo });
+        if (printOpts.form === 'check') return buildCheckPages(scope, ds);
+        return all ? buildMasterIndexPages(photos, ds) : buildPrintPages(data, i, ds, multi ? photoLetter(i) : null);
+    }
+    function renderPrintPreview(tab) {
+        if (tab) printScope = tab;
+        const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
+        const data = photos.find(d => d.id == printPreviewId) || photos[0], multi = photos.length > 1, i = photos.indexOf(data);
+        const form = PRINT_FORMS[printOpts.form] ? printOpts.form : 'map', F = PRINT_FORMS[form];
+        printOpts.form = form;
+        document.getElementById('printTitle').innerHTML = `<i class="ti ti-printer"></i> ${F.title}`;
+        document.getElementById('printSub').textContent = F.sub;
+        document.querySelectorAll('#printForms button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.form === form)));
         const tabs = document.getElementById('printTabs');
         tabs.hidden = !multi;
         if (multi) {
             tabs.querySelector('[data-tab="photo"]').textContent = `${photoLetter(i)} · ${data.title || ''}`;
-            tabs.querySelectorAll('button').forEach(btn => btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false'));
+            tabs.querySelector('[data-tab="all"]').innerHTML = form === 'map' ? '<i class="ti ti-list-search"></i> 전체 찾아보기' : '<i class="ti ti-stack-2"></i> 전체 사진';
+            tabs.querySelectorAll('button').forEach(btn => btn.setAttribute('aria-selected', btn.dataset.tab === printScope ? 'true' : 'false'));
         }
-        const pages = tab === 'all' && multi ? buildMasterIndexPages(photos, printDateStr()) : buildPrintPages(data, i, printDateStr(), multi ? photoLetter(i) : null);
-        const label = tab === 'all' && multi ? '전체 찾아보기' : (data.title || '');
+        const opts = document.getElementById('printListOpts');
+        opts.hidden = form !== 'list';
+        opts.querySelectorAll('[data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === printOpts.sort)));
+        const memoBtn = document.getElementById('printMemoBtn');
+        memoBtn.setAttribute('aria-pressed', String(!!printOpts.memo)); memoBtn.textContent = printOpts.memo ? '메모 보이기' : '메모 숨김';
+        // PDF: 지도는 지금처럼 전부(전체 찾아보기 + 사진마다 지도), 목록·점검표는 보이는 그대로
+        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${form === 'map' && multi ? ` (전체 찾아보기 + 사진 ${photos.length}장)` : ''}`;
+        const pages = currentPrintPages();
+        const label = form === 'map' ? (printScope === 'all' && multi ? '전체 찾아보기' : (data.title || '')) : F.title;
         document.getElementById('printPages').innerHTML = pages.map((src, k) => `<img src="${src}" alt="${escapeHtml(label)} 인쇄물 ${k + 1}쪽">`).join('');
         document.getElementById('printPages').scrollTop = 0;
     }
@@ -5549,6 +5605,11 @@
             const dateStr = printDateStr(), multi = photos.length > 1;
             let firstPage = true;
             const addPage = (imgData) => { if (!firstPage) doc.addPage(); else firstPage = false; doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm); };
+            if (printOpts.form !== 'map' && PRINT_FORMS[printOpts.form]) { // 목록·점검표: 미리보기에 보이는 그대로
+                currentPrintPages().forEach(addPage);
+                doc.save(`창고지기_${PRINT_FORMS[printOpts.form].file}_${fileDate()}.pdf`);
+                return;
+            }
             if (multi) buildMasterIndexPages(photos, dateStr).forEach(addPage); // 맨 앞: 창고 입구에 붙일 전체 찾아보기
             photos.forEach((data, pi) => {
                 buildPrintPages(data, pi, dateStr, multi ? photoLetter(pi) : null).forEach(imgData => {
