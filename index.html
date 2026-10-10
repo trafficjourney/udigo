@@ -858,7 +858,12 @@
         /* ⚙️ 설정 창: 한 화면 안에 들어오게 짧게 */
         .settings-head { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 16px; }
         .settings-head h3 { margin: 0; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 6px; }
-        .settings-group { display: grid; gap: 8px; margin-bottom: 18px; }
+        .settings-group { display: grid; gap: 8px; margin-bottom: 14px; }
+        .settings-sec { margin-bottom: 20px; }
+        .settings-sec > .settings-group:last-child { margin-bottom: 0; }
+        .settings-sec-title { margin: 0 0 10px; font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+        .settings-danger { margin-top: 4px; }
+        .settings-danger[hidden] { display: none; }
         .settings-label { font-weight: 600; font-size: 12px; color: var(--text2); }
         .settings-inline { display: flex; gap: 8px; }
         .settings-inline select { flex: 1; min-width: 0; margin: 0; }
@@ -883,15 +888,15 @@
         @media (hover: hover) { .settings-row:hover { background: var(--bg); } }
         .settings-row:active { background: var(--bg); }
         /* 🎨 테마 선택: 색 두 개짜리 동그라미 5개를 한 줄로 */
-        .theme-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .theme-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; } /* 5개를 한 줄로 (4칸이면 파스텔만 아래로 떨어졌다) */
         .theme-option {
-            display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; min-height: 56px;
+            display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 0; min-height: 52px; min-width: 0;
             background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-md);
-            font: inherit; font-size: 11px; font-weight: 600; color: var(--text2); cursor: pointer; line-height: 1.2;
+            font: inherit; font-size: 10.5px; font-weight: 600; color: var(--text2); cursor: pointer; line-height: 1.2; white-space: nowrap; letter-spacing: -0.3px;
         }
         .theme-option[aria-checked="true"] { border-color: var(--accent-text); color: var(--text); box-shadow: var(--shadow-focus); }
         .theme-swatch { display: flex; }
-        .theme-swatch i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; margin-left: -5px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+        .theme-swatch i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; margin-left: -5px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
         .theme-swatch i:first-child { margin-left: 0; }
 
         /* 📋 사진 아래 구역 목록: 사진의 번호와 같은 번호로 연결 */
@@ -1918,57 +1923,74 @@
         <h3><i class="ti ti-settings"></i> 설정</h3>
         <button class="btn-ghost" onclick="closeSettingsModal()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
-    <div class="settings-group">
-        <div class="settings-label">화면 테마</div>
-        <div class="theme-options" role="radiogroup" aria-label="화면 테마">
-            <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
-                <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙">
-                <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>샴페인</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
-                <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
-                <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
-            </button>
-            <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔">
-                <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
-            </button>
+    <!-- 설정은 묶음(1단계 제목) 안에 항목(2단계 이름)으로: 화면 · 매장 · 백업 · 도움 순서, 지우기는 맨 아래 따로 -->
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">화면</h4>
+        <div class="settings-group">
+            <div class="settings-label">테마</div>
+            <div class="theme-options" role="radiogroup" aria-label="화면 테마">
+                <button type="button" class="theme-option" data-theme-value="mono" role="radio" onclick="setTheme('mono')" title="인디고 (기본)">
+                    <span class="theme-swatch"><i style="background:#ffffff;box-shadow:inset 0 0 0 1px #ccc"></i><i style="background:#3b3577"></i></span><span>기본</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="champagne" role="radio" onclick="setTheme('champagne')" title="샴페인골드 &amp; 블랙">
+                    <span class="theme-swatch"><i style="background:#33302e"></i><i style="background:#c8a96e"></i></span><span>샴페인</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="yellow" role="radio" onclick="setTheme('yellow')" title="옐로우 &amp; 네이비">
+                    <span class="theme-swatch"><i style="background:#ffd200"></i><i style="background:#13306b"></i></span><span>옐로우</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="default" role="radio" onclick="setTheme('default')" title="그린 &amp; 아이보리">
+                    <span class="theme-swatch"><i style="background:#f8f6f1"></i><i style="background:#2d6a4f"></i></span><span>그린</span>
+                </button>
+                <button type="button" class="theme-option" data-theme-value="pastel" role="radio" onclick="setTheme('pastel')" title="파스텔">
+                    <span class="theme-swatch"><i style="background:#f6f2fb"></i><i style="background:#7c6a9c"></i></span><span>파스텔</span>
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="settings-group">
-        <label class="settings-label" for="storeNameInput">매장 이름 <small style="font-weight: 400; color: var(--text3);">인쇄물 머리글·파일 이름에 들어가요</small></label>
-        <input type="text" id="storeNameInput" class="store-name-input" maxlength="20" placeholder="예: 다산점 창고" autocomplete="off" oninput="setStoreName(this.value)">
-    </div>
-    <div class="settings-group">
-        <label class="settings-label" for="industrySelect">업종 기본 품목</label>
-        <div class="settings-inline">
-            <select id="industrySelect"></select>
-            <button class="btn-base btn-secondary" onclick="applyIndustryTemplate()">적용</button>
+        <div class="settings-group">
+            <div class="settings-label">사진 위 글자 크기</div>
+            <div class="font-seg" id="fontSeg" role="group" aria-label="사진 위 글자 크기">
+                <button type="button" data-step="-4" onclick="setFontDelta(-4)" style="font-size: 12px;">작게</button>
+                <button type="button" data-step="0" onclick="setFontDelta(0)" style="font-size: 14px;">보통</button>
+                <button type="button" data-step="4" onclick="setFontDelta(4)" style="font-size: 15px;">크게</button>
+                <button type="button" data-step="8" onclick="setFontDelta(8)" style="font-size: 16px;">아주 크게</button>
+            </div>
         </div>
-    </div>
-    <div class="settings-group">
-        <div class="settings-label">사진 위 글자 크기</div>
-        <div class="font-seg" id="fontSeg" role="group" aria-label="사진 위 글자 크기">
-            <button type="button" data-step="-4" onclick="setFontDelta(-4)" style="font-size: 12px;">작게</button>
-            <button type="button" data-step="0" onclick="setFontDelta(0)" style="font-size: 14px;">보통</button>
-            <button type="button" data-step="4" onclick="setFontDelta(4)" style="font-size: 15px;">크게</button>
-            <button type="button" data-step="8" onclick="setFontDelta(8)" style="font-size: 16px;">아주 크게</button>
+    </section>
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">매장</h4>
+        <div class="settings-group">
+            <label class="settings-label" for="storeNameInput">매장 이름 <small style="font-weight: 400; color: var(--text3);">인쇄물 머리글·파일 이름에 들어가요</small></label>
+            <input type="text" id="storeNameInput" class="store-name-input" maxlength="20" placeholder="예: 다산점 창고" autocomplete="off" oninput="setStoreName(this.value)">
         </div>
-    </div>
-    <div class="settings-list">
-        <a id="promoRow" class="settings-row promo-row" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden><i class="ti ti-gift"></i> 무료 방문 세팅 신청 <small style="margin-left: auto; color: var(--text3); font-weight: 400;">10/31까지 · 다산동·구리시</small></a>
-        <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
-        <button id="shareBackupRow" class="settings-row" onclick="shareBackup()" hidden><i class="ti ti-send"></i> 백업 보내기 (카톡·메일)</button>
-        <button class="settings-row" onclick="exportSystemData()"><i class="ti ti-download"></i> 백업 파일 받기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
-        <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
-        <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
-        <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
-        <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고여지도</span> 알려주기 (링크 공유)</button>
-        <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
-        <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+        <div class="settings-group">
+            <label class="settings-label" for="industrySelect">업종 기본 품목</label>
+            <div class="settings-inline">
+                <select id="industrySelect"></select>
+                <button class="btn-base btn-secondary" onclick="applyIndustryTemplate()">적용</button>
+            </div>
+        </div>
+    </section>
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">데이터 · 백업</h4>
+        <div class="settings-list">
+            <!-- 백업은 한 줄: 보내기가 되는 폰이면 [카톡 등으로 보내기 / 이 폰에 저장]을 고르고, 아니면 바로 저장 (예전엔 '보내기'·'받기' 두 줄이 겹쳤다) -->
+            <button class="settings-row" onclick="closeSettingsModal(); startBackup()"><i class="ti ti-cloud-upload"></i> 백업하기 <small id="lastBackupText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+            <button class="settings-row" onclick="document.getElementById('backupFileInput').click()"><i class="ti ti-upload"></i> 백업 파일로 복구</button>
+            <button class="settings-row" onclick="openDataInfo()"><i class="ti ti-shield-lock"></i> 내 데이터는 어디에 있나요?</button>
+        </div>
+    </section>
+    <section class="settings-sec">
+        <h4 class="settings-sec-title">도움 · 소식</h4>
+        <div class="settings-list">
+    <a id="promoRow" class="settings-row promo-row" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden><i class="ti ti-gift"></i> 무료 방문 세팅 <small style="margin-left: auto; color: var(--text3); font-weight: 400;">10/31까지 · 다산·구리</small></a>
+            <button id="installAppRow" class="settings-row" onclick="installApp()"><i class="ti ti-device-mobile"></i> 홈 화면에 앱으로 설치</button>
+            <button class="settings-row" onclick="closeSettingsModal(); document.getElementById('guideModal').style.setProperty('display', 'block', 'important');"><i class="ti ti-help-circle"></i> 사용법 다시 보기</button>
+            <button class="settings-row" onclick="shareApp()"><i class="ti ti-share"></i> <span data-app-name>창고여지도</span> 알려주기</button>
+            <button class="settings-row" onclick="openFeedbackForm()"><i class="ti ti-message-2"></i> 의견 보내기</button>
+            <button id="contactRow" class="settings-row" onclick="openContact()" hidden><i class="ti ti-headset"></i> 문의하기 <small id="contactText" style="margin-left: auto; color: var(--text3); font-weight: 400;"></small></button>
+        </div>
+    </section>
+    <div class="settings-list settings-danger">
         <button id="resetRow" class="settings-row is-danger" onclick="openResetAsk()"><i class="ti ti-trash"></i> 모든 데이터 지우기</button>
     </div>
     <p id="settingsFooter" class="settings-footer"></p>
@@ -2770,10 +2792,9 @@
         syncIndustryUI();
         document.getElementById('installAppRow').hidden = isInstalledApp();
         syncLastBackupText();
-        document.getElementById('shareBackupRow').hidden = !canShareBackup();
         document.getElementById('promoRow').hidden = !setupPromoOn();
         syncSettingsFooter(); syncFontSeg(); document.getElementById('storeNameInput').value = storeName();
-        document.getElementById('resetRow').hidden = isSamplePreview || !hasSavedData();
+        document.getElementById('resetRow').parentElement.hidden = isSamplePreview || !hasSavedData(); // 지울 게 없으면 묶음째 숨김
         document.getElementById('contactRow').hidden = !CONTACT.url;
         document.getElementById('contactText').textContent = CONTACT.label || '';
         document.getElementById('settingsModal').style.display = 'block';
