@@ -494,6 +494,11 @@
         .image-section { background: var(--card); padding: 20px; margin-bottom: 24px; border-radius: var(--radius-lg); border: 1px solid rgba(224,219,208,0.6); box-shadow: var(--shadow-sm); position: relative; }
         /* 사진이 여러 장이면 한 번에 한 장만 보여주고, 위 썸네일 줄로 바꿔 본다 */
         .image-section { scroll-margin-top: 84px; }
+        .image-section.is-other-photo { display: none; }
+        .photo-strip { scroll-margin-top: 76px; }
+        .photo-next { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); color: var(--text2); font: inherit; font-size: 13px; cursor: pointer; text-align: left; }
+        .photo-next b { flex: 1; min-width: 0; color: var(--accent-text); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .photo-next .ti { color: var(--accent-text); font-size: 18px; }
         .photo-strip { position: relative; display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 12px; margin: 0 -2px 4px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .photo-strip::-webkit-scrollbar { display: none; }
         .photo-strip[hidden] { display: none; }
@@ -910,6 +915,7 @@
         .zl-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; color: var(--text); padding: 4px 10px; border-radius: var(--radius-pill); background: var(--bg); border: 1px solid var(--border); }
         .zl-chip small { font-size: 11px; color: var(--text2); }
         .zl-chip small::before { content: '· '; }
+        .zl-chip.has-memo small { color: #8a6a10; }
         .zl-chip.is-movable { cursor: pointer; border-style: dashed; border-color: var(--accent2); min-height: 36px; }
         .zl-chip.is-movable i { color: var(--text3); font-size: 13px; }
         .zl-chip.is-movable:active { background: var(--accent-soft); }
@@ -2610,23 +2616,44 @@
             return btn;
         }) : []));
         centerCurrentThumb();
+        applyPhotoVisibility();
     }
     function centerCurrentThumb() {
         const strip = document.getElementById('photoStrip'), cur = strip.querySelector('[aria-selected="true"]');
         if (cur) strip.scrollLeft = cur.offsetLeft - (strip.clientWidth - cur.offsetWidth) / 2;
     }
     function markCurrentPhoto(dataId) {
-        if (currentPhotoId == dataId) return;
+        if (currentPhotoId == dataId) { applyPhotoVisibility(); return; }
         currentPhotoId = dataId;
         document.querySelectorAll('.photo-thumb').forEach(b => b.setAttribute('aria-selected', b.dataset.id == dataId ? 'true' : 'false'));
         centerCurrentThumb();
+        applyPhotoVisibility();
+    }
+    // 사진은 한 번에 한 장만: 위 썸네일 줄이 탭 역할 (예전엔 모든 사진·목록이 위아래로 쌓여 폰에서 스크롤이 8화면 넘게 길었다)
+    function applyPhotoVisibility() {
+        const photos = imageList.filter(d => d.id !== 'dummy_root'), multi = photos.length > 1;
+        photos.forEach((d, i) => {
+            const sec = document.getElementById('section-' + d.id); if (!sec) return;
+            sec.classList.toggle('is-other-photo', multi && d.id != currentPhotoId);
+            // 목록 맨 아래: 다음 사진으로 바로 (위로 올라가 썸네일을 누르지 않아도)
+            let nav = sec.querySelector('.photo-next');
+            const next = multi ? photos[(i + 1) % photos.length] : null;
+            if (!next) { if (nav) nav.remove(); return; }
+            if (!nav) { nav = document.createElement('button'); nav.type = 'button'; nav.className = 'photo-next'; sec.appendChild(nav); }
+            nav.innerHTML = `<span>${i + 1 < photos.length ? '다음 사진' : '처음 사진'}</span><b>${escapeHtml(next.title || '')}</b><i class="ti ti-arrow-right"></i>`;
+            nav.onclick = () => showPhoto(next.id, true);
+        });
     }
     function showPhoto(dataId, scroll) {
         markCurrentPhoto(dataId);
-        if (scroll) { const s = document.getElementById('section-' + dataId); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        if (scroll) { // 썸네일 줄이 보이게 위로 (이미 보이면 그대로)
+            const strip = document.getElementById('photoStrip'), target = (strip && !strip.hidden) ? strip : document.getElementById('section-' + dataId);
+            if (target && target.getBoundingClientRect().top < 60) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
     // 스크롤하며 보는 사진을 썸네일에 표시: 화면 위쪽 35% 선을 넘어선 마지막 사진 (맨 아래까지 내리면 마지막 사진)
     function updateCurrentPhotoFromScroll() {
+        return; // 사진 한 장씩 보기라 스크롤로 고를 사진이 없다
         const photos = imageList.filter(d => d.id !== 'dummy_root');
         if (photos.length < 2) return;
         const line = innerHeight * 0.35;
@@ -3734,18 +3761,17 @@
                 const visibleCount = listOpen ? zones.length : Math.min(zones.length, ZL_ROWS);
                 const html = `<div class="zl-rows">${zones.slice(0, visibleCount).map((z, i) => {
                     const shown = z.items, more = 0; // 칩은 모두 그린 뒤 clampZoneChips가 2줄을 넘는 칩을 접는다 (+N개 더)
-                    // 메모(유통기한 임박 같은 중요한 말)는 칩에서 빼는 대신 줄 아래에 따로 한 줄로: "우유 · 유통기한 짧은 것 앞쪽"
-                    const memos = z.items.filter(it => (it.comment || '').trim()).map(it => `<span class="zl-memo-item"><b>${escapeHtml(it.name)}:</b> ${escapeHtml(it.comment.trim())}</span>`);
+                    // 메모는 칩 안에 작게: [우유 · 유통기한 짧은 것 앞쪽] (예전엔 줄 아래에 '우유: …'로 물건 이름을 한 번 더 적어 칸이 3~4줄씩 길어졌다)
+                    const memoOf = (it) => (it.comment || '').trim() ? `<small>${escapeHtml(it.comment.trim())}</small>` : '';
                     const chip = (it) => isEditMode
-                        ? `<button type="button" class="zl-chip is-movable${it.comment ? ' has-memo' : ''}" data-name="${escapeHtml(it.name)}" onclick="event.stopPropagation(); startMoveItem('${data.id}', ${i}, this.dataset.name)" title="눌러서 다른 구역으로 옮기기">${it.comment ? '<i class="ti ti-note zl-memo-ic" aria-label="메모 있음"></i>' : ''}${escapeHtml(it.name)}<i class="ti ti-arrows-move"></i></button>`
-                        : `<span class="zl-chip${it.comment ? ' has-memo' : ''}">${it.comment ? '<i class="ti ti-note zl-memo-ic" aria-label="메모 있음"></i>' : ''}${escapeHtml(it.name)}</span>`;
+                        ? `<button type="button" class="zl-chip is-movable${it.comment ? ' has-memo' : ''}" data-name="${escapeHtml(it.name)}" onclick="event.stopPropagation(); startMoveItem('${data.id}', ${i}, this.dataset.name)" title="눌러서 다른 구역으로 옮기기">${escapeHtml(it.name)}${memoOf(it)}<i class="ti ti-arrows-move"></i></button>`
+                        : `<span class="zl-chip${it.comment ? ' has-memo' : ''}">${escapeHtml(it.name)}${memoOf(it)}</span>`;
                     const go = isEditMode ? `editZone('${data.id}', ${i})` : `selectZone('${data.id}', ${i})`;
                     return `<div role="button" tabindex="0" class="zone-item zl-row ${isEditMode ? 'is-edit' : ''} ${z === activeZone ? 'active' : ''}" onclick="${go}" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ${go}; }" aria-label="${escapeHtml(z.name || '이름 없는 구역')} ${isEditMode ? '고치기' : '사진에서 보기'}">
                         <span class="zl-num">${i + 1}</span>
                         <span class="zl-row-main">
                             <span class="zl-row-top"><span class="zl-name">${escapeHtml(z.name || '이름 없는 구역')}</span>${isZoneStale(z) ? `<span class="zone-checked is-stale">${formatCheckedAgo(z.checkedAt)} 확인</span>` : ''}</span>
                             <span class="zl-row-items" data-key="${data.id}:${i}">${z.items.length ? shown.map(chip).join('') + (more ? `<span class="zl-more">+${more}</span>` : '') : '<span class="zl-empty">비어 있음</span>'}</span>
-                            ${memos.length ? `<span class="zl-row-memo"><i class="ti ti-note" aria-hidden="true"></i><span>${memos.join('<span class="zl-memo-sep"> · </span>')}</span></span>` : ''}
                         </span>
                         <i class="ti ${isEditMode ? 'ti-pencil' : 'ti-chevron-right'} zl-go" aria-hidden="true"></i>
                     </div>`;
