@@ -1755,14 +1755,14 @@
 <div id="printBackdrop" onclick="closePrintPreview()"></div>
 <div id="printModal" role="dialog" aria-modal="true" aria-labelledby="printTitle">
     <div class="settings-head">
-        <h3 id="printTitle"><i class="ti ti-printer"></i> 벽에 붙일 지도</h3>
+        <h3 id="printTitle"><i class="ti ti-printer"></i> 사진 지도</h3>
         <button class="btn-ghost" onclick="closePrintPreview()" aria-label="닫기"><i class="ti ti-x"></i></button>
     </div>
     <p class="print-sub" id="printSub">선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요</p>
     <!-- 양식: 지도(사진+찾아보기) · 위치 목록(큰 글씨 표) · 점검표 -->
     <div id="printForms" class="print-tabs print-forms" role="tablist" aria-label="인쇄 양식">
-        <button type="button" role="tab" data-form="map" onclick="setPrintOpt('form', 'map')"><i class="ti ti-map-2"></i> 지도</button>
-        <button type="button" role="tab" data-form="list" onclick="setPrintOpt('form', 'list')"><i class="ti ti-list-details"></i> 위치 목록</button>
+        <button type="button" role="tab" data-form="map" onclick="setPrintOpt('form', 'map')"><i class="ti ti-map-2"></i> 사진 지도</button>
+        <button type="button" role="tab" data-form="list" onclick="setPrintOpt('form', 'list')"><i class="ti ti-list-details"></i> 큰 글씨 목록</button>
         <button type="button" role="tab" data-form="check" onclick="setPrintOpt('form', 'check')"><i class="ti ti-checkbox"></i> 점검표</button>
     </div>
     <!-- 사진이 여러 장이면: 보던 사진 한 장 / 모든 사진 -->
@@ -5403,7 +5403,7 @@
         let i = 0, lastInit = null;
         do {
             const { c, ctx } = printPageCanvas();
-            let y = drawPrintHead(ctx, '물건 위치 목록' + (pages.length ? ` (${pages.length + 1})` : ''), dateStr, sort === 'name' ? '가나다순 · 번호는 사진 지도의 칸 번호' : '칸 순서대로 · 번호는 사진 지도의 칸 번호');
+            let y = drawPrintHead(ctx, '물건 위치 목록 (큰 글씨)' + (pages.length ? ` · ${pages.length + 1}쪽` : ''), dateStr, sort === 'name' ? '가나다순 · 번호는 사진 지도의 칸 번호' : '칸 순서대로 · 번호는 사진 지도의 칸 번호');
             if (multi && !pages.length) { // 첫 쪽에만: 사진 기호 안내 (A = 창고 박스 선반 · B = …)
                 ctx.font = `${printPx(3.6)}px sans-serif`; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
                 const legend = []; // 항목(A = …) 중간에서 줄이 끊기지 않게 항목 단위로 채운다
@@ -5516,8 +5516,8 @@
     let printOpts = { form: 'map', sort: 'name', memo: true }, printScope = 'photo';
     try { Object.assign(printOpts, JSON.parse(localStorage.getItem('printOpts') || '{}')); } catch (e) {}
     const PRINT_FORMS = {
-        map: { title: '벽에 붙일 지도', sub: '선반 옆에 붙여 두면 꺼낼 때도, 다시 넣을 때도 폰 없이 자리를 찾아요 · 직원도 바로 써요', file: '지도' },
-        list: { title: '물건 위치 목록', sub: '사진 없이 큰 글씨 표로: 물건 이름만 알면 칸 번호가 바로 보여요 · 흑백 프린터도 잘 나와요', file: '위치목록' },
+        map: { title: '사진 지도', sub: '선반 옆에 붙이는 용도: 사진 속 칸 번호와 아래 찾아보기로 폰 없이 자리를 찾아요', file: '지도' },
+        list: { title: '큰 글씨 목록', sub: '사진 없이 표로 크게: 칸 번호와 구역 이름까지 보여서 멀리서도, 흑백 프린터로도 잘 읽혀요', file: '위치목록' },
         check: { title: '위치 점검표', sub: '칸 순서대로 걸으며 있음·없음에 체크해요 · 옮긴 곳은 메모 칸에 적었다가 앱에서 고쳐요', file: '점검표' }
     };
     function setPrintOpt(key, val) {
