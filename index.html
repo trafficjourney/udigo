@@ -386,6 +386,11 @@
            포커스 표시는 .search-input-wrap:focus-within의 알약 모양 글로우 하나로만 보여준다. */
         .search-input-wrap input[type="text"]:focus { border: none; background: transparent; box-shadow: none; }
 
+        /* 폰을 가로로 눕히면 화면 높이가 낮아서, 위에 붙어 있던 검색창이 사진을 많이 가렸다 → 맨 위에서만 보이고 내리면 같이 올라간다 */
+        @media (orientation: landscape) and (max-height: 520px) {
+            body:not(.hero-search-active) .search-bar { position: relative; }
+            .image-section, .photo-strip { scroll-margin-top: 8px; }
+        }
         .search-dropdown {
             display: none; position: absolute; top: calc(100% + 8px); right: 20px;
             width: 50%; max-width: 480px; background: var(--card); border: 1px solid var(--border);
