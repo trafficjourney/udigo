@@ -1804,6 +1804,21 @@
         </div>
         <button type="button" id="printMemoBtn" class="seg-solo" onclick="setPrintOpt('memo', !printOpts.memo)">메모</button>
     </div>
+    <div class="print-row" id="printSizeOpts" hidden>
+        <span class="print-row-label">글씨</span>
+        <div class="seg" role="group" aria-label="글씨 크기">
+            <button type="button" data-size="1" onclick="setPrintOpt('size', 1)">크게</button>
+            <button type="button" data-size="1.35" onclick="setPrintOpt('size', 1.35)">아주 크게</button>
+        </div>
+    </div>
+    <!-- 사진 지도 옵션: 흑백 프린터·토너 아끼기 -->
+    <div class="print-row" id="printMapOpts" hidden>
+        <span class="print-row-label">색</span>
+        <div class="seg" role="group" aria-label="인쇄 색">
+            <button type="button" data-ink="0" onclick="setPrintOpt('ink', false)">사진 그대로</button>
+            <button type="button" data-ink="1" onclick="setPrintOpt('ink', true)">잉크 절약</button>
+        </div>
+    </div>
     <div id="printPages" class="print-pages"></div>
     <div class="print-actions">
         <button type="button" class="btn-base btn-secondary" onclick="closePrintPreview()">닫기</button>
@@ -5031,6 +5046,11 @@
         ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, w, h);
         if (data.img && data.img.src) { try { ctx.drawImage(data.img, x, y, w, h); } catch (e) {} }
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+        const ink = printOpts.ink; // 잉크 절약: 사진은 흑백으로 연하게, 쪽지·번호만 진하게 (흑백 프린터에서도 칸 번호가 또렷하게)
+        if (ink) {
+            ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = '#808080'; ctx.fillRect(x, y, w, h);
+            ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(255,255,255,0.68)'; ctx.fillRect(x, y, w, h);
+        }
         const badgeR = printPx(2.6);
         data.zones.forEach((z) => {
             const zx = x + z.x * scale, zy = y + z.y * scale, zw = z.w * scale, zh = z.h * scale;
@@ -5048,13 +5068,18 @@
             const nw = Math.min(zw - L.inset - printPx(1), textW + L.padX * 2), nh = L.lines.length * L.lh + L.padY * 2;
             const nx = zx + L.inset, ny = zy + L.inset + (L.lines.length === 1 && nh > zh - L.inset ? (zh - nh) / 2 - L.inset : 0);
             ctx.save();
-            ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = printPx(1.2); ctx.shadowOffsetY = printPx(0.4);
-            ctx.fillStyle = '#fff3a3'; ctx.beginPath(); drawSafeRoundRect(ctx, nx, ny, nw, nh, printPx(0.8)); ctx.fill();
+            if (ink) { // 잉크 절약: 흰 쪽지 + 검은 테두리 (그림자·노란 바탕 없이)
+                ctx.fillStyle = '#fff'; ctx.beginPath(); drawSafeRoundRect(ctx, nx, ny, nw, nh, printPx(0.8)); ctx.fill();
+                ctx.lineWidth = printPx(0.35); ctx.strokeStyle = PRINT.ink; ctx.stroke();
+            } else {
+                ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = printPx(1.2); ctx.shadowOffsetY = printPx(0.4);
+                ctx.fillStyle = '#fff3a3'; ctx.beginPath(); drawSafeRoundRect(ctx, nx, ny, nw, nh, printPx(0.8)); ctx.fill();
+            }
             ctx.restore();
             ctx.save(); ctx.beginPath(); ctx.rect(nx, ny, nw, nh); ctx.clip();
             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
             L.lines.forEach((l, li) => {
-                ctx.font = `${l.more ? 500 : 600} ${L.fs}px sans-serif`; ctx.fillStyle = l.more ? '#7a6a1e' : '#2b2716';
+                ctx.font = `${l.more ? 500 : 600} ${L.fs}px sans-serif`; ctx.fillStyle = l.more ? (ink ? PRINT.sub : '#7a6a1e') : (ink ? PRINT.ink : '#2b2716');
                 ctx.fillText(l.t, nx + L.padX + (l.cont ? L.fs * 0.6 : 0), ny + L.padY + L.lh * (li + 0.5) + 1);
             });
             ctx.restore();
@@ -5567,8 +5592,9 @@
         if (!document.body.classList.contains('print-open')) { document.body.classList.add('print-open'); lockPageScroll(); }
     }
     // 인쇄 양식·옵션 (다음에 열어도 그대로)
-    let printOpts = { form: 'map', sort: 'name', memo: true }, printScope = 'photo';
+    let printOpts = { form: 'map', sort: 'name', memo: true, size: 1, ink: false }, printScope = 'photo';
     try { Object.assign(printOpts, JSON.parse(localStorage.getItem('printOpts') || '{}')); } catch (e) {}
+    if (![1, 1.35].includes(printOpts.size)) printOpts.size = 1;
     const PRINT_FORMS = {
         map: { title: '사진 지도', sub: '선반 옆에 붙이는 용도: 사진 속 칸 번호와 아래 찾아보기로 폰 없이 자리를 찾아요', file: '지도' },
         list: { title: '큰 글씨 목록', sub: '사진 없이 표로 크게: 칸 번호와 구역 이름까지 보여서 멀리서도, 흑백 프린터로도 잘 읽혀요', file: '위치목록' },
@@ -5585,7 +5611,7 @@
         const photos = imageList.filter(d => d.id !== 'dummy_root' && d.canvas);
         const data = photos.find(d => d.id == printPreviewId) || photos[0], multi = photos.length > 1, i = photos.indexOf(data);
         const all = printScope === 'all' && multi, scope = all ? photos : [data], ds = printDateStr();
-        if (printOpts.form === 'list') return [() => buildBigListPages(scope, ds, { sort: printOpts.sort, memo: printOpts.memo })];
+        if (printOpts.form === 'list') return [() => buildBigListPages(scope, ds, { sort: printOpts.sort, memo: printOpts.memo, scale: printOpts.size })];
         if (printOpts.form === 'check') return [() => buildCheckPages(scope, ds)];
         if (!all) return [() => buildPrintPages(data, i, ds, multi ? photoLetter(i) : null)];
         // 전체: 맨 앞에 창고 입구에 붙일 전체 찾아보기, 이어서 사진마다 지도
@@ -5624,9 +5650,13 @@
         opts.querySelectorAll('[data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === printOpts.sort)));
         const memoBtn = document.getElementById('printMemoBtn');
         memoBtn.setAttribute('aria-pressed', String(!!printOpts.memo)); memoBtn.textContent = printOpts.memo ? '메모 표시' : '메모 숨김';
+        const sizeRow = document.getElementById('printSizeOpts'), mapRow = document.getElementById('printMapOpts');
+        sizeRow.hidden = form !== 'list'; mapRow.hidden = form !== 'map';
+        sizeRow.querySelectorAll('[data-size]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.size === printOpts.size)));
+        mapRow.querySelectorAll('[data-ink]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === (printOpts.ink ? '1' : '0'))));
         // PDF는 양식·범위 모두 미리보기에 보이는 그대로 (예전엔 지도만 범위와 상관없이 전부 받아져 헷갈렸다)
         const label = form === 'map' ? (printScope === 'all' && multi ? '사진 전체' : (data.title || '')) : F.title;
-        const key = JSON.stringify([form, multi && printScope === 'all', printPreviewId, printOpts.sort, printOpts.memo]);
+        const key = JSON.stringify([form, multi && printScope === 'all', printPreviewId, printOpts.sort, printOpts.memo, printOpts.size, printOpts.ink]);
         fillPrintPreview(++printJob, key, label);
     }
     async function fillPrintPreview(job, key, label) {
