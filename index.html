@@ -1010,11 +1010,12 @@
             -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent); pointer-events: none; }
         .hero-beta { display: none; justify-content: center; margin-top: -6px; }
         .hero-beta .beta-pill { background: var(--hero-chip-bg); border: 1px solid var(--hero-chip-border); color: var(--hero-text); }
-        .setup-promo { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 360px; margin: 12px auto 0; padding: 10px 12px; border-radius: var(--radius-md); background: #fff6c7; border: 1px solid #f0d36a; color: #3a2f0a; text-decoration: none; text-align: left; }
+        .setup-promo { display: flex; align-items: center; gap: 6px; width: 100%; max-width: 360px; margin: 10px auto 0; padding: 7px 10px; border-radius: 999px; background: #fff6c7; border: 1px solid #f0d36a; color: #3a2f0a; text-decoration: none; text-align: left; }
         .setup-promo[hidden] { display: none; }
-        .setup-promo-ic { font-size: 22px; color: #b8901a; flex: none; }
-        .setup-promo-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; line-height: 1.35; word-break: keep-all; }
-        .setup-promo-text b { font-size: 14px; }
+        .setup-promo-ic { font-size: 18px; color: #b8901a; flex: none; }
+        .setup-promo-text { flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 한 줄 띠: 버튼보다 튀지 않게 */
+        .setup-promo-text b { font-size: 13px; }
+        .setup-promo-text span { color: #8a6a10; margin-left: 1px; font-size: 12px; }
         .setup-promo-go { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 800; color: #8a6a10; }
         .setup-promo:active { transform: scale(0.99); }
         .ws-setup { padding: 18px 16px; border-radius: var(--radius-md); background: #fffbe8; border: 1px solid #f0d36a; }
@@ -1650,18 +1651,17 @@
             </g>
             <g class="welcome-hero-pin"><path d="M119 36 a12 12 0 1 1 24 0 c0 9 -12 20 -12 20 s-12 -11 -12 -20z" fill="var(--accent)"/><circle cx="131" cy="35" r="4.5" fill="var(--on-accent)"/></g>
         </svg>
-        <div class="welcome-brand"><div class="welcome-brand-name"><b data-app-name>창고여지도</b><small class="welcome-en" data-app-name-en>Backroom Atlas</small></div><span>사진으로 만드는 매장 물품 지도</span></div>
-        <div class="welcome-beta"><span class="beta-pill"><i class="ti ti-flask"></i> 무료 베타 운영 중</span></div>
+        <div class="welcome-brand"><div class="welcome-brand-name"><b data-app-name>창고여지도</b><small class="welcome-en" data-app-name-en>Backroom Atlas</small></div></div>
         <h2 class="welcome-title">사진 한 장이<br>창고 지도가 돼요</h2>
         <!-- 포스트잇과 다른 점: 선반 앞에 가지 않아도 물건 이름으로 자리를 찾는다 (넣을 때도, 꺼낼 때도) -->
-        <p class="welcome-sub">물건 이름만 대면 어느 구역인지 나와요<br class="sub-br"><span class="sub-more"> 선반 앞에 가지 않아도, 넣을 때도 꺼낼 때도</span></p>
+        <p class="welcome-sub">물건 이름만 대면 어느 칸인지 안내해요</p>
         <div class="welcome-actions">
             <button class="btn-base btn-primary btn-lg" onclick="loadSampleData()"><i class="ti ti-player-play"></i> 예시로 먼저 둘러보기</button>
             <button class="btn-base btn-secondary btn-lg" onclick="pickPhoto()"><i class="ti ti-camera"></i> 내 창고 사진으로 시작</button>
             <p class="revisit-only welcome-revisit-note">지금 쓰던 지도는 그대로 있어요. 예시는 저장하지 않고 미리보기로 열려요.</p>
             <a class="setup-promo" href="https://forms.gle/Yf3eGxW8N1i8fh6L8" target="_blank" rel="noopener" hidden>
                 <i class="ti ti-gift setup-promo-ic" aria-hidden="true"></i>
-                <span class="setup-promo-text"><b>매장에 직접 가서 무료 세팅</b><span>10월 31일까지 · 다산동·구리시 · 선착순 10팀</span></span>
+                <span class="setup-promo-text"><b>10/31까지 무료 방문 세팅</b> <span>다산·구리</span></span>
                 <span class="setup-promo-go">신청 <i class="ti ti-chevron-right"></i></span>
             </a>
             <p class="welcome-trust"><span><i class="ti ti-flask"></i> 무료 베타</span><span><i class="ti ti-user-off"></i> 회원가입 없음</span><button type="button" class="trust-link" onclick="openDataInfo()"><i class="ti ti-device-mobile"></i> 내 폰에 저장</button></p>
