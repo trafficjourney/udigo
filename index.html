@@ -5578,7 +5578,9 @@
         const all = printScope === 'all' && multi, scope = all ? photos : [data], ds = printDateStr();
         if (printOpts.form === 'list') return buildBigListPages(scope, ds, { sort: printOpts.sort, memo: printOpts.memo });
         if (printOpts.form === 'check') return buildCheckPages(scope, ds);
-        return all ? buildMasterIndexPages(photos, ds) : buildPrintPages(data, i, ds, multi ? photoLetter(i) : null);
+        if (!all) return buildPrintPages(data, i, ds, multi ? photoLetter(i) : null);
+        // 전체: 맨 앞에 창고 입구에 붙일 전체 찾아보기, 이어서 사진마다 지도 (미리보기에 보이는 쪽이 그대로 PDF가 된다)
+        return [...buildMasterIndexPages(photos, ds), ...photos.flatMap((d, pi) => buildPrintPages(d, pi, ds, photoLetter(pi)))];
     }
     function renderPrintPreview(tab) {
         if (tab) printScope = tab;
@@ -5592,8 +5594,8 @@
         const tabs = document.getElementById('printTabs');
         document.getElementById('printScopeRow').hidden = !multi;
         if (multi) {
-            tabs.querySelector('[data-tab="photo"]').textContent = `${photoLetter(i)} · ${data.title || ''}`;
-            tabs.querySelector('[data-tab="all"]').textContent = form === 'map' ? '전체 찾아보기' : '전체 사진';
+            tabs.querySelector('[data-tab="photo"]').textContent = `${photoLetter(i)} 사진만`;
+            tabs.querySelector('[data-tab="all"]').textContent = `전체 ${photos.length}장`;
             tabs.querySelectorAll('button').forEach(btn => btn.setAttribute('aria-selected', btn.dataset.tab === printScope ? 'true' : 'false'));
         }
         const opts = document.getElementById('printListOpts');
@@ -5601,10 +5603,10 @@
         opts.querySelectorAll('[data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === printOpts.sort)));
         const memoBtn = document.getElementById('printMemoBtn');
         memoBtn.setAttribute('aria-pressed', String(!!printOpts.memo)); memoBtn.textContent = printOpts.memo ? '메모 표시' : '메모 숨김';
-        // PDF: 지도는 지금처럼 전부(전체 찾아보기 + 사진마다 지도), 목록·점검표는 보이는 그대로
-        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기${form === 'map' && multi ? ` (전체 찾아보기 + 사진 ${photos.length}장)` : ''}`;
+        // PDF는 양식·범위 모두 미리보기에 보이는 그대로 (예전엔 지도만 범위와 상관없이 전부 받아져 헷갈렸다)
         const pages = currentPrintPages();
-        const label = form === 'map' ? (printScope === 'all' && multi ? '전체 찾아보기' : (data.title || '')) : F.title;
+        document.getElementById('printDownloadBtn').innerHTML = `<i class="ti ti-download"></i> PDF 받기 (${pages.length}쪽)`;
+        const label = form === 'map' ? (printScope === 'all' && multi ? '사진 전체' : (data.title || '')) : F.title;
         document.getElementById('printPages').innerHTML = pages.map((src, k) => `<img src="${src}" alt="${escapeHtml(label)} 인쇄물 ${k + 1}쪽">`).join('');
         document.getElementById('printPages').scrollTop = 0;
     }
@@ -5648,22 +5650,11 @@
         }
 
         try {
-            const dateStr = printDateStr(), multi = photos.length > 1;
-            let firstPage = true;
-            const addPage = (imgData) => { if (!firstPage) doc.addPage(); else firstPage = false; doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm); };
-            if (printOpts.form !== 'map' && PRINT_FORMS[printOpts.form]) { // 목록·점검표: 미리보기에 보이는 그대로
-                currentPrintPages().forEach(addPage);
-                doc.save(`창고지기_${PRINT_FORMS[printOpts.form].file}_${fileDate()}.pdf`);
-                return;
-            }
-            if (multi) buildMasterIndexPages(photos, dateStr).forEach(addPage); // 맨 앞: 창고 입구에 붙일 전체 찾아보기
-            photos.forEach((data, pi) => {
-                buildPrintPages(data, pi, dateStr, multi ? photoLetter(pi) : null).forEach(imgData => {
-                    if (!firstPage) doc.addPage(); else firstPage = false;
-                    doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm);
-                });
-            });
-            doc.save(`창고지기_지도_${fileDate()}.pdf`);
+            // 미리보기에 보이는 그대로 (양식·범위)
+            currentPrintPages().forEach((imgData, k) => { if (k) doc.addPage(); doc.addImage(imgData, 'JPEG', 0, 0, PRINT.pageWmm, PRINT.pageHmm); });
+            const F = PRINT_FORMS[printOpts.form] || PRINT_FORMS.map, one = photos.length > 1 && printScope !== 'all' ? photos.find(d => d.id == printPreviewId) : null;
+            const part = one ? '_' + (one.title || '').replace(/[\\/:*?"<>|\s]+/g, '').slice(0, 20) : '';
+            doc.save(`창고지기_${F.file}${part}_${fileDate()}.pdf`);
         } catch (error) {
             console.error("PDF 생성 중 오류 발생:", error);
             alert("PDF 생성 중 문제가 발생했습니다.");
