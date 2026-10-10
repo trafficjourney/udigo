@@ -691,9 +691,9 @@
         .print-viewer-bar { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); color: #fff; font-size: 14px; font-weight: 700; }
         .print-viewer-bar span { flex: 1; }
         .print-viewer-btn { display: inline-flex; align-items: center; gap: 4px; min-height: 38px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 19px; background: rgba(255,255,255,0.1); color: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
-        .print-viewer-body { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 10px 24px; }
-        .print-viewer-body canvas { display: block; width: 100%; max-width: none; height: auto; margin: 0 0 14px; background: #fff; }
-        .print-viewer-body.is-zoom canvas { width: 200%; }
+        /* 두 손가락으로 벌리고 오므려 확대 (브라우저 화면 전체 확대는 막고 이 안에서만). 쪽 사이 간격도 같이 커져야 손가락 아래 자리가 그대로 있다 */
+        .print-viewer-body { --z: 1; flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 10px 24px; touch-action: pan-x pan-y; }
+        .print-viewer-body canvas { display: block; width: calc(var(--z) * 100%); max-width: none; height: auto; margin: 0 0 calc(var(--z) * 14px); background: #fff; }
         #printBackdrop { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.45); z-index: 1085; }
         body.print-open #printBackdrop { display: block; }
         .print-sub { font-size: 12.5px; color: var(--text3); margin: -4px 0 12px 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -5746,10 +5746,13 @@
         let pages = printCache.get(key);
         if (!pages) {
             setBtn(0); pages = [];
-            for (const fn of printChunks()) {
+            const chunks = printChunks();
+            for (let ci = 0; ci < chunks.length; ci++) {
                 await printYield(); // 창과 빙글이가 먼저 그려지게
                 if (job !== printJob) return; // 그 사이 다른 양식·범위를 골랐다
-                const got = printPreviewChunk(fn); pages.push(...got); got.forEach(add);
+                const got = printPreviewChunk(chunks[ci]);
+                got.forEach((cv, j) => { cv.dataset.chunk = ci; cv.dataset.sub = j; }); // 크게 보기에서 선명하게 다시 그릴 때 쓴다
+                pages.push(...got); got.forEach(add);
             }
             printCache.set(key, pages);
         } else pages.forEach(add);
@@ -5784,7 +5787,7 @@
     function openPrintViewer(target) {
         const pages = document.getElementById('printPages'), body = document.getElementById('printViewerBody');
         if (!pages.querySelector('canvas')) return;
-        body.classList.remove('is-zoom'); syncViewerZoom();
+        setViewerZoom(1);
         const cs = [...pages.querySelectorAll('canvas')], top = pages.getBoundingClientRect().top + pages.clientHeight * 0.35;
         const at = target && target.tagName === 'CANVAS' ? cs.indexOf(target) : Math.max(0, cs.findIndex(c => c.getBoundingClientRect().bottom > top));
         body.append(...cs);
@@ -5800,15 +5803,73 @@
         v.hidden = true; syncPrintPageBadge();
         return true;
     }
-    function togglePrintViewerZoom() { // 보던 자리 그대로 확대/축소
-        const body = document.getElementById('printViewerBody'), r = body.scrollTop / Math.max(1, body.scrollHeight);
-        body.classList.toggle('is-zoom'); syncViewerZoom();
-        body.scrollTop = r * body.scrollHeight; body.scrollLeft = 0; syncPrintPageBadge();
+    // 확대 배율 (1 = 화면 폭에 맞춤 ~ 4배). 손가락(또는 화면 가운데) 아래 자리가 그대로 있게 스크롤을 맞춘다
+    const VIEWER_ZMAX = 4;
+    let viewerZoom = 1;
+    function setViewerZoom(z, fx, fy) {
+        const body = document.getElementById('printViewerBody'), pad = 10;
+        z = Math.min(VIEWER_ZMAX, Math.max(1, z));
+        const r = body.getBoundingClientRect();
+        if (fx === undefined) { fx = r.left + body.clientWidth / 2; fy = r.top + body.clientHeight / 2; }
+        const mx = fx - r.left, my = fy - r.top, z0 = viewerZoom;
+        const cx = (body.scrollLeft + mx - pad) / z0, cy = (body.scrollTop + my) / z0; // 배율 1 기준 내용 좌표
+        viewerZoom = z; body.style.setProperty('--z', z);
+        body.scrollLeft = cx * z + pad - mx; body.scrollTop = cy * z - my;
+        document.getElementById('printViewerZoom').innerHTML = z > 1.05 ? '<i class="ti ti-zoom-out"></i> 맞추기' : '<i class="ti ti-zoom-in"></i> 더 크게';
+        syncPrintPageBadge();
     }
-    function syncViewerZoom() {
-        const z = document.getElementById('printViewerBody').classList.contains('is-zoom');
-        document.getElementById('printViewerZoom').innerHTML = z ? '<i class="ti ti-zoom-out"></i> 맞추기' : '<i class="ti ti-zoom-in"></i> 더 크게';
+    function togglePrintViewerZoom() { setViewerZoom(viewerZoom > 1.05 ? 1 : 2.5); sharpenViewerPage(); }
+    // 두 손가락 벌리기·오므리기 + 두 번 톡 (확대 ↔ 맞추기)
+    (() => {
+        const body = document.getElementById('printViewerBody');
+        let pinch = null, lastTap = 0;
+        const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        const mid = (t) => [(t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2];
+        body.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) { pinch = { d: dist(e.touches), z: viewerZoom }; e.preventDefault(); }
+        }, { passive: false });
+        body.addEventListener('touchmove', (e) => {
+            if (!pinch || e.touches.length !== 2) return;
+            e.preventDefault(); // 브라우저가 화면 전체를 확대하지 않게
+            const [x, y] = mid(e.touches);
+            setViewerZoom(pinch.z * dist(e.touches) / pinch.d, x, y);
+        }, { passive: false });
+        body.addEventListener('touchend', (e) => {
+            if (pinch) { if (e.touches.length < 2) { pinch = null; sharpenViewerPage(); } return; }
+            if (e.changedTouches.length !== 1 || e.touches.length) return;
+            const now = Date.now(), t = e.changedTouches[0];
+            if (now - lastTap < 300) { lastTap = 0; setViewerZoom(viewerZoom > 1.05 ? 1 : 2.5, t.clientX, t.clientY); sharpenViewerPage(); e.preventDefault(); }
+            else lastTap = now;
+        });
+        // 컴퓨터: Ctrl(⌘) + 휠
+        body.addEventListener('wheel', (e) => {
+            if (!e.ctrlKey && !e.metaKey) return;
+            e.preventDefault(); setViewerZoom(viewerZoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX, e.clientY);
+            clearTimeout(sharpenTimer); sharpenTimer = setTimeout(sharpenViewerPage, 300);
+        }, { passive: false });
+    })();
+    // 많이 키우면 미리보기(반 해상도)가 흐려서, 보고 있는 쪽만 종이 해상도로 다시 그린다 (메모리 때문에 최근 3쪽까지만 선명하게)
+    let sharpenTimer = 0, sharpened = [];
+    function sharpenViewerPage() {
+        if (viewerZoom < 1.6) return;
+        const body = document.getElementById('printViewerBody'), cs = [...body.querySelectorAll('canvas')];
+        const mid = body.getBoundingClientRect().top + body.clientHeight / 2;
+        const cv = cs.find(c => { const r = c.getBoundingClientRect(); return r.top <= mid && r.bottom >= mid; }) || cs[0];
+        if (!cv || cv.dataset.sharp || cv.dataset.chunk === undefined) return;
+        const fn = printChunks()[+cv.dataset.chunk]; if (!fn) return;
+        let hi = null;
+        PRINT.raw = true; try { hi = fn()[+cv.dataset.sub]; } catch (e) {} finally { PRINT.raw = false; }
+        if (!hi) return;
+        const low = { w: cv.width, h: cv.height };
+        cv.width = hi.width; cv.height = hi.height; cv.getContext('2d').drawImage(hi, 0, 0);
+        cv.dataset.sharp = '1'; sharpened.push({ cv, low });
+        while (sharpened.length > 3) { // 오래된 쪽은 다시 반 해상도로
+            const { cv: old, low: l } = sharpened.shift();
+            const tmp = document.createElement('canvas'); tmp.width = l.w; tmp.height = l.h; tmp.getContext('2d').drawImage(old, 0, 0, l.w, l.h);
+            old.width = l.w; old.height = l.h; old.getContext('2d').drawImage(tmp, 0, 0); delete old.dataset.sharp;
+        }
     }
+    document.getElementById('printViewerBody').addEventListener('scroll', () => { clearTimeout(sharpenTimer); sharpenTimer = setTimeout(sharpenViewerPage, 400); }, { passive: true });
     // 지금 보고 있는 쪽 "3 / 9쪽" (미리보기·크게 보기 둘 다)
     function syncPrintPageBadge() {
         const viewer = !document.getElementById('printViewer').hidden;
