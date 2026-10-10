@@ -5369,31 +5369,53 @@
         printZoneList(photos).forEach(L => L.zone.items.forEach(it => rows.push({ name: it.name.trim(), memo: (it.comment || '').trim(), L })));
         if (sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
         const nameFs = printPx(6 * scale), locFs = printPx(4.6 * scale), memoFs = printPx(3.8 * scale);
+        const gutter = sort === 'name' ? printPx(7 * scale) : 0; // 첫소리 자리
         const colName = (pageW - m * 2) * 0.46, colLoc = (pageW - m * 2) * (memo ? 0.30 : 0.54), colMemo = (pageW - m * 2) - colName - colLoc;
         const meas = document.createElement('canvas').getContext('2d');
         rows.forEach(r => {
-            meas.font = `bold ${nameFs}px sans-serif`; r.nameLines = wrapCanvasText(meas, r.name, colName - printPx(4));
-            meas.font = `${locFs}px sans-serif`; r.locLines = wrapCanvasText(meas, (r.L.zone.name || '') + (multi ? ` · ${r.L.photo.title || ''}` : ''), colLoc - printPx(4) - locFs * 3);
+            meas.font = `bold ${nameFs}px sans-serif`; r.nameLines = wrapCanvasText(meas, r.name, colName - printPx(4) - gutter);
+            meas.font = `${locFs}px sans-serif`; r.locLines = wrapCanvasText(meas, r.L.zone.name || '', colLoc - printPx(4) - locFs * 3); // 사진 이름은 맨 위 기호 안내(A = …)로
             meas.font = `${memoFs}px sans-serif`; r.memoLines = memo && r.memo ? wrapCanvasText(meas, r.memo, colMemo - printPx(3)) : [];
             r.h = Math.max(r.nameLines.length * nameFs * 1.3, r.locLines.length * locFs * 1.35, r.memoLines.length * memoFs * 1.35) + printPx(4.5);
         });
         const pages = [], headH = printPx(9 * Math.max(1, scale * 0.9)), limit = pageH - m - printPx(9);
-        let i = 0;
+        let i = 0, lastInit = null;
         do {
             const { c, ctx } = printPageCanvas();
-            let y = drawPrintHead(ctx, '물건 위치 목록', dateStr, sort === 'name' ? '가나다순 · 번호는 사진 지도의 칸 번호' : '칸 순서대로 · 번호는 사진 지도의 칸 번호');
+            let y = drawPrintHead(ctx, '물건 위치 목록' + (pages.length ? ` (${pages.length + 1})` : ''), dateStr, sort === 'name' ? '가나다순 · 번호는 사진 지도의 칸 번호' : '칸 순서대로 · 번호는 사진 지도의 칸 번호');
+            if (multi && !pages.length) { // 첫 쪽에만: 사진 기호 안내 (A = 창고 박스 선반 · B = …)
+                ctx.font = `${printPx(3.6)}px sans-serif`; ctx.fillStyle = PRINT.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                const legend = []; // 항목(A = …) 중간에서 줄이 끊기지 않게 항목 단위로 채운다
+                photos.map((d, pi) => `${photoLetter(pi)} = ${d.title || `#${pi + 1}`}`).forEach(t => { const last = legend.length - 1; if (last >= 0 && ctx.measureText(legend[last] + '   ' + t).width <= pageW - m * 2) legend[last] += '   ' + t; else legend.push(t); });
+                legend.forEach((t, li) => ctx.fillText(t, m, y + printPx(1) + li * printPx(5)));
+                y += legend.length * printPx(5) + printPx(2);
+            }
             // 표 머리
             ctx.fillStyle = '#efece6'; ctx.fillRect(m, y, pageW - m * 2, headH);
             ctx.fillStyle = PRINT.ink; ctx.font = `bold ${printPx(4 * Math.max(1, scale * 0.9))}px sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-            ctx.fillText('물건', m + printPx(2), y + headH / 2); ctx.fillText('위치', m + colName + printPx(2), y + headH / 2); if (memo) ctx.fillText('메모', m + colName + colLoc + printPx(2), y + headH / 2);
+            ctx.fillText('물건', m + printPx(2) + gutter, y + headH / 2); ctx.fillText('위치', m + colName + printPx(2), y + headH / 2); if (memo) ctx.fillText('메모', m + colName + colLoc + printPx(2), y + headH / 2);
             y += headH;
             let lastCode = null;
-            while (i < rows.length && y + rows[i].h <= limit) {
-                const r = rows[i], ry = y + printPx(2.2);
+            // 가나다순이면 물건 이름 왼쪽 여백에 첫소리(ㄱ·ㄴ…)를 바뀔 때마다 적는다 (띠를 따로 두면 줄이 늘어 쪽이 넘어갔다)
+            let pageStart = true;
+            while (i < rows.length) {
+                const r = rows[i];
+                if (y + r.h > limit && !pageStart) break; // 쪽 맨 위 줄은 넘쳐도 그린다 (아주 긴 줄 하나로 멈추지 않게)
+                if (sort === 'name') {
+                    const ini = indexInitial(r.name), changed = ini !== lastInit;
+                    if (changed || pageStart) {
+                        if (changed && !pageStart) { ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.4); ctx.beginPath(); ctx.moveTo(m, y); ctx.lineTo(pageW - m, y); ctx.stroke(); }
+                        ctx.font = `bold ${Math.round(nameFs * 0.72)}px sans-serif`; ctx.fillStyle = '#a08a2a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                        ctx.fillText(ini, m + printPx(1), y + printPx(2.2) + nameFs * 0.12);
+                        lastInit = ini;
+                    }
+                }
+                pageStart = false;
+                const ry = y + printPx(2.2);
                 if (sort === 'zone' && lastCode !== null && lastCode !== r.L.code) { ctx.strokeStyle = PRINT.ink; ctx.lineWidth = printPx(0.4); ctx.beginPath(); ctx.moveTo(m, y); ctx.lineTo(pageW - m, y); ctx.stroke(); }
                 lastCode = r.L.code;
                 ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = PRINT.ink;
-                ctx.font = `bold ${nameFs}px sans-serif`; r.nameLines.forEach((t, li) => ctx.fillText(t, m + printPx(2), ry + li * nameFs * 1.3));
+                ctx.font = `bold ${nameFs}px sans-serif`; r.nameLines.forEach((t, li) => ctx.fillText(t, m + printPx(2) + gutter, ry + li * nameFs * 1.3));
                 const codeH = locFs * 1.5, codeW = drawPrintCode(ctx, m + colName + printPx(2), ry + codeH / 2, codeH, r.L.code);
                 ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = PRINT.ink; ctx.font = `${locFs}px sans-serif`;
                 r.locLines.forEach((t, li) => ctx.fillText(t, m + colName + printPx(2) + codeW + printPx(2), ry + (codeH - locFs) / 2 + li * locFs * 1.35));
