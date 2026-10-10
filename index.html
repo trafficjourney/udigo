@@ -321,6 +321,8 @@
             background: var(--bg); color: var(--text);
             min-height: 100vh; line-height: 1.5;
             -webkit-font-smoothing: antialiased;
+            /* 한글이 단어 중간에서 끊기지 않게 (띄어쓰기 단위로 줄바꿈). 띄어쓰기 없는 아주 긴 글자만 넘칠 때 끊는다 */
+            word-break: keep-all; overflow-wrap: break-word;
         }
 
         .search-bar {
@@ -1337,7 +1339,7 @@
         /* 💬 토스트 */
         .toast {
             position: fixed; left: 50%; bottom: 24px; z-index: 1100; transform: translate(-50%, 16px);
-            max-width: calc(100% - 32px); padding: 12px 18px; border-radius: var(--radius-pill);
+            width: max-content; max-width: calc(100vw - 32px); padding: 11px 16px; border-radius: 18px; /* left 50%만 주면 폭이 화면 절반(폰에서 180px)으로 줄어 짧은 글도 3~4줄로 쪼개졌다 */
             background: var(--charcoal); color: var(--ivory-text); font-size: 13px; font-weight: 600; text-align: center;
             box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
         }
@@ -1537,7 +1539,7 @@
         </div>
     </div>
     <div id="backupBanner" class="sample-banner install-banner" style="display: none;">
-        <span><i class="ti ti-device-floppy"></i> 데이터는 이 폰에만 있어요. 백업 파일을 받아 두세요 <button type="button" class="trust-link" onclick="openDataInfo()">자세히</button></span>
+        <span><i class="ti ti-device-floppy"></i> 이 폰에만 저장돼요. 백업해 두세요 <button type="button" class="trust-link" onclick="openDataInfo()">자세히</button></span>
         <span class="install-banner-actions">
             <button type="button" class="btn-xs is-accent" onclick="startBackup()">백업 받기</button>
             <button type="button" class="btn-xs is-icon" onclick="dismissBackupBanner()" title="나중에" aria-label="나중에"><i class="ti ti-x"></i></button>
@@ -1552,7 +1554,7 @@
         </span>
     </div>
     <div id="installBanner" class="sample-banner install-banner" style="display: none;">
-        <span id="installBannerText"><i class="ti ti-device-mobile"></i> 홈 화면에 추가하면 앱처럼 바로 열리고, 사진도 더 안전하게 보관돼요</span>
+        <span id="installBannerText"><i class="ti ti-device-mobile"></i> 홈 화면에 추가하면 앱처럼 바로 열려요</span>
         <span class="install-banner-actions">
             <button type="button" class="btn-xs is-accent" onclick="installApp()">설치</button>
             <button type="button" class="btn-xs is-icon" onclick="dismissInstallBanner()" title="닫기" aria-label="닫기"><i class="ti ti-x"></i></button>
@@ -4186,8 +4188,8 @@
     let deferredInstallPrompt = null;
     const isInstalledApp = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const IOS_INSTALL_GUIDE = "아래쪽(또는 주소창 옆) 공유 버튼 → '홈 화면에 추가'를 누르면 앱처럼 설치돼요.";
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; maybeShowInstallBanner(); });
+    const IOS_INSTALL_GUIDE = "공유 버튼 → '홈 화면에 추가'로 앱처럼 설치돼요";
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; maybeShowInstallBanner(); requestAnimationFrame(fitBannerTexts); });
     window.addEventListener('appinstalled', () => { deferredInstallPrompt = null; hideInstallBanner(); });
     // 처음 쓰는 사람에게는 띄우지 않고, 손에 익었을 때 추천한다: 서로 다른 날 3번 이상 열었거나, 물건 위치를 5번 이상 찾았을 때.
     // (그 전에도 설정 > "홈 화면에 앱으로 설치"로 언제든 설치할 수 있다)
@@ -4654,9 +4656,22 @@
     }
 
     let toastTimer = null;
+    // 글이 정한 줄 수를 넘으면 글씨를 조금씩 줄인다 (작은 폰에서 띠·알림이 3~4줄로 길어지지 않게)
+    function fitLines(el, maxLines = 2, minPx = 11) {
+        if (!el || !el.getClientRects().length) return; // 안 보이는 건 건너뜀 (fixed 요소는 offsetParent가 없어 getClientRects로 본다)
+        el.style.fontSize = '';
+        const lineH = () => parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.5;
+        let size = parseFloat(getComputedStyle(el).fontSize);
+        const cs = getComputedStyle(el), pad = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+        while (el.scrollHeight - pad > lineH() * maxLines + 2 && size > minPx) { size -= 0.5; el.style.fontSize = size + 'px'; }
+    }
+    // 위쪽 띠들의 글: 2줄 안에 들어가게
+    function fitBannerTexts() { document.querySelectorAll('.sample-banner > span:first-child').forEach(el => fitLines(el, 2, 11.5)); }
+    let fitTimer = null;
+    window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitBannerTexts, 150); });
     function showToast(msg, ms = 2200) {
         const el = document.getElementById('toast');
-        el.textContent = msg; el.classList.add('show');
+        el.textContent = msg; el.classList.add('show'); fitLines(el, 2, 11);
         clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms);
     }
 
@@ -4801,6 +4816,7 @@
         pickMode = { title, excludeZone, onPick, onRemove };
         searchFlyAnim = null; showSearchArrow = false; activeZone = null;
         document.getElementById('pickBannerTitle').textContent = title;
+        requestAnimationFrame(() => fitLines(document.querySelector('.pick-banner-title'), 2, 12.5));
         document.querySelectorAll('.pick-remove-btn').forEach(b => b.style.display = onRemove ? '' : 'none');
         document.body.classList.add('pick-mode');
         imageList.forEach(d => render(d));
@@ -5718,6 +5734,7 @@
             // 띠는 한 번에 하나: 기간 한정 이벤트(한 번 닫으면 끝) → 백업 안내(다음에 다시 뜸) → 설치 안내
             maybeShowPromoBanner();
             maybeShowBackupBanner();
+            requestAnimationFrame(fitBannerTexts);
             maybeShowInstallBanner();
         }
         else {
