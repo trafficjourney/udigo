@@ -520,6 +520,7 @@
         .photo-next { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); color: var(--text2); font: inherit; font-size: 13px; cursor: pointer; text-align: left; }
         .photo-next b { flex: 1; min-width: 0; color: var(--accent-text); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .photo-next .ti { color: var(--accent-text); font-size: 18px; }
+        .image-section + .image-section:not(.is-other-photo) { margin-top: 4px; } /* 이어 붙은 사진 */
         .photo-strip { position: relative; display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 12px; margin: 0 -2px 4px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .photo-strip::-webkit-scrollbar { display: none; }
         .photo-strip[hidden] { display: none; }
@@ -2649,44 +2650,62 @@
         if (cur) strip.scrollLeft = cur.offsetLeft - (strip.clientWidth - cur.offsetWidth) / 2;
     }
     function markCurrentPhoto(dataId) {
-        if (currentPhotoId == dataId) { applyPhotoVisibility(); return; }
-        currentPhotoId = dataId;
-        document.querySelectorAll('.photo-thumb').forEach(b => b.setAttribute('aria-selected', b.dataset.id == dataId ? 'true' : 'false'));
-        centerCurrentThumb();
+        if (currentPhotoId != dataId) {
+            currentPhotoId = dataId;
+            document.querySelectorAll('.photo-thumb').forEach(b => b.setAttribute('aria-selected', b.dataset.id == dataId ? 'true' : 'false'));
+            centerCurrentThumb();
+        }
         applyPhotoVisibility();
     }
-    // 사진은 한 번에 한 장만: 위 썸네일 줄이 탭 역할 (예전엔 모든 사진·목록이 위아래로 쌓여 폰에서 스크롤이 8화면 넘게 길었다)
+    // 사진 보기: 썸네일로 고른 사진부터 보여 주고, 목록 끝까지 내리면 다음 사진을 아래에 이어 붙인다 (세로 스크롤 그대로).
+    // 예전처럼 처음부터 모든 사진을 쌓으면 폰에서 8화면 넘게 길어져 원하는 사진까지 한참 내려야 했다
+    let photoRange = null; // 보이는 사진 범위 { from, to } (photos 순번)
+    const viewPhotos = () => imageList.filter(d => d.id !== 'dummy_root');
     function applyPhotoVisibility() {
-        const photos = imageList.filter(d => d.id !== 'dummy_root'), multi = photos.length > 1;
+        const photos = viewPhotos(), multi = photos.length > 1, cur = photos.findIndex(d => d.id == currentPhotoId);
+        if (!photoRange || cur < photoRange.from || cur > photoRange.to) photoRange = { from: Math.max(0, cur), to: Math.max(0, cur) };
         photos.forEach((d, i) => {
             const sec = document.getElementById('section-' + d.id); if (!sec) return;
-            sec.classList.toggle('is-other-photo', multi && d.id != currentPhotoId);
-            // 목록 맨 아래: 다음 사진으로 바로 (위로 올라가 썸네일을 누르지 않아도)
+            const shown = !multi || (i >= photoRange.from && i <= photoRange.to);
+            sec.classList.toggle('is-other-photo', !shown);
+            // 목록 맨 아래: 다음 사진 (보이는 마지막 사진에만). 내리기만 해도 이어지지만, 눌러서 바로 갈 수도 있게
             let nav = sec.querySelector('.photo-next');
-            const next = multi ? photos[(i + 1) % photos.length] : null;
-            if (!next) { if (nav) nav.remove(); return; }
+            const last = i === photos.length - 1, showNav = multi && shown && i === photoRange.to;
+            if (!showNav) { if (nav) nav.remove(); return; }
+            const next = last ? photos[0] : photos[i + 1];
             if (!nav) { nav = document.createElement('button'); nav.type = 'button'; nav.className = 'photo-next'; sec.appendChild(nav); }
-            nav.innerHTML = `<span>${i + 1 < photos.length ? '다음 사진' : '처음 사진'}</span><b>${escapeHtml(next.title || '')}</b><i class="ti ti-arrow-right"></i>`;
-            nav.onclick = () => showPhoto(next.id, true);
+            nav.innerHTML = `<span>${last ? '처음 사진' : '다음 사진'}</span><b>${escapeHtml(next.title || '')}</b><i class="ti ${last ? 'ti-arrow-up' : 'ti-arrow-down'}"></i>`;
+            nav.onclick = () => {
+                if (last) { showPhoto(next.id, true); return; }
+                revealNextPhoto();
+                const s = document.getElementById('section-' + next.id); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
         });
     }
+    function revealNextPhoto() {
+        const photos = viewPhotos();
+        if (!photoRange || photoRange.to >= photos.length - 1) return false;
+        photoRange.to++; applyPhotoVisibility(); return true;
+    }
+    // 썸네일·검색으로 고르면 그 사진 하나부터 다시
+    let revealHold = 0;
     function showPhoto(dataId, scroll) {
+        photoRange = null; revealHold = Date.now() + 1000; // 고른 직전엔 페이지가 짧아지며 '끝에 닿음'으로 읽혀 다음 사진이 바로 붙었다
         markCurrentPhoto(dataId);
         if (scroll) { // 썸네일 줄이 보이게 위로 (이미 보이면 그대로)
             const strip = document.getElementById('photoStrip'), target = (strip && !strip.hidden) ? strip : document.getElementById('section-' + dataId);
             if (target && target.getBoundingClientRect().top < 60) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
-    // 스크롤하며 보는 사진을 썸네일에 표시: 화면 위쪽 35% 선을 넘어선 마지막 사진 (맨 아래까지 내리면 마지막 사진)
+    // 내리는 동안: 화면 위쪽 35% 선을 넘어선 마지막 사진을 썸네일에 표시하고, 끝에 가까워지면 다음 사진을 이어 붙인다
     function updateCurrentPhotoFromScroll() {
-        return; // 사진 한 장씩 보기라 스크롤로 고를 사진이 없다
-        const photos = imageList.filter(d => d.id !== 'dummy_root');
-        if (photos.length < 2) return;
+        const photos = viewPhotos();
+        if (photos.length < 2 || !photoRange) return;
+        if (Date.now() > revealHold && innerHeight + scrollY >= document.documentElement.scrollHeight - 280) revealNextPhoto();
         const line = innerHeight * 0.35;
-        let cur = photos[0].id;
-        photos.forEach(d => { const s = document.getElementById('section-' + d.id); if (s && s.getBoundingClientRect().top <= line) cur = d.id; });
-        if (scrollY > 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) cur = photos[photos.length - 1].id;
-        markCurrentPhoto(cur);
+        let cur = photos[photoRange.from].id;
+        for (let i = photoRange.from; i <= photoRange.to; i++) { const s = document.getElementById('section-' + photos[i].id); if (s && s.getBoundingClientRect().top <= line) cur = photos[i].id; }
+        if (cur != currentPhotoId) markCurrentPhoto(cur);
     }
     // 버튼 모음 숨기기: 아래로 스크롤 중이면 숨기고, 위로 올리거나 0.9초 멈추면 다시. 편집 중·맨 아래에서는 늘 보이게
     let remoteLastY = scrollY, remoteIdle = 0;
@@ -2699,6 +2718,9 @@
         if (down || up) remoteLastY = y;
         clearTimeout(remoteIdle); remoteIdle = setTimeout(() => fr.classList.remove('is-tucked'), 900);
     }, { passive: true });
+    // 이미 맨 아래면 더 내려도 scroll이 안 생긴다 → 손가락 떼기·휠에서도 한 번 확인해 다음 사진을 붙인다
+    window.addEventListener('touchend', () => updateCurrentPhotoFromScroll(), { passive: true });
+    window.addEventListener('wheel', (e) => { if (e.deltaY > 0) updateCurrentPhotoFromScroll(); }, { passive: true });
     let photoSpyQueued = false;
     window.addEventListener('scroll', () => {
         if (photoSpyQueued) return;
